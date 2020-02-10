@@ -7,15 +7,16 @@ function resolve (dir) {
 module.exports = {
   pluginOptions: {
     electronBuilder: {
+      nodeIntegration: true,
       builderOptions: {
         "extraFiles": [
           {
-            "from": "build/Release",
-            "to": "resources",
+            "from": "public/peak",
+            "to": "resources/peak",
             "filter": [
-              "*.node"
+              "*.dll"
             ]
-          }
+          },
         ],
         // options placed here will be merged with default configuration and passed to electron-builder
       },
@@ -26,6 +27,11 @@ module.exports = {
           .use('node-loader')
           .loader('node-loader')
           .end()
+        // config.module
+        //   .rule('js')
+        //   .test(/\.js$/)
+        //   .use('babel-loader')
+        //   .loader('babel-loader')
       },
       chainWebpackRendererProcess: config => {
         config.module

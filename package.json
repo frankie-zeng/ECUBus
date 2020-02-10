@@ -13,6 +13,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "bindings": "^1.5.0",
     "core-js": "^3.6.4",
     "element-ui": "^2.4.5",
     "node-addon-api": "^2.0.0",

@@ -1,7 +1,8 @@
-
-const isDevelopment = process.env.NODE_ENV !== 'production'
+/* eslint-disable no-undef */
+/* eslint-disable no-empty */
 const path = require('path')
-const PCANTP = require('./../../build/Release/PCANTP.node')
+// var pp='./../../build/Release/PCANTP.node'
+const  PCANTP = require('./../../build/Release/PCANTP.node')
 const fs = require('fs')
 const { ipcMain } = require('electron')
 const ErrorText = {
@@ -13,12 +14,12 @@ const ErrorText = {
   5: 'Invalid or unknown FlowStatus',
   6: 'Unexpected protocol data unit'
 }
-
-export default class CANUDS {
-  constructor (win, CANReadCallback) {
+const isDevelopment = process.env.NODE_ENV !== 'production'
+const dllPath = isDevelopment?path.join(__static, 'peak'):path.join(process.resourcesPath, 'peak')
+class CANUDS {
+  constructor (win) {
     this.win = win
-    // eslint-disable-next-line no-undef
-    this.cantp = new PCANTP.CANTP(path.join(__static, 'peak'), CANReadCallback)
+    this.cantp = new PCANTP.CANTP(dllPath)
     this.canfd = false
     this.channel = PCANTP.PCANTP_USBBUS1
     this.suppress = false
@@ -389,3 +390,5 @@ export default class CANUDS {
     }
   }
 }
+
+module.exports = CANUDS;

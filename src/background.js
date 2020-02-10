@@ -1,17 +1,18 @@
 'use strict'
 
 import { app, protocol, BrowserWindow, dialog} from 'electron'
-import CANUDS from './uds/canuds.js'
+// import CANUDS from './uds/canuds.js'
 
 import {
   createProtocol,
   /* installVueDevtools */
 } from 'vue-cli-plugin-electron-builder/lib'
 
+
+const CANUDS = require('./uds/canuds.js')
 const { ipcMain } = require('electron')
 const fs = require('fs')
 const isDevelopment = process.env.NODE_ENV !== 'production'
-console.log(process.resourcesPath)
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
