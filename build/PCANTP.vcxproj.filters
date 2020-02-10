@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\src">
+      <UniqueIdentifier>{8CDEE807-BC53-E450-C8B8-4DEBB66742D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\src\addons">
+      <UniqueIdentifier>{CD460BF1-E3DE-B3D0-01CC-127DD8693DD7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\src\addons\can">
+      <UniqueIdentifier>{EC047483-EEA2-9189-867B-B48226A31A08}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..\src\addons\can\peak">
+      <UniqueIdentifier>{8F94E1F7-EC60-BDBF-D8F3-5DFB752C95B3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:">
+      <UniqueIdentifier>{7B735499-E5DD-1C2B-6C26-70023832A1CF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:\2020">
+      <UniqueIdentifier>{CD19FB6F-72CE-D0EB-AB1C-CBA5E20AA663}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:\2020\ecubus">
+      <UniqueIdentifier>{CFF70282-BC15-F6A8-3D6B-8C1D17145E0D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:\2020\ecubus\node_modules">
+      <UniqueIdentifier>{56DF7A98-063D-FB9D-485C-089023B4C16A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:\2020\ecubus\node_modules\node-gyp">
+      <UniqueIdentifier>{77348C0E-2034-7791-74D5-63C077DF5A3B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="C:\2020\ecubus\node_modules\node-gyp\src">
+      <UniqueIdentifier>{8CDEE807-BC53-E450-C8B8-4DEBB66742D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="..">
+      <UniqueIdentifier>{739DB09A-CC57-A953-A6CF-F64FA08E4FA7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\addons\can\peak\pcantp_napi.cpp">
+      <Filter>..\src\addons\can\peak</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\2020\ecubus\node_modules\node-gyp\src\win_delay_load_hook.cc">
+      <Filter>C:\2020\ecubus\node_modules\node-gyp\src</Filter>
+    </ClCompile>
+    <None Include="..\binding.gyp">
+      <Filter>..</Filter>
+    </None>
+  </ItemGroup>
+</Project>
