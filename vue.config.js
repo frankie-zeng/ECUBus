@@ -7,6 +7,18 @@ function resolve (dir) {
 module.exports = {
   pluginOptions: {
     electronBuilder: {
+      builderOptions: {
+        "extraFiles": [
+          {
+            "from": "build/Release",
+            "to": "resources",
+            "filter": [
+              "*.node"
+            ]
+          }
+        ],
+        // options placed here will be merged with default configuration and passed to electron-builder
+      },
       chainWebpackMainProcess: config => {
         config.module
           .rule('node')

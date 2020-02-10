@@ -1,25 +1,33 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, dialog} from 'electron'
+import CANUDS from './uds/canuds.js'
+
 import {
   createProtocol,
   /* installVueDevtools */
 } from 'vue-cli-plugin-electron-builder/lib'
-const isDevelopment = process.env.NODE_ENV !== 'production'
 
+const { ipcMain } = require('electron')
+const fs = require('fs')
+const isDevelopment = process.env.NODE_ENV !== 'production'
+console.log(process.resourcesPath)
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
-
+let canuds
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
 function createWindow () {
   // Create the browser window.
-  win = new BrowserWindow({ width: 800, height: 600, webPreferences: {
+  win = new BrowserWindow({ width: 1200, height: 620, webPreferences: {
     nodeIntegration: true
   } })
-
+  canuds = new CANUDS(win)
+  canuds.registerCallback(() => {
+    canuds.eventHandle()
+  })
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -87,3 +95,11 @@ if (isDevelopment) {
     })
   }
 }
+
+ipcMain.on('openFile', (event, arg) => {
+  var data = fs.readFileSync(arg)
+  event.returnValue = data
+})
+ipcMain.on('saveFile', (event, arg) => {
+  event.returnValue = dialog.showSaveDialogSync(null)
+})

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import PCAN from './views/Pcan.vue'
-import HOME from './views/Home.vue'
+import PCAN from './../views/Pcan.vue'
+import HOME from './../views/Home.vue'
 
 Vue.use(VueRouter)
 

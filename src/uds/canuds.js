@@ -1,7 +1,9 @@
-const PCANTP = require('./../../build/Release/PCANTP.node')
-var fs = require('fs')
-const { ipcMain } = require('electron')
+
+const isDevelopment = process.env.NODE_ENV !== 'production'
 const path = require('path')
+const PCANTP = require('./../../build/Release/PCANTP.node')
+const fs = require('fs')
+const { ipcMain } = require('electron')
 const ErrorText = {
   0: 'OK!',
   1: 'Timeout occured between 2 frames transmission',
