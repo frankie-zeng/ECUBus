@@ -272,7 +272,7 @@
     </div>
 </template>
 <script>
-import PCANTP from 'ADDON/PCANTP.node'
+import PCANTP from './../../build/Release/PCANTP.node'
 const { ipcRenderer } = require('electron')
 export default {
 

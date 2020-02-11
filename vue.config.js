@@ -9,6 +9,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
+        "nodeGypRebuild":true,
         "extraFiles": [
           {
             "from": "public/peak",
@@ -21,25 +22,50 @@ module.exports = {
         // options placed here will be merged with default configuration and passed to electron-builder
       },
       chainWebpackMainProcess: config => {
-        config.module
-          .rule('node')
-          .test(/\.node$/)
-          .use('node-loader')
-          .loader('node-loader')
-          .end()
-        // config.module
-        //   .rule('js')
-        //   .test(/\.js$/)
-        //   .use('babel-loader')
-        //   .loader('babel-loader')
+        if (process.env.NODE_ENV === 'production') {
+          config.module
+            .rule('node')
+            .test(/\.node$/)
+            .use('native-ext-loader')
+            .loader('native-ext-loader')
+            .options({
+              rewritePath: process.resourcesPath
+            })
+            .end()
+        }else{
+          config.module
+            .rule('node')
+            .test(/\.node$/)
+            .use('native-ext-loader')
+            .loader('native-ext-loader')
+            .options({
+              rewritePath: path.resolve(__dirname,"dist_electron")
+            })
+            .end()
+        }
       },
       chainWebpackRendererProcess: config => {
-        config.module
-          .rule('node')
-          .test(/\.node$/)
-          .use('node-loader')
-          .loader('node-loader')
-          .end()
+        if (process.env.NODE_ENV === 'production') {
+          config.module
+            .rule('node')
+            .test(/\.node$/)
+            .use('native-ext-loader')
+            .loader('native-ext-loader')
+            .options({
+              rewritePath: process.resourcesPath
+            })
+            .end()
+        }else{
+          config.module
+            .rule('node')
+            .test(/\.node$/)
+            .use('native-ext-loader')
+            .loader('native-ext-loader')
+            .options({
+              rewritePath: path.resolve(__dirname,"dist_electron")
+            })
+            .end()
+        }
       },
       mainProcessWatch: ['src/uds/canuds.js']
     }

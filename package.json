@@ -17,6 +17,7 @@
     "core-js": "^3.6.4",
     "element-ui": "^2.4.5",
     "node-addon-api": "^2.0.0",
+    "node-addon-loader": "0.0.6",
     "sortablejs": "^1.10.2",
     "vue": "^2.6.11",
     "vue-router": "^3.1.5",
