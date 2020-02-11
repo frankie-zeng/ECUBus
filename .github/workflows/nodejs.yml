@@ -17,8 +17,11 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - run: npm install
+    - run: |
+        npm install
+        (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
     - run: npm run lint
     - run: npm run electron:build
       env:
         CI: true
+        GH_TOKEN: ${{ secrets.github_token }}
