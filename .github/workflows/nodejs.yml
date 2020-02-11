@@ -21,15 +21,11 @@ jobs:
         npm install
         (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
     - run: npm run lint
-    - name: Electron Builder Action
-        uses: samuelmeuli/action-electron-builder@v1.3.0
-        with:
-          # GitHub authentication token
-          github_token: ${{ secrets.github_token }}
-          release: true
-          build_script_name: electron:build
-#     - run: npm run electron:build
-#       env:
-#         CI: true
-#         GH_TOKEN: ${{ secrets.github_token }}
-       
+    - run: npm run electron:build
+      env:
+        CI: true
+        GH_TOKEN: ${{ secrets.github_token }}
+    - uses: actions/upload-artifact@v1
+      with:
+        name: ECUBus
+        path: dist_electron/win-unpacked
