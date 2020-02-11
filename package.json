@@ -38,5 +38,6 @@
     "vue-cli-plugin-electron-builder": "~1.4.5",
     "vue-cli-plugin-element": "~1.0.1",
     "vue-template-compiler": "^2.6.11"
-  }
+  },
+  "nodeGypRebuild":"true" 
 }
