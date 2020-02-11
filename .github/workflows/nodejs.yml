@@ -38,7 +38,7 @@ jobs:
     - uses: actions/upload-artifact@v1
       with:
         name: ECUBus
-        path: dist_electron/win-
+        path: dist_electron/win-unpacked
     - uses: actions/upload-artifact@v1
       with:
         name: ECUBus.exe
