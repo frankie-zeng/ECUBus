@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 export default {
   '10': {
     value: 0x10,

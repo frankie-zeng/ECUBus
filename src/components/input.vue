@@ -54,7 +54,7 @@ export default {
     }
   },
   methods: {
-    dataChange (val) {
+    dataChange () {
       var ret = {}
 
       ret.index = this.index

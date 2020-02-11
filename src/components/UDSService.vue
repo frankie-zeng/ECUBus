@@ -169,7 +169,7 @@ export default {
     Input
   },
   watch: {
-    itemInfo: function (val) {
+    itemInfo: function () {
       this.subFunc = ''
       this.userParamData = []
       this.suboption = false
@@ -237,6 +237,7 @@ export default {
     saveFile () {
       this.filePath = ipcRenderer.sendSync('saveFile')
     },
+    // eslint-disable-next-line no-unused-vars
     removeFile (files, fileList) {
       this.fileList = []
       this.filePath = ''

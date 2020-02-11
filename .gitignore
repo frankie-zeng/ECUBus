@@ -22,3 +22,12 @@ yarn-error.log*
 
 #Electron-builder output
 /dist_electron
+
+
+#native module
+/build
+
+/bin
+
+
+PCANBasic.log

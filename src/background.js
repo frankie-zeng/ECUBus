@@ -101,6 +101,7 @@ ipcMain.on('openFile', (event, arg) => {
   var data = fs.readFileSync(arg)
   event.returnValue = data
 })
+// eslint-disable-next-line no-unused-vars
 ipcMain.on('saveFile', (event, arg) => {
   event.returnValue = dialog.showSaveDialogSync(null)
 })
