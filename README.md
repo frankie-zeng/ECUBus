@@ -1,3 +1,4 @@
+![Node.js CI](https://github.com/frankie-zeng/ECUBus/workflows/Node.js%20CI/badge.svg)
 # ecubus
 
 ## Project setup
