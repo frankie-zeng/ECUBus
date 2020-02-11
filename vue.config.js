@@ -24,11 +24,8 @@ module.exports = {
         config.module
           .rule('node')
           .test(/\.node$/)
-          .use('native-ext-loader')
-          .loader('native-ext-loader')
-          .options({
-            rewritePath: path.resolve(__dirname, "dist_electron")
-          })
+          .use('node-loader')
+          .loader('node-loader')
           .end()
         // config.module
         //   .rule('js')
@@ -40,11 +37,8 @@ module.exports = {
         config.module
           .rule('node')
           .test(/\.node$/)
-          .use('nnative-ext-loader')
-          .loader('native-ext-loader')
-          .options({
-            rewritePath: path.resolve(__dirname, "dist_electron")
-          })
+          .use('node-loader')
+          .loader('node-loader')
           .end()
       },
       mainProcessWatch: ['src/uds/canuds.js']

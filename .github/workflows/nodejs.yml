@@ -30,6 +30,7 @@ jobs:
     - run: |
         .\node_modules\.bin\node-gyp.cmd configure
         .\node_modules\.bin\node-gyp.cmd build
+        cp .\build\Release\PCANTP.node .\src\uds\
     - run: npm run electron:build
       env:
         CI: true
