@@ -9,6 +9,8 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
+        "copyright":"Copyright © 2020 ${author}",
+        "productName":"ECUBus",
         "nodeGypRebuild":true,
         "extraFiles": [
           {
@@ -19,6 +21,9 @@ module.exports = {
             ]
           },
         ],
+        "win": {  
+          "icon": './public/logo.ico'
+        }  
         // options placed here will be merged with default configuration and passed to electron-builder
       },
       chainWebpackMainProcess: config => {

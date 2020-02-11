@@ -1,5 +1,7 @@
 {
   "name": "ecubus",
+  "author": "Fu Zeng <frankie.zeng@nxp.com>",
+  "description": "ECUBus",
   "version": "0.1.0",
   "private": true,
   "scripts": {
