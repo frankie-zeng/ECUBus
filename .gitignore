@@ -25,11 +25,11 @@ yarn-error.log*
 
 
 #native module
-build/Release/*[!*.node]
-build/*.gypi
-build/*.vcxproj
-build/*.vcxproj.filters
-
+# build/Release/*[!*.node]
+# build/*.gypi
+# build/*.vcxproj
+# build/*.vcxproj.filters
+/build
 /bin
 
 

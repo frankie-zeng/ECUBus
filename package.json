@@ -17,7 +17,6 @@
     "core-js": "^3.6.4",
     "element-ui": "^2.4.5",
     "node-addon-api": "^2.0.0",
-    "node-loader": "^0.6.0",
     "sortablejs": "^1.10.2",
     "vue": "^2.6.11",
     "vue-router": "^3.1.5",
@@ -34,6 +33,7 @@
     "electron-rebuild": "^1.10.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.1.2",
+    "native-ext-loader": "^2.3.0",
     "vue-cli-plugin-electron-builder": "~1.4.5",
     "vue-cli-plugin-element": "~1.0.1",
     "vue-template-compiler": "^2.6.11"

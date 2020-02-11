@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-empty */
 const path = require('path')
-// var pp='./../../build/Release/PCANTP.node'
-const  PCANTP = require('./../../build/Release/PCANTP.node')
+
+
 const fs = require('fs')
 const { ipcMain } = require('electron')
 const ErrorText = {
@@ -14,6 +14,11 @@ const ErrorText = {
   5: 'Invalid or unknown FlowStatus',
   6: 'Unexpected protocol data unit'
 }
+
+
+const  PCANTP = require('./../../build/Release/PCANTP.node')
+
+// const  PCANTP = require(path.join(__static, 'PCANTP.node'))
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const dllPath = isDevelopment?path.join(__static, 'peak'):path.join(process.resourcesPath, 'peak')
 class CANUDS {
