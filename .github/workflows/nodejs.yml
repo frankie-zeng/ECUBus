@@ -27,10 +27,9 @@ jobs:
         npm install
         (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
     - run: npm run lint
-    # - run: |
-    #     npm install node-gyp
-    #     node-gyp configure
-    #     node-gyp build
+    - run: |
+        .\node_modules\.bin\node-gyp.cmd configure
+        .\node_modules\.bin\node-gyp.cmd build
     - run: npm run electron:build
       env:
         CI: true
