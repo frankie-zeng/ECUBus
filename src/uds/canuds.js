@@ -17,7 +17,7 @@ const ErrorText = {
 
 
 const  PCANTP = require('./../../build/Release/PCANTP.node')
-
+// const  PCANTP = require(__dirname+'/PCANTP.node')
 // const  PCANTP = require(path.join(__static, 'PCANTP.node'))
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const dllPath = isDevelopment?path.join(__static, 'peak'):path.join(process.resourcesPath, 'peak')
