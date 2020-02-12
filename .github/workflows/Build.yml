@@ -1,6 +1,10 @@
 name: Build CI
 
-on: [push]
+on: 
+  push:
+    paths-ignore: 
+      - README.md
+      - LICENSE.txt
 
 jobs:
   build:
