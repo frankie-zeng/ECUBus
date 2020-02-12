@@ -22,8 +22,27 @@ module.exports = {
           },
         ],
         "win": {  
-          "icon": './public/logo.ico'
-        }  
+          "icon": './public/logo.ico',
+          "target": [
+            {
+              "target": "nsis" ,
+              'arch': [
+                'x64'
+              ]
+            }
+          ]
+        },
+        'nsis': {
+          'oneClick': false,
+          'allowElevation': true,
+          'allowToChangeInstallationDirectory': true,
+          'installerIcon': './public/logo.ico',
+          'uninstallerIcon': './public/logo.ico',
+          'installerHeaderIcon': './public/logo.ico',
+          'createDesktopShortcut': true,
+          'createStartMenuShortcut': true,
+          'license': 'LICENSE.txt'
+        },
         // options placed here will be merged with default configuration and passed to electron-builder
       },
       chainWebpackMainProcess: config => {
