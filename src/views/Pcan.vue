@@ -48,7 +48,6 @@ export default {
   },
   data: function () {
     return {
-      height: 0,
       cd: false,
       uds: false
     }
@@ -67,21 +66,11 @@ export default {
       return this.$store.state.running
     }
   },
-  mounted () {
-    this.height = window.innerHeight - 233
-    window.addEventListener('resize', this.resizeHandle)
-  },
-  destroyed () {
-    window.removeEventListener('resize', this.resizeHandle)
-  },
   methods: {
     goBack () {
       window.history.length > 1
         ? this.$router.go(-1)
         : this.$router.push('/')
-    },
-    resizeHandle () {
-      this.height = window.innerHeight - 233
     },
     exportConfig () {
       // this.$refs.export.click()

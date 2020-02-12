@@ -39,7 +39,3 @@ jobs:
       with:
         name: ECUBus
         path: dist_electron/win-unpacked
-    - uses: actions/upload-artifact@v1
-      with:
-        name: ECUBus.exe
-        path: dist_electron/ecubus Setup 0.1.0.exe

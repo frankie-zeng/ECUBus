@@ -106,6 +106,6 @@ module.exports = {
       .set('src', resolve('src'))
       .set('common', resolve('src/common'))
       .set('components', resolve('src/components'))
-      .set('ADDON', resolve('build/Release'))
+      .set('public', resolve('public'))
   }
 }
