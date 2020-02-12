@@ -1,4 +1,5 @@
-![Node.js CI](https://github.com/frankie-zeng/ECUBus/workflows/Node.js%20CI/badge.svg)
+![Release CI](https://github.com/frankie-zeng/ECUBus/workflows/Release%20CI/badge.svg)
+![Build CI](https://github.com/frankie-zeng/ECUBus/workflows/Build%20CI/badge.svg)
 # ecubus
 
 ## Project setup
