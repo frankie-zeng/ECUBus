@@ -1,0 +1,56 @@
+name: Release CI
+
+on: 
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - uses: actions/cache@v1
+      with:
+        path: ~\AppData\Roaming\npm-cache
+        key: ${{ runner.os }}-node-${{ hashFiles('**\package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
+    - run: |
+        npm install
+        (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
+    - run: npm run lint
+    - run: npm run electron:build
+      env:
+        CI: true
+        GH_TOKEN: ${{ secrets.github_token }}
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.github_token }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    - name: Upload Release Asset
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./dist_electron/ecubus Setup ${{ github.ref }}.exe
+        asset_name: ecubus Setup ${{ github.ref }}.exe
+        asset_content_type: application/vnd.microsoft.portable-executable
