@@ -50,7 +50,6 @@ export default {
     this.height = window.innerHeight
     this.width = window.innerWidth
     window.addEventListener('resize', this.resizeHandle)
-    console.log(process.env.BASE_URL)
   },
   destroyed () {
     window.removeEventListener('resize', this.resizeHandle)
