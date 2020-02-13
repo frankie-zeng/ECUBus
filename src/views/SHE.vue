@@ -63,7 +63,8 @@
 </template>
 <script>
 const { ipcRenderer } = require('electron')
-const ClipboardJS = require('clipboard')
+const ClipboardJS = require('clipboard/dist/clipboard.js')
+
 const sprintf = require('sprintf-js').sprintf
 export default {
     mounted(){

@@ -44,7 +44,6 @@ function createWindow () {
   }
 
   win.on('closed', () => {
-    console.log('close')
     win = null
   })
 }
