@@ -18,24 +18,26 @@
           </el-carousel-item>
         </el-carousel>
          <el-divider></el-divider>
+         <div class="catalog">UDS ISO-14299</div>
          <div class="card">
            <el-row>
              <el-col :span="7" :offset="1">
               <el-card shadow="always">
-                <div class="name">ISO-15765-2 + ISO-14299</div>
+                <div class="name">DoCAN ISO-15765-2</div>
                 <div class="tip">UDS Over CAN/CAN-FD</div>
                 <el-button @click="goPEAK" type="text">GO</el-button>
               </el-card>
              </el-col>
              <el-col :span="7" :offset="1">
               <el-card shadow="always">
-                <div class="name">ISO-13400-2 + ISO-14299</div>
+                <div class="name">DoIP ISO-13400-2</div>
                 <div class="tip">UDS Over Ethernet</div>
-                <el-button @click="goPEAK" type="text" disabled>GO</el-button>
+                <el-button @click="goSECURITY" type="text">GO</el-button>
               </el-card>
              </el-col>
            </el-row>
          </div>
+          <div class="catalog">SECURITY</div>
     </div>
 </template>
 <script>
@@ -58,6 +60,9 @@ export default {
     goPEAK () {
       this.$router.push('/pcan')
     },
+    goSECURITY(){
+      this.$router.push('/security')
+    },
     resizeHandle () {
       this.height = window.innerHeight - 233
     },
@@ -68,9 +73,15 @@ export default {
   .home {
     font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif
   }
+  .catalog{
+    font-size: 20px;
+    margin: 20px;
+    color: gray
+  }
   .title{
       height: 48px;
        line-height: 48px;
+       margin: 10px;
   }
   .title span{
     position: absolute;

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 'use strict'
 
 import { app, protocol, BrowserWindow, dialog} from 'electron'
@@ -7,8 +8,9 @@ import {
   createProtocol,
   /* installVueDevtools */
 } from 'vue-cli-plugin-electron-builder/lib'
+import { compile } from 'vue-template-compiler'
 
-
+const k1SHEGen = require('./crypto/k1she.js')
 const CANUDS = require('./uds/canuds.js')
 const { ipcMain } = require('electron')
 const fs = require('fs')
@@ -103,7 +105,20 @@ ipcMain.on('openFile', (event, arg) => {
   var data = fs.readFileSync(arg)
   event.returnValue = data
 })
-// eslint-disable-next-line no-unused-vars
+
 ipcMain.on('saveFile', (event, arg) => {
   event.returnValue = dialog.showSaveDialogSync(null)
+})
+
+ipcMain.on('k1SHEGen', (event, arg) => {
+  var ret=k1SHEGen(
+    arg.authKeyId,//auth key id
+    arg.authkeyValue, //auth key value
+    arg.keyId,//update key id
+    arg.keyValue, //update key value
+    arg.flag,//flag
+    arg.counter,//cid
+    arg.uid //uid
+    )
+    event.returnValue = ret
 })
