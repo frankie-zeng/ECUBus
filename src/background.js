@@ -44,6 +44,7 @@ function createWindow () {
   }
 
   win.on('closed', () => {
+    console.log('close')
     win = null
   })
 }
@@ -111,14 +112,23 @@ ipcMain.on('saveFile', (event, arg) => {
 })
 
 ipcMain.on('k1SHEGen', (event, arg) => {
+  var flag2=function(flag){
+    var fo={}
+    for(var i in flag){
+      fo[flag[i]]=true
+    }
+    return fo
+  }
+  console.log(arg)
   var ret=k1SHEGen(
-    arg.authKeyId,//auth key id
-    arg.authkeyValue, //auth key value
-    arg.keyId,//update key id
-    arg.keyValue, //update key value
-    arg.flag,//flag
-    arg.counter,//cid
-    arg.uid //uid
-    )
-    event.returnValue = ret
+    parseInt(arg.authKeyId),//auth key id
+    Buffer.from(arg.authKeyValue,'hex'), //auth key value
+    parseInt(arg.keyId),//update key id
+    Buffer.from(arg.keyValue,'hex'), //update key value
+    flag2(arg.flag),//flag
+    parseInt(arg.counter),//cid
+    Buffer.from(arg.uid,'hex') //uid
+  )
+  
+  event.returnValue = ret
 })

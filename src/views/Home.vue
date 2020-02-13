@@ -32,12 +32,23 @@
               <el-card shadow="always">
                 <div class="name">DoIP ISO-13400-2</div>
                 <div class="tip">UDS Over Ethernet</div>
-                <el-button @click="goSECURITY" type="text">GO</el-button>
+                <el-button @click="goSECURITY" type="text" disabled>GO</el-button>
               </el-card>
              </el-col>
            </el-row>
          </div>
           <div class="catalog">SECURITY</div>
+          <div class="card">
+           <el-row>
+             <el-col :span="7" :offset="1">
+              <el-card shadow="always">
+                <div class="name">SHE KEY GENERATE</div>
+                <div class="tip">S32K1-CSEC | S32K3-HSE</div>
+                <el-button @click="goSECURITY" type="text">GO</el-button>
+              </el-card>
+             </el-col>
+           </el-row>
+         </div>
     </div>
 </template>
 <script>
@@ -64,7 +75,7 @@ export default {
       this.$router.push('/security')
     },
     resizeHandle () {
-      this.height = window.innerHeight - 233
+      this.height = window.innerHeight
     },
   }
 }

@@ -2,7 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import PCAN from './../views/Pcan.vue'
 import HOME from './../views/Home.vue'
-import SECURITY from './../views/Security.vue'
+import SHE from './../views/SHE.vue'
 
 Vue.use(VueRouter)
 
@@ -20,7 +20,7 @@ const routes = [
   {
     path: '/security',
     name: 'security',
-    component: SECURITY
+    component: SHE
   }
 ]
 

@@ -1,26 +1,25 @@
 const crypto = require('crypto')
 
-const h0=Buffer.from([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
 const encrypt = function (key, data) {
-    var cipher = crypto.createCipheriv('aes-128-ecb', key,null)
+    var cipher = crypto.createCipheriv('AES-128-ECB', key, null)
     var crypted = cipher.update(data)
     cipher.final()
     return crypted
 };
-const bxor=function(a,b){
-    var c=Buffer.alloc(a.length)
-    for(var i=0;i<a.length;i++){
-        c[i]=(a[i]^b[i])
+const bxor = function (bufferA, bufferB) {
+    var length = Math.min(bufferA.length, bufferB.length);
+    var output = Buffer.alloc(length);
+    for (var index = 0; index < length; index++) {
+      output[index] = bufferA[index] ^ bufferB[index];
     }
-    // console.log(ac)
-    return c
-}
+    return output;
+  }
 function MPCompress(value){
     var l=value.length
     var blkSize=16
     var nblk=parseInt((l+blkSize-1)/blkSize)
-    var outCur=h0
+    var outCur=Buffer.alloc(16,0xff)
     var dblk
     var xCur
     var outPre
@@ -28,14 +27,14 @@ function MPCompress(value){
         outPre=outCur
         dblk=value.slice(i*blkSize,(i+1)*blkSize)
         if(dblk.length<blkSize){
-            xCur=dblk.concat(Buffer.alloc(blkSize-dblk.length).fill(0))
+            xCur=Buffer.concat([dblk,Buffer.alloc(blkSize-dblk.length).fill(0)],blkSize)
         }else{
             xCur=dblk
         }
         outCur=encrypt(outPre,dblk)
-        //outCur=bxor(outCur,bxor(xCur,outPre))
-        outCur=bxor(outCur,xCur)
-        outCur=bxor(outCur,outPre)
+        outCur=bxor(outCur,bxor(xCur,outPre))
+        //outCur=bxor(outCur,xCur)
+        //outCur=bxor(outCur,outPre)
     }
     return outCur
 }
