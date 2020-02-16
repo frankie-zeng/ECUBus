@@ -32,7 +32,7 @@
               <el-card shadow="always">
                 <div class="name">DoIP ISO-13400-2</div>
                 <div class="tip">UDS Over Ethernet</div>
-                <el-button @click="goSECURITY" type="text" disabled>GO</el-button>
+                <el-button @click="goDOIP" type="text">GO</el-button>
               </el-card>
              </el-col>
            </el-row>
@@ -73,6 +73,9 @@ export default {
     },
     goSECURITY(){
       this.$router.push('/security')
+    },
+    goDOIP(){
+      this.$router.push('/doip')
     },
     resizeHandle () {
       this.height = window.innerHeight

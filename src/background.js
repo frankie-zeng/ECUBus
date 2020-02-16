@@ -12,6 +12,7 @@ import { compile } from 'vue-template-compiler'
 
 const k1SHEGen = require('./crypto/k1she.js')
 const CANUDS = require('./uds/canuds.js')
+const IPUDS = require('./uds/ipuds.js')
 const { ipcMain } = require('electron')
 const fs = require('fs')
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -19,6 +20,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 // be closed automatically when the JavaScript object is garbage collected.
 let win
 let canuds
+let ipuds
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
@@ -33,6 +35,7 @@ function createWindow () {
   canuds.registerCallback(() => {
     canuds.eventHandle()
   })
+  ipuds = new IPUDS(win)
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
