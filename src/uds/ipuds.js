@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const os = require('os')
 const dgram = require('dgram')
+const net = require('net')
 const { ipcMain } = require('electron')
 
 const PORT = 13400
@@ -45,6 +46,57 @@ class IPUDS {
                 msg=this.writeReqMsg((x)=>{return x})
             }
             this.udpFd.send(msg,PORT+1,arg.multiaddress)
+        })
+        ipcMain.on('ip-deactive',(event,arg)=>{
+            this.tcpFd.destroy()
+        })
+        ipcMain.on('ip-active',(event,arg)=>{
+            var target =arg[0]
+            var active =arg[1]
+            this.tcpFd=net.createConnection(PORT,target.ip,()=>{
+                // this.emit('tcpEvent',{
+                //     err: 0,
+                //     msg:'Connect ok'
+                // })
+                var msg=this.writeRouteActive((x)=>{return x},active.sa,active.type,active.oem)
+                this.tcpFd.write(msg,()=>{
+                    this.tcpTimeout=setTimeout(() => {
+                        this.tcpFd.destroy()
+                        this.emit('tcpActive',{
+                        err: -1,
+                        msg:'Timeout wait active rounter response'
+                    })
+                    }, 2000);
+                })
+                
+            })
+            this.tcpFd.on('data',(msg)=>{
+                var ret=this.parseData(msg)
+                // this.emit('tcpData',ret)
+                if(ret.err===0){
+                    if(ret.type===0x0006){
+                        clearTimeout(this.tcpTimeout)
+                        this.emit('tcpActive',{
+                            err:0,
+                            msg:'Receive a active rounter response',
+                            data:ret.data
+                        })
+                    }
+                }
+                console.log(ret)
+            })
+            this.tcpFd.on('end',()=>{
+                this.emit('tcpActive',{
+                    err:-1,
+                    msg:'Disconnected from server'
+                })
+            })
+            this.tcpFd.on('error',(err)=>{
+                this.emit('tcpActive',{
+                    err:-2,
+                    msg:'Connect refused from server'
+                })
+            })
         })
 
     }
@@ -175,7 +227,7 @@ class IPUDS {
         this.changeType(5)
         var b=Buffer.alloc(7+len,0)
         if(len>0){
-            Buffer.from(option).copy(b,7)
+            Buffer.from(option,'binary').copy(b,7)
         }
         
         b.writeUInt16BE(sa,0)

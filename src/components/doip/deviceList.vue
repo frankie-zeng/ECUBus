@@ -3,7 +3,7 @@
         <el-dialog
             title="ACTIVE Router"
             :visible.sync="activeStatus"
-            width="50%"
+            width="60%"
             >
             <el-row>
                 <el-col :span="24"><el-tag size="small" type="info"  class="info">IP: {{activeItem.ip}}</el-tag></el-col>
@@ -13,7 +13,7 @@
                 <el-col :span="24"><el-tag size="small" type="info"  class="info">FutureAction: {{activeItem.fAction}}</el-tag></el-col>
                 <el-col :span="24"><el-tag size="small" type="info"  class="info" v-if="activeItem.syncStatus">SyncStatus: {{activeItem.sync}}</el-tag></el-col>
             </el-row>
-            <el-form ref="active" :model="active" label-width="150px" size="small" :rules="rules1">
+            <el-form label-position="left" ref="active" :model="active" label-width="130px" size="small" :rules="rules1">
                 <el-form-item label="Source Address:" prop="sa">
                     <el-row>
                         <el-col :span="24">
@@ -32,8 +32,14 @@
                         </el-col>
                     </el-row> 
                 </el-form-item>
+                <el-form-item label="OEM Specific:" prop="type">
+                     <el-input v-model="active.oem" maxlength="8" show-word-limit>
+                            <template slot="prepend">0x</template>
+                        </el-input>  
+                </el-form-item>
                  <el-form-item style="text-align:right">
-                    <el-button type="primary" @click="activeConnect">Active</el-button>
+                    <el-button type="primary" @click="activeConnect('active')" :loading="active.loading" :disabled="connect">Active</el-button>
+                    <el-tag type="info" v-if="connect">已经有设备激活，请先关闭激活的设备</el-tag>
                 </el-form-item>
             </el-form>
         </el-dialog>
@@ -166,9 +172,42 @@ export default {
                 this.deviceList.push(item)
             }
         })
+        ipcRenderer.on('tcpData', (event, val) => {
+            console.log(val)
+        })
+        ipcRenderer.on('tcpActive', (event, val) => {
+            this.active.loading=false;
+            console.log(val)
+            if(val.err===0){
+                if(val.data.code===0x10){
+                    this.$store.commit('ipChange', true)
+                    this.$notify({
+                        title: '成功',
+                        message: 'ACTIVE成功',
+                        type: 'success'
+                    });
+                    this.activeStatus=false
+                    this.$emit('change', [this.activeItem,val.data])
+                    this.changeSize()
+                }else{
+                    this.$notify.error({
+                        title: 'Error',
+                        message: "Error response code "+val.data.code
+                    })
+                }
+            }else{
+                this.$store.commit('ipChange', false)
+                this.$notify.error({
+                    title: 'Error',
+                    message: val.msg
+                })
+            }
+        })
     },
     destroyed(){
         ipcRenderer.removeAllListeners('ipAnnounce')
+        ipcRenderer.removeAllListeners('tcpData')
+        ipcRenderer.removeAllListeners('tcpEvent')
     },
     data(){
         return{
@@ -194,6 +233,7 @@ export default {
             deviceList:[
                 {
                     vin:'zengfu',
+                    ip:'192.168.3.13'
                 }
             ],
             netLoading:false,
@@ -207,15 +247,32 @@ export default {
             activeItem:{},
             active:{
                 type:'00',
-                sa:''
+                sa:'',
+                oem:'',
+                loading:false,
+                msg:''
             }
             
             
         }
     },
+    computed:{
+        connect:function(){
+            return this.$store.state.ipConnect
+        }
+    },
     methods:{
-        activeConnect(){
-
+        activeConnect(formName){
+            this.$refs[formName].validate((valid) => {
+                if (valid) {
+                    this.active.loading=true
+                    ipcRenderer.send('ip-active',[this.activeItem,this.active])
+                } 
+            })
+        },
+        deactive(){
+            ipcRenderer.send('ip-deactive')
+            this.$store.commit('ipChange', false)
         },
         reloadInterface(){
             this.netLoading=true

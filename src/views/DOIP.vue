@@ -2,10 +2,10 @@
     <div>
          <el-page-header @back="goBack" content="DOIP UDS"  class="header" ></el-page-header>
          <div > 
-             <DL @change="activeRouter" class="dl"></DL>  
+             <DL @change="activeRouter" class="dl" ref="deviceList"></DL>  
          </div>
-         <div v-if="connect" class="active">
-           ACTIVE
+         <div v-if="connect" class="iactive">
+           <el-button type="danger" size="mini" icon="el-icon-close" circle plain @click="deactive"></el-button><span><strong> ACTIVE</strong> VIN: {{activeTarget.vin}} IP: {{activeTarget.ip}} SA: {{activeInfo.testerAddr}} TA: {{activeInfo.entityAddr}}</span>
          </div> 
          <div v-else class="deactive">
            DEACTIVE
@@ -20,20 +20,15 @@
 </template>
 <script>
 import DL from './../components/doip/deviceList.vue'
-
-
-const { ipcRenderer } = require('electron')
-
 export default {
   components: {
     DL,
   },
-  mounted(){
-    this.reloadInterface()
-  },
   data: function () {
     return {
-      active:false
+      active:false,
+      activeTarget:{},
+      activeInfo:{}
     }
   },
   computed:{
@@ -42,19 +37,15 @@ export default {
     }
   },
   methods:{
-    reloadInterface(){
-        this.netLoading=true
-        this.NetInterface=ipcRenderer.sendSync('ip-interface')
-        this.netLoading=false
-    },
     goBack(){
         this.$router.push('/')
     },
     activeRouter(info){
-        console.log(info)
+      this.activeTarget=info[0]
+      this.activeInfo=info[1]
     },
-    bind(){
-
+    deactive(){
+      this.$refs.deviceList.deactive()
     }
   }
 }
@@ -72,8 +63,20 @@ export default {
      top:10px;
      right: 300px;
  }
- .active{
+ .iactive{
+   background-color: #67C23A;
+   margin: 20px;
+   padding: 10px;
+   padding-left: 30px;
+   border-radius: 8px;
    z-index: auto;
+   color: white;
+   /* line-height: 28px; */
+   vertical-align: middle;
+ }
+ .iactive span{
+   line-height: 30px;
+   padding-left: 10px;
  }
  .deactive{
    background-color: #F56C6C;
