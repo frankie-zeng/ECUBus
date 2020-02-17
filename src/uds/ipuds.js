@@ -21,12 +21,6 @@ class IPUDS {
         })
         this.typeList=[0,1,2,3,4,5,6,7,8,0x4001,0x4002,0x4003,0x4004,0x8001,0x8002,0x8003]
         this.clientTypeList=[0,4,6,7,0x4002,0x4004,0x8002,0x8003]
-        // this.vin=''
-        // this.logicalAddr=0
-        // this.eid=''
-        // this.gid=''
-        // this.fAction=0
-        // this.syncStatus=0
         ipcMain.on('ip-interface', (event, arg) => {
             event.returnValue =os.networkInterfaces()
         })

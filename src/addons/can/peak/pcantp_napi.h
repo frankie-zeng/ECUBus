@@ -56,6 +56,7 @@ class CANTP : public Napi::ObjectWrap<CANTP>{
   Napi::Value CANTP::Write(const Napi::CallbackInfo& info);
   Napi::Value CANTP::Read(const Napi::CallbackInfo& info);
   Napi::Value CANTP::RegisterCallback(const Napi::CallbackInfo& info);
+  Napi::Value CANTP::Unload(const Napi::CallbackInfo& info);
   HANDLE rEvent;
   HANDLE rThread;
   HINSTANCE hDLL;

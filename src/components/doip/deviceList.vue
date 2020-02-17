@@ -1,6 +1,43 @@
 <template>
     <div>
         <el-dialog
+            title="ACTIVE Router"
+            :visible.sync="activeStatus"
+            width="50%"
+            >
+            <el-row>
+                <el-col :span="24"><el-tag size="small" type="info"  class="info">IP: {{activeItem.ip}}</el-tag></el-col>
+                <!-- <el-col :span="11" :offset="1"><el-tag size="small" type="info"  class="info">PORT: {{activeItem.port}}</el-tag></el-col> -->
+                <el-col :span="24"><el-tag size="small" type="info"  class="info">EID: 0x{{activeItem.eid}}</el-tag></el-col>
+                <el-col :span="24"><el-tag size="small" type="info"  class="info">GID: 0x{{activeItem.gid}}</el-tag></el-col>
+                <el-col :span="24"><el-tag size="small" type="info"  class="info">FutureAction: {{activeItem.fAction}}</el-tag></el-col>
+                <el-col :span="24"><el-tag size="small" type="info"  class="info" v-if="activeItem.syncStatus">SyncStatus: {{activeItem.sync}}</el-tag></el-col>
+            </el-row>
+            <el-form ref="active" :model="active" label-width="150px" size="small" :rules="rules1">
+                <el-form-item label="Source Address:" prop="sa">
+                    <el-row>
+                        <el-col :span="24">
+                        <el-input v-model.number="active.sa"></el-input>  
+                        </el-col>
+                    </el-row> 
+                </el-form-item>
+                <el-form-item label="Active Type:" prop="type">
+                    <el-row>
+                        <el-col :span="24">
+                         <el-select v-model="active.type" style="width:100%" >
+                                <el-option label="Default" value="00"/>
+                                <el-option label="WWH-OBD" value="01"/>
+                                <el-option label="Central Security" value="E0"/>
+                            </el-select>
+                        </el-col>
+                    </el-row> 
+                </el-form-item>
+                 <el-form-item style="text-align:right">
+                    <el-button type="primary" @click="activeConnect">Active</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
+        <el-dialog
             title="DOIP设置"
             :visible.sync="dialogVisible"
             width="80%"
@@ -60,7 +97,7 @@
                     </el-form>
                 </div>
             </el-dialog>
-        <VueDragResize :isActive="false" :w="dWidth" :h="dHigh" v-on:resizing="resize" v-on:dragging="resize" :isResizable="false" :z="1">
+        <VueDragResize :isActive="false" :w="1" :h="1" v-on:resizing="resize" v-on:dragging="resize" :isResizable="false" >
         <div class="divList"  :style="{height:dHigh+'px'}">
             <el-row class="deviceHeader">
                 <el-col :span="24">
@@ -144,10 +181,20 @@ export default {
                 ],
 
             },
+            rules1:{
+                sa:[
+                    { required: true, message: '源地址不能为空'},
+                    { type: 'number', message: '源地址必须为数字值'}
+                ]
+            },
             dialogVisible:false,
-            dHigh:40,
+            activeStatus:false,
+            dHigh:300,
             dWidth:250,
             deviceList:[
+                {
+                    vin:'zengfu',
+                }
             ],
             netLoading:false,
             NetInterface:{},
@@ -157,10 +204,19 @@ export default {
                 vin:'',
                 eid:'',
             },
+            activeItem:{},
+            active:{
+                type:'00',
+                sa:''
+            }
+            
             
         }
     },
     methods:{
+        activeConnect(){
+
+        },
         reloadInterface(){
             this.netLoading=true
             this.NetInterface=ipcRenderer.sendSync('ip-interface')
@@ -174,7 +230,8 @@ export default {
             this.setting.multiaddress=num2dot(dot2num(this.setting.interface.address)|netmask)
         },
         activeRouter(val){
-            this.$emit('change', val)
+            this.activeItem=val
+            this.activeStatus=true;
         },
         changeSize(){
             if(this.dHigh===300){
@@ -183,9 +240,8 @@ export default {
                 this.dHigh=300
             }
         },
-        resize(newRect) {
-            this.dHigh=newRect.height
-            this.dWidth=newRect.width
+        resize() {
+            
         },
         refresh(){
             if(this.setting.multiaddress===''){
@@ -211,7 +267,7 @@ export default {
       
       
  }
- .item .info{
+.info{
      width: 100%;
      margin-bottom: 4px;
  }
@@ -221,7 +277,9 @@ export default {
      overflow-y:auto;
      overflow-x:hidden;
      margin-right:-20px;
-     
+     width: 260px;
+     z-index: 10;
+     background-color: white;
  }
  .divList .deviceHeader{
      background-color: whitesmoke;

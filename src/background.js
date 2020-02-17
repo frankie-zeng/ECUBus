@@ -31,10 +31,12 @@ function createWindow () {
   },
   // eslint-disable-next-line no-undef
   icon: `${__static}/logo.ico` })
-  canuds = new CANUDS(win)
-  canuds.registerCallback(() => {
-    canuds.eventHandle()
-  })
+  if(canuds===null){
+    canuds = new CANUDS(win)
+    canuds.registerCallback(() => {
+      canuds.eventHandle()
+    })
+  }
   ipuds = new IPUDS(win)
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -48,6 +50,11 @@ function createWindow () {
 
   win.on('closed', () => {
     win = null
+    if(canuds!==null){
+      canuds.Unload()
+      canuds = null
+    }
+
   })
 }
 

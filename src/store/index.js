@@ -8,7 +8,8 @@ export default new Vuex.Store({
     canConnect: false,
     canTpMapTable: [],
     udsTable: [],
-    running: false
+    running: false,
+    ipConnect: false,
   },
   mutations: {
     runChange (state, run) {
@@ -16,6 +17,9 @@ export default new Vuex.Store({
     },
     canChange (state, connect) {
       state.canConnect = connect
+    },
+    ipChange (state, connect) {
+      state.ipConnect = connect
     },
     canTpMapAdd (state, item) {
       state.canTpMapTable.push(item)

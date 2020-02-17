@@ -4,6 +4,12 @@
          <div > 
              <DL @change="activeRouter" class="dl"></DL>  
          </div>
+         <div v-if="connect" class="active">
+           ACTIVE
+         </div> 
+         <div v-else class="deactive">
+           DEACTIVE
+         </div>
         
          
          
@@ -27,6 +33,12 @@ export default {
   },
   data: function () {
     return {
+      active:false
+    }
+  },
+  computed:{
+    connect:function(){
+      return this.$store.state.ipConnect
     }
   },
   methods:{
@@ -59,5 +71,17 @@ export default {
      position: absolute;
      top:10px;
      right: 300px;
+ }
+ .active{
+   z-index: auto;
+ }
+ .deactive{
+   background-color: #F56C6C;
+   margin: 20px;
+   padding: 10px;
+   padding-left: 30px;
+   border-radius: 8px;
+   z-index: auto;
+   color: white;
  }
 </style>

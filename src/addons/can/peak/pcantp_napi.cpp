@@ -27,7 +27,8 @@ Napi::Object CANTP::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("AddMapping",&CANTP::AddMapping),
                    InstanceMethod("TpWrite",&CANTP::Write),
                    InstanceMethod("RegCb",&CANTP::RegisterCallback),
-                   InstanceMethod("TpRead",&CANTP::Read),});
+                   InstanceMethod("TpRead",&CANTP::Read),
+                   InstanceMethod("Unload",&CANTP::Unload),});
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -66,6 +67,10 @@ DWORD WINAPI CANTP::CallReadThreadFunc(LPVOID lpParam)
 Napi::Value CANTP::RegisterCallback(const Napi::CallbackInfo& info){
     Napi::Function callback = info[0].As<Napi::Function>();
     this->readWorker = new PiWorker(callback);
+    return Napi::Number::New(info.Env(),0);
+}
+Napi::Value CANTP::Unload(const Napi::CallbackInfo& info){
+    FreeLibrary(this->hDLL);
     return Napi::Number::New(info.Env(),0);
 }
 
