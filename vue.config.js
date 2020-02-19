@@ -63,34 +63,35 @@ module.exports = {
             .use('native-ext-loader')
             .loader('native-ext-loader')
             .options({
-              rewritePath: path.resolve(__dirname,"dist_electron")
+              rewritePath: path.resolve(__dirname,"dist_electron"),
+              emit: false
             })
             .end()
         }
       },
-      chainWebpackRendererProcess: config => {
-        if (process.env.NODE_ENV === 'production') {
-          config.module
-            .rule('node')
-            .test(/\.node$/)
-            .use('native-ext-loader')
-            .loader('native-ext-loader')
-            .options({
-              rewritePath: process.resourcesPath
-            })
-            .end()
-        }else{
-          config.module
-            .rule('node')
-            .test(/\.node$/)
-            .use('native-ext-loader')
-            .loader('native-ext-loader')
-            .options({
-              rewritePath: path.resolve(__dirname,"dist_electron")
-            })
-            .end()
-        }
-      },
+      // chainWebpackRendererProcess: config => {
+      //   if (process.env.NODE_ENV === 'production') {
+      //     config.module
+      //       .rule('node')
+      //       .test(/\.node$/)
+      //       .use('native-ext-loader')
+      //       .loader('native-ext-loader')
+      //       .options({
+      //         rewritePath: process.resourcesPath
+      //       })
+      //       .end()
+      //   }else{
+      //     config.module
+      //       .rule('node')
+      //       .test(/\.node$/)
+      //       .use('native-ext-loader')
+      //       .loader('native-ext-loader')
+      //       .options({
+      //         rewritePath: path.resolve(__dirname,"dist_electron")
+      //       })
+      //       .end()
+      //   }
+      // },
       mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js']
     }
   },

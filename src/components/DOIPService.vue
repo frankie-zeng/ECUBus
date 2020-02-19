@@ -1,37 +1,11 @@
 <template>
     <div class="uds">
         <div >
-          <div class="file" v-if="itemInfo.file=='upload'">
-            <div>
-              <el-button size="small" type="info" @click="saveFile">选择保存文件</el-button>
-              <div class="el-upload__tip">选择文件后,TransferData(0x36)和RequestTransferExit(0x37)服务由系统自动计算和添加,
-                  成功执行完0x37服务后，会生成对应的文件。
-                </div>
-              <div>{{filePath}}</div>
-            </div>
-          </div>
-          <div class="file" v-if="itemInfo.file=='download'">
-            <div>
-              <el-upload
-                 :auto-upload="false"
-                :limit="2"
-                action="https://jsonplaceholder.typicode.com/posts/"
-                :file-list="fileList"
-                :on-change="exceedFile"
-                :on-remove="removeFile">
-                <el-button size="small" type="info">点击上传文件</el-button>
-                <div slot="tip" class="el-upload__tip">上传文件后，会自动计算文件大小,TransferData(0x36)和RequestTransferExit(0x37)服务由系统自动计算和添加,
-                  MemorySize和addressAndLengthFormatIdentifier(7:4)会根据文件实际大小在点击添加服务后进行调整覆盖。
-                </div>
-              </el-upload>
-            </div>
-            </div>
-
             <el-row style="text-align:left">
                 服务名字：
-                    <el-select v-model="service" placeholder="Choose Service"  filterable style="width:300px">
+                    <el-select v-model="service" placeholder="Choose Service"  filterable style="width:500px">
                         <el-option
-                        v-for="(item, key) in UDSConfig"
+                        v-for="(item, key) in DOIPConfig"
                         :key="item.value"
                         :label="item.name"
                         :value="item.value"
@@ -41,42 +15,11 @@
                         </el-option>
                     </el-select>
             </el-row>
-              <el-row>
-                地址名字：
-                <el-select v-model="addrIndex" placeholder="请选择">
-                    <el-option
-                    v-for="(item, index) in tpTable"
-                    :key="index"
-                    :value="index"
-                    :label="item.name">
-                    </el-option>
-                </el-select>
-              </el-row>
-              <div v-if="hasSub">
-                <el-row>
-                  自定义SubFunction：
-                  <el-switch
-                    v-model="suboption" @change="switchChange">
-                  </el-switch>
-                </el-row>
-                  {{itemInfo.subFunction.name}}：
-                  <el-select v-model="subFunc" placeholder="请选择" v-if="!suboption">
-                      <el-option
-                      v-for="item in itemInfo.subFunction.options"
-                      :key="item.value"
-                      :value="item.value"
-                      :label="item.name">
-                      </el-option>
-                  </el-select>
-                  <el-input v-model="subFunc" style="width:65px" v-else maxlength="2" show-word-limit></el-input>
-                  <span> - </span>
-                  <el-checkbox v-model="suppress" label="Suppress" border > </el-checkbox>
-              </div>
               <el-row v-if="hasParam">
                 <div v-for="(item,index) in itemInfo.param"
                   :key="index">
                   <el-tag style="margin-bottom:10px;margin-top:10px">参数{{index+1}} {{item.name}}:</el-tag>
-                  <Input :minLen="lenLimit[index][0]" :maxLen="lenLimit[index][1]" :index="index" @change="dataChange"/>
+                  <Input :minLen="lenLimit[index][0]" :maxLen="lenLimit[index][1]" :index="index" @change="dataChange" :readonly="item.readonly?true:false"/>
                 </div>
 
               </el-row>
@@ -137,31 +80,21 @@
     </div>
 </template>
 <script>
-import UDSConfig from './uds.js'
+import DOIPConfig from './doip.js'
 import Input from './input.vue'
 import jslint from './../JSLint/jslint.js'
 import report from './../JSLint/report.js'
-const { ipcRenderer } = require('electron')
+// const { ipcRenderer } = require('electron')
 export default {
   data () {
     return {
-      UDSConfig: UDSConfig,
+      DOIPConfig: DOIPConfig,
       addrIndex: '',
-      activeNames: ['1'],
-      service: 0x10,
+      service: 1,
       subFunc: '',
       userParamData: [],
-      suppress: false,
-      suboption: false,
-      fileList: [],
-      filePath: '',
-      fileSize: 0,
       jsFn: 'return true;',
       jsError: ''
-      // hasSub: false,
-      // hasParam: false
-      // paramLen: [],
-      // paramData: []
     }
   },
   props:['mode'],
@@ -170,30 +103,17 @@ export default {
   },
   watch: {
     itemInfo: function () {
-      this.subFunc = ''
       this.userParamData = []
-      this.suboption = false
       this.jsFn = 'return true;'
       this.jsError = ''
     }
   },
   computed: {
     connect: function () {
-      return this.$store.state.canConnect
-    },
-    tpTable: function () {
-      if(this.mode==='can'){
-        return this.$store.state.canTpMapTable
-      }
-      else if(this.mode==='ip'){
-        return this.$store.state.doipAddrTable
-      }
-      else{
-        return []
-      }
+      return this.$store.state.ipConnect
     },
     itemInfo: function () {
-      return UDSConfig[this.service.toString(16)]
+      return DOIPConfig[this.service.toString(16)]
     },
     paramLen: function () {
       var a = []
@@ -212,12 +132,9 @@ export default {
     lenLimit: function () {
       var a = []
       for (var i in this.itemInfo.param) {
-        a[i] = this.itemInfo.param[i].len(this.subFunc)
+        a[i] = this.itemInfo.param[i].len()
       }
       return a
-    },
-    hasSub: function () {
-      if (this.itemInfo.subFunction) { return true } else { return false }
     },
     hasParam: function () {
       if (this.itemInfo.param) { return true } else { return false }
@@ -242,23 +159,6 @@ export default {
       )
       this.jsError = report.error(result)
     },
-    saveFile () {
-      this.filePath = ipcRenderer.sendSync('saveFile')
-    },
-    // eslint-disable-next-line no-unused-vars
-    removeFile (files, fileList) {
-      this.fileList = []
-      this.filePath = ''
-      this.fileSize = 0
-    },
-    exceedFile (files, fileList) {
-      this.fileList = fileList.slice(-1)
-      this.filePath = this.fileList[0].raw.path
-      this.fileSize = this.fileList[0].size
-    },
-    switchChange () {
-      this.subFunc = ''
-    },
     addUserParam () {
       this.userParamData.push({
         name: '',
@@ -275,48 +175,10 @@ export default {
       this.userParamData[index].data.pop()
     },
     addService () {
-      if (this.hasSub) {
-        if (this.subFunc === '') {
-          this.$message.error('请选择正确的SubFunction')
-          return
-        }
-      }
-      if (!this.tpTable[this.addrIndex]) {
-        this.$message.error('请选择正确的地址')
-        this.addrIndex = ''
-        return
-      }
       var item = {}
-      item.addr = this.tpTable[this.addrIndex]
       item.service = {
         value: this.itemInfo.value,
         name: this.itemInfo.name
-      }
-      if (this.itemInfo.file === 'download') {
-        item.other = {
-          path: this.filePath,
-          size: this.fileSize
-        }
-      }
-      if (this.itemInfo.file === 'upload') {
-        item.other = {
-          path: this.filePath,
-          size: parseInt(this.paramData[3].join().split(',').join(''), 16)
-        }
-      }
-      if (this.hasSub) {
-        var sfn = 'UserDefine'
-        for (var i in this.itemInfo.subFunction.options) {
-          if (this.itemInfo.subFunction.options[i].value === this.subFunc) {
-            sfn = this.itemInfo.subFunction.options[i].name
-            break
-          }
-        }
-        item.subFunc = {
-          name: sfn,
-          value: parseInt(this.subFunc, 16),
-          suppress: this.suppress
-        }
       }
       item.param = []
       if (this.hasParam) {
@@ -326,24 +188,6 @@ export default {
             value: JSON.parse(JSON.stringify(this.paramData[j]))
           })
         }
-
-        if ((this.itemInfo.file === 'download') && (this.fileList.length > 0)) {
-          var size = this.fileSize.toString(16)
-          var len = parseInt((size.length + 1) / 2)
-          var mLen = len > item.param[3].value.length ? len : item.param[3].value.length
-
-          for (i = 0; i < len; i++) {
-            if (i === 0) {
-              item.param[3].value[mLen - 1] = size.slice(-2)
-            } else {
-              item.param[3].value[mLen - 1 - i] = size.slice(-2 * (i + 1), -2 * i)
-            }
-          }
-          var rawLen = parseInt(item.param[1].value[0], 16)
-          if (((rawLen & 0xf0) >> 4) < len) {
-            item.param[1].value[0] = ((rawLen & 0x0f) + (len * 16)).toString(16)
-          }
-        }
       }
       for (var z in this.userParamData) {
         item.param.push({
@@ -352,7 +196,7 @@ export default {
         })
       }
       item.func = this.jsFn
-      this.$store.commit('udsTableAdd', item)
+      this.$store.commit('doipTableAdd', item)
       this.$emit('addDone')
     },
     dataChange (val) {

@@ -7,7 +7,7 @@
             <el-col :span="24">
             <span v-for="data in paramLen"
             :key="data" style="margin:1px">
-                <el-input v-model="paramData[data-1]" @input="dataChange" maxlength="2" show-word-limit size="small" style="width:65px">
+                <el-input v-model="paramData[data-1]" @input="dataChange" maxlength="2" show-word-limit size="small" style="width:65px" :readonly="readonly">
 
                 </el-input>
             </span>
@@ -38,6 +38,12 @@ export default {
       type: Number,
       default: function () {
         return 0
+      }
+    },
+    readonly: {
+      type: Boolean,
+      default: function () {
+        return false
       }
     }
   },

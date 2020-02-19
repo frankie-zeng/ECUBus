@@ -8,8 +8,11 @@ export default new Vuex.Store({
     canConnect: false,
     canTpMapTable: [],
     udsTable: [],
+    doipTable: [],
+    doipAddrTable: [],
     running: false,
     ipConnect: false,
+
   },
   mutations: {
     runChange (state, run) {
@@ -21,6 +24,17 @@ export default new Vuex.Store({
     ipChange (state, connect) {
       state.ipConnect = connect
     },
+    /* doip addr table */
+    doipAddrAdd (state, item) {
+      state.doipAddrTable.push(item)
+    },
+    doipAddrDelete (state, index) {
+      state.doipAddrTable.splice(index, 1)
+    },
+    doipAddrMapLoad (state, data) {
+      state.doipAddrTable = data
+    },
+    /* can addr table */
     canTpMapAdd (state, item) {
       state.canTpMapTable.push(item)
     },
@@ -30,6 +44,7 @@ export default new Vuex.Store({
     canTpMapLoad (state, data) {
       state.canTpMapTable = data
     },
+    /*uds table*/
     udsTableUpdate (state, index) {
       const targetRow = state.udsTable.splice(index[1], 1)[0]
       state.udsTable.splice(index[0], 0, targetRow)
@@ -43,6 +58,21 @@ export default new Vuex.Store({
     },
     udsTableLoad (state, data) {
       state.udsTable = data
+    },
+    /*doip table*/
+    doipTableUpdate (state, index) {
+      const targetRow = state.doipTable.splice(index[1], 1)[0]
+      state.doipTable.splice(index[0], 0, targetRow)
+    },
+    doipTableAdd (state, item) {
+      item.date = new Date().getTime()
+      state.doipTable.push(item)
+    },
+    doipTableDelete (state, index) {
+      state.doipTable.splice(index, 1)
+    },
+    doipTableLoad (state, data) {
+      state.doipTable = data
     }
   },
   actions: {

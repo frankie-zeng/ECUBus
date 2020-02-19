@@ -272,7 +272,8 @@
     </div>
 </template>
 <script>
-import PCANTP from './../../build/Release/PCANTP.node'
+//import PCANTP from './../../build/Release/PCANTP.node'
+
 const { ipcRenderer } = require('electron')
 export default {
 
@@ -285,27 +286,27 @@ export default {
         RA: '0',
         txId: '0',
         rxId: '0',
-        MSGTYPE: PCANTP.PCANTP_MESSAGE_DIAGNOSTIC,
-        FORMAT: PCANTP.PCANTP_FORMAT_NORMAL,
-        IDTYPE: PCANTP.PCANTP_ID_CAN_11BIT,
-        TA_TYPE: PCANTP.PCANTP_ADDRESSING_PHYSICAL
+        MSGTYPE: 1,
+        FORMAT: 1,
+        IDTYPE: 1,
+        TA_TYPE: 1
       },
       formatList: [
         {
           label: 'Normal addressing',
-          value: PCANTP.PCANTP_FORMAT_NORMAL
+          value: 1
         },
         {
           label: 'Normal fixed addressing',
-          value: PCANTP.PCANTP_FORMAT_FIXED_NORMAL
+          value: 2
         },
         {
           label: 'Extended addressing',
-          value: PCANTP.PCANTP_FORMAT_EXTENDED
+          value: 3
         },
         {
           label: 'Mixed addressing',
-          value: PCANTP.PCANTP_FORMAT_MIXED
+          value: 4
         }
         // {
         //   label: 'Enhance addressing',
@@ -313,40 +314,40 @@ export default {
         // }
       ],
       canfd: false,
-      device: PCANTP.PCANTP_USBBUS1,
+      device: 0x51,
       deviceList: [{
         label: 'PEAK-USB1',
-        value: PCANTP.PCANTP_USBBUS1
+        value: 0x51
       }, {
         label: 'PEAK-USB2',
-        value: PCANTP.PCANTP_USBBUS2
+        value: 0x52
       }],
-      speed: PCANTP.PCANTP_BAUD_500K,
+      speed: 0x001c,
       canSpeed: [{
         label: '250 KBit/s',
-        value: PCANTP.PCANTP_BAUD_250K
+        value: 0x011C
       }, {
         label: '500 KBit/s',
-        value: PCANTP.PCANTP_BAUD_500K
+        value: 0x001c
       }, {
         label: '1 MBit/s',
-        value: PCANTP.PCANTP_BAUD_1M
+        value: 0x0014
       }],
-      nomSpeed: PCANTP.PCANTP_BAUD_NOM_500K,
+      nomSpeed: 'f_clock=80000000,nom_brp=10,nom_tseg1=12,nom_tseg2=3,nom_sjw=1,',
       canNomSpeed: [{
         label: '500 KBit/s',
-        value: PCANTP.PCANTP_BAUD_NOM_500K
+        value: 'f_clock=80000000,nom_brp=10,nom_tseg1=12,nom_tseg2=3,nom_sjw=1,'
       }, {
         label: '1 MBit/s',
-        value: PCANTP.PCANTP_BAUD_NOM_1M
+        value: 'f_clock=80000000,nom_brp=10,nom_tseg1=5,nom_tseg2=2,nom_sjw=1,'
       }],
-      dataSpeed: PCANTP.PCANTP_BAUD_DATA_2M,
+      dataSpeed: 'data_brp=4,data_tseg1=7,data_tseg2=4,data_sjw=1',
       canDataSpeed: [{
         label: '2 MBit/s',
-        value: PCANTP.PCANTP_BAUD_DATA_2M
+        value: 'data_brp=4,data_tseg1=7,data_tseg2=4,data_sjw=1'
       }, {
         label: '4 MBit/s',
-        value: PCANTP.PCANTP_BAUD_DATA_4M
+        value: 'data_brp=2,data_tseg1=7,data_tseg2=4,data_sjw=1'
       }]
     }
   },
@@ -360,7 +361,7 @@ export default {
     txId: function () {
       let ta = parseInt(this.tpConfig.TA, 16) << 8
       let sa = parseInt(this.tpConfig.SA, 16)
-      if (this.tpConfig.FORMAT === PCANTP.PCANTP_FORMAT_FIXED_NORMAL) {
+      if (this.tpConfig.FORMAT === 2) {
         return (0x18db0000 + ta + sa).toString(16)
       } else {
         return (0x18ce0000 + ta + sa).toString(16)
@@ -369,26 +370,26 @@ export default {
     rxId: function () {
       let ta = parseInt(this.tpConfig.SA, 16) << 8
       let sa = parseInt(this.tpConfig.TA, 16)
-      if (this.tpConfig.FORMAT === PCANTP.PCANTP_FORMAT_FIXED_NORMAL) {
+      if (this.tpConfig.FORMAT === 2) {
         return (0x18db0000 + ta + sa).toString(16)
       } else {
         return (0x18ce0000 + ta + sa).toString(16)
       }
     },
     bit29Must: function () {
-      if (this.tpConfig.FORMAT === PCANTP.PCANTP_FORMAT_FIXED_NORMAL) {
+      if (this.tpConfig.FORMAT === 2) {
         // eslint-disable-next-line vue/no-side-effects-in-computed-properties
-        this.tpConfig.IDTYPE = PCANTP.PCANTP_ID_CAN_29BIT
+        this.tpConfig.IDTYPE = 2
         return true
       } else {
         return false
       }
     },
     mapMust: function () {
-      if (this.tpConfig.FORMAT === PCANTP.PCANTP_FORMAT_FIXED_NORMAL) {
+      if (this.tpConfig.FORMAT === 2) {
         return false
       }
-      if ((this.tpConfig.FORMAT === PCANTP.PCANTP_FORMAT_MIXED) && (this.tpConfig.IDTYPE === PCANTP.PCANTP_ID_CAN_29BIT)) {
+      if ((this.tpConfig.FORMAT === 4) && (this.tpConfig.IDTYPE === 2)) {
         return false
       }
       return true
@@ -423,6 +424,13 @@ export default {
         this.$notify.error({
           title: 'Error',
           message: 'SA不能等于TA'
+        })
+        return
+      }
+      if (item.txId === item.rxId) {
+        this.$notify.error({
+          title: 'Error',
+          message: 'TX_ID不能等于RX_ID'
         })
         return
       }

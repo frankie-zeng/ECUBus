@@ -7,7 +7,7 @@
             </el-dialog>
         <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
                 <div class="connect">
-                    <UDSService @addDone="uds=false"/>
+                    <UDSService @addDone="uds=false"  mode="can"/>
                 </div>
             </el-dialog>
         <el-row style="margin:0px">

@@ -35,6 +35,7 @@ class CANUDS {
     }
     clearTimeout(this.udsTimer)
     ipcMain.on('can-connect', (event, arg) => {
+      console.log('connect')
       var err = this.cantp.Initialize(arg[0], arg[1])
       this.canfd = false
       this.channel = arg[0]
@@ -103,7 +104,9 @@ class CANUDS {
       this.win.webContents.send('udsEvent', ret)
     }, t)
   }
-
+  Unload(){
+    this.cantp.Unload()
+  }
   eventHandle () {
     var err = {}
     var msg = {}
