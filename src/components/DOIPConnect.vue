@@ -9,10 +9,10 @@
             </el-form-item>
             <el-form-item required>
                 <el-col :span="10">
-                    <div>SA:</div><el-input style="width:200px" v-model="tpConfig.SA" placeholder="SA" maxlength="4" show-word-limit ><template slot="prepend">0x</template></el-input>
+                    <div>SA:</div><el-input style="width:250px" v-model="tpConfig.SA" placeholder="SA" maxlength="6" show-word-limit ></el-input>
                 </el-col>
                 <el-col :span="10" :offset="1">
-                    <div>TA:</div><el-input  style="width:200px" v-model="tpConfig.TA" placeholder="TA" maxlength="4" show-word-limit><template slot="prepend">0x</template></el-input>
+                    <div>TA:</div><el-input  style="width:250px" v-model="tpConfig.TA" placeholder="TA" maxlength="6" show-word-limit></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item style="text-align:right">
@@ -48,7 +48,7 @@
                 width="100"
                 align="center">
                 <template slot-scope="scope">
-                    <el-tag size="medium"  type="info">0X{{scope.row.SA.toString(16)}}</el-tag>
+                    <el-tag size="medium"  type="info">{{scope.row.SA}}</el-tag>
                 </template>
             </el-table-column>
             <el-table-column
@@ -57,7 +57,7 @@
                 width="100"
                 align="center">
                 <template slot-scope="scope">
-                    <el-tag size="medium"  type="info">0X{{scope.row.TA.toString(16)}}</el-tag>
+                    <el-tag size="medium"  type="info">{{scope.row.TA}}</el-tag>
                 </template>
             </el-table-column>
            
@@ -84,8 +84,8 @@ export default {
     return {
       tpConfig: {
         name: 'defaultName1',
-        SA: '0',
-        TA: '0',
+        SA: 0,
+        TA: 0,
         multicast:'255.255.255.255',
       },
     }
@@ -117,9 +117,8 @@ export default {
         })
         return
       }
-      item.SA = parseInt(item.SA, 16)
-      item.TA = parseInt(item.TA, 16)
-
+      item.SA = parseInt(item.SA, 10)
+      item.TA = parseInt(item.TA, 10)
       this.$store.commit('doipAddrAdd', item)
     },
   }

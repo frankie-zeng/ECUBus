@@ -7,12 +7,12 @@
             </el-dialog>
         <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
                 <div class="connect">
-                    <UDSService @addDone="uds=false" mode="ip"/>
+                    <UDSService @addDone="uds=false" mode="doip"/>
                 </div>
             </el-dialog>
           <el-dialog title="添加一个DOIP服务" :visible.sync="doip"  width="80%">
               <div class="connect">
-                  <DOIPService @addDone="doip=false" mode="ip"/>
+                  <DOIPService @addDone="doip=false"/>
               </div>
           </el-dialog>
         <el-row style="margin:0px">
@@ -29,14 +29,14 @@
                 <el-button icon="el-icon-share" @click="exportConfig" size="mini"  type="primary"  :disabled="running">导出配置<input type="file" ref="export" style="display: none"/></el-button>
         </el-row>
         <el-row style="text-align:right">
-                <el-button icon="el-icon-menu" @click="doip=true"   size="mini" type="primary"  :disabled="running">DOIP配置</el-button>
+                <el-button icon="el-icon-menu" @click="doip=true"   size="mini" type="warning"  :disabled="running">DOIP配置</el-button>
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
-        <div class="ttt">DOIP Basic Services:</div>
-        <DOIPBasic/>
-        <div class="ttt">DOIP UDS Services:</div>
-        <UDS/>
-        <Excute mode="can"/>
+        <div class="BasicTable">DOIP Basic Services:</div>
+        <DOIPBasic :index="0"/>
+        <div class="UDSTable">DOIP UDS Services:</div>
+        <UDS :index="1"/>
+        <Excute mode="doip"/>
         </div>
         
     </div>
@@ -119,10 +119,17 @@ export default {
 }
 </script>
 <style scoped>
-    .ttt{
+    .BasicTable{
       font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
       font-size: 20px;
-      color: darkgray;
+      color: #E6A23C;
+      padding: 10px;
+      margin: 10px;
+    }
+    .UDSTable{
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 20px;
+      color: #409EFF;
       padding: 10px;
       margin: 10px;
     }

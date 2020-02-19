@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-table stripe size="small" ref="table" row-key="date" border :data="udsTable" style="width: 100%;text-align: center">
+        <el-table stripe size="small" id="udstable" row-key="date" border :data="udsTable" style="width: 100%;text-align: center">
              <el-table-column prop="addr" label="地址" width="100">
                <template slot-scope="scope">
                   {{ scope.row.addr.name}}
@@ -91,9 +91,9 @@ export default {
     }
   },
   mounted () {
-    const table = document.querySelector('.el-table__body-wrapper tbody')
+    const table = document.querySelectorAll('.el-table__body-wrapper tbody')
     const self = this
-    this.sortable = Sortable.create(table, {
+    this.sortable = Sortable.create(table[this.index], {
       onEnd ({ newIndex, oldIndex }) {
         self.$store.commit('udsTableUpdate', [newIndex, oldIndex])
       }
@@ -104,6 +104,7 @@ export default {
       this.$store.commit('udsTableDelete', index)
     }
   },
+  props:['index'],
   computed: {
     udsTable: function () {
       return this.$store.state.udsTable

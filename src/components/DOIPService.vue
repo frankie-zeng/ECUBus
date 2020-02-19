@@ -97,7 +97,6 @@ export default {
       jsError: ''
     }
   },
-  props:['mode'],
   components: {
     Input
   },

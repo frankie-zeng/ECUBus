@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-table stripe size="small" ref="table" row-key="date" border :data="doipTable" style="width: 100%;text-align: center">
+        <el-table stripe size="small" ref="basictable" row-key="date" border :data="doipTable" style="width: 100%;text-align: center">
             <el-table-column prop="service" label="服务信息" width="300">
                <template slot-scope="scope">
                   {{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})
@@ -50,14 +50,15 @@ export default {
     }
   },
   mounted () {
-    const table = document.querySelector('.el-table__body-wrapper tbody')
+    const table = document.querySelectorAll('.el-table__body-wrapper tbody')
     const self = this
-    this.sortable = Sortable.create(table, {
+    this.sortable = Sortable.create(table[this.index], {
       onEnd ({ newIndex, oldIndex }) {
         self.$store.commit('doipTableUpdate', [newIndex, oldIndex])
       }
     })
   },
+  props:['index'],
   methods: {
     deleteService (index) {
       this.$store.commit('doipTableDelete', index)

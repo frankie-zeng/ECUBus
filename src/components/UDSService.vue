@@ -185,7 +185,7 @@ export default {
       if(this.mode==='can'){
         return this.$store.state.canTpMapTable
       }
-      else if(this.mode==='ip'){
+      else if(this.mode==='doip'){
         return this.$store.state.doipAddrTable
       }
       else{

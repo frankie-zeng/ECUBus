@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-row>
+        <el-row style="margin-top:10px;">
             <el-col :span="22" :offset="1" style="text-align:right">
                 Suppress Delay: <el-input v-model="sDelay" size="small" placeholder="请输入内容" style="width:80px"  maxlength="6"></el-input> ms,
 
@@ -60,10 +60,17 @@ export default {
   },
   computed: {
     connected: function () {
-      return this.$store.state.canConnect
+      if(this.mode==='can'){
+        return this.$store.state.canConnect
+      }else{
+        return true
+      }
     },
     udsTable: function () {
       return this.$store.state.udsTable
+    },
+    basicTable: function (){
+      return this.$store.state.doipTable
     },
     running: function () {
       return this.$store.state.running
@@ -101,12 +108,20 @@ export default {
       }
     },
     run () {
-      // this.$store.commit('runChange', true)
+      this.$store.commit('runChange', true)
       this.logText = ''
-      ipcRenderer.send(this.mode + 'udsExcute', {
-        udsTable: this.udsTable,
-        timeout: parseInt(this.udsTimeout, 10),
-        sDelay: parseInt(this.sDelay, 10) })
+      if(this.mode==='can'){
+        ipcRenderer.send(this.mode + 'udsExcute', {
+          udsTable: this.udsTable,
+          timeout: parseInt(this.udsTimeout, 10),
+          sDelay: parseInt(this.sDelay, 10) })
+      }else if(this.mode==='doip'){
+        ipcRenderer.send(this.mode + 'udsExcute', {
+          udsTable: this.udsTable,
+          basicTable: this.basicTable,
+          timeout: parseInt(this.udsTimeout, 10),
+          sDelay: parseInt(this.sDelay, 10) })
+      }
     }
   }
 
