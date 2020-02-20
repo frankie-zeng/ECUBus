@@ -121,8 +121,8 @@
 
 <script>
 const { ipcRenderer } = require("electron");
-import jslint from "./../JSLint/jslint.js";
-import report from "./../JSLint/report.js";
+import jslint from "./../../JSLint/jslint.js";
+import report from "./../../JSLint/report.js";
 export default {
   data() {
     return {

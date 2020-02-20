@@ -27,7 +27,7 @@
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
        
-        <serviceTable :index="0" mode="doip"/>
+        <serviceTable :index="0" mode="doip" @additem="uds=false"/>
         <Excute mode="doip"/>
         </div>
         
@@ -35,9 +35,9 @@
 </template>
 <script>
 import DOIPConnect from './../components/DOIPConnect.vue'
-import ADDService from './../components/addservice.vue'
+import ADDService from './../components/service/addservice.vue'
 import Excute from './../components/excute.vue'
-import serviceTable from './../components/serviceTable.vue'
+import serviceTable from './../components/service/serviceTable.vue'
 
 const { ipcRenderer } = require('electron')
 

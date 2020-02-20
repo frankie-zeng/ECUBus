@@ -2,14 +2,15 @@
     <div>
         <el-table size="small" ref="basictable" row-key="date" border :data="doipTable" style="width: 100%;text-align: center"
         :row-class-name="tableRowClassName">
-            <!-- <el-table-column prop="addr" label="地址" width="100">
-               <template slot-scope="scope">
-                  {{ scope.row.addr.name}}
-                </template>
-            </el-table-column> -->
+            
             <el-table-column prop="service" label="服务信息" width="300">
                <template slot-scope="scope">
                   {{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})
+                </template>
+            </el-table-column>
+            <el-table-column prop="addr" label="地址" width="100">
+               <template slot-scope="scope">
+                  {{ scope.row.addr.name}},SA:{{ scope.row.addr.sa}},TA:{{ scope.row.addr.ta}}
                 </template>
             </el-table-column>
            <el-table-column prop="payload" label="Payload" width="300">

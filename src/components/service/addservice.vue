@@ -6,8 +6,8 @@
         <el-radio-button label="doip" v-if="mode==='doip'">DOIP</el-radio-button>
       </el-radio-group>
     </div>
-    <div class="choose">
-    选择一个服务：<el-select
+    <div class="subheader">Serivce</div>
+    <el-select
         v-model="itemIndex"
         placeholder="请选择"
         class="choose"
@@ -21,8 +21,7 @@
           >0x{{ item.value.toString(16) }}</span>
         </el-option>
       </el-select>
-    </div>
-    选择一个地址：<div class="choose">
+    <div class="subheader">Address</div>
       <el-select
         v-model="addrIndex"
         placeholder="请选择"
@@ -36,7 +35,6 @@
           >SA:{{ item.sa}},TA:{{item.ta}}</span>
         </el-option>
       </el-select>
-    </div>
 
     <Service :config="config[type][itemIndex]" @additem="addItem" v-if="refresh" />
     
@@ -75,6 +73,7 @@ export default {
   methods: {
     addItem(val) {
       //console.log(val)
+      val.addr=this.addrTable[this.addrIndex]
       if (!this.addrTable[this.addrIndex]) {
         this.$message.error('请选择正确的地址')
         this.addrIndex = ''
@@ -85,6 +84,7 @@ export default {
       } else if (this.mode === "can") {
         this.$store.commit("canTableAdd", val);
       }
+      this.$emit('additem')
     },
     itemChange() {
       this.refresh = false;
@@ -99,5 +99,10 @@ export default {
 <style>
 .choose {
   margin-bottom: 20px;
+}
+.subheader {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-size: 25px;
+  margin-bottom: 10px;
 }
 </style>
