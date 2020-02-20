@@ -34,6 +34,8 @@ export default {
         param:[
             {
                 name:'SA',
+                readonly:true,
+                msg:'SA等于地址信息里的SA',
                 len:function(){
                     return [2,2]
                 }

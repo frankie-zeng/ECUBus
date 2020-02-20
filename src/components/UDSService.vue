@@ -12,6 +12,7 @@
           </div>
           <div class="file" v-if="itemInfo.file=='download'">
             <div>
+              文件大小：0x{{fileSize.toString(16)}}
               <el-upload
                  :auto-upload="false"
                 :limit="2"
@@ -327,23 +328,23 @@ export default {
           })
         }
 
-        if ((this.itemInfo.file === 'download') && (this.fileList.length > 0)) {
-          var size = this.fileSize.toString(16)
-          var len = parseInt((size.length + 1) / 2)
-          var mLen = len > item.param[3].value.length ? len : item.param[3].value.length
+        // if ((this.itemInfo.file === 'download') && (this.fileList.length > 0)) {
+        //   var size = this.fileSize.toString(16)
+        //   var len = parseInt((size.length + 1) / 2)
+        //   var mLen = len > item.param[3].value.length ? len : item.param[3].value.length
 
-          for (i = 0; i < len; i++) {
-            if (i === 0) {
-              item.param[3].value[mLen - 1] = size.slice(-2)
-            } else {
-              item.param[3].value[mLen - 1 - i] = size.slice(-2 * (i + 1), -2 * i)
-            }
-          }
-          var rawLen = parseInt(item.param[1].value[0], 16)
-          if (((rawLen & 0xf0) >> 4) < len) {
-            item.param[1].value[0] = ((rawLen & 0x0f) + (len * 16)).toString(16)
-          }
-        }
+        //   for (i = 0; i < len; i++) {
+        //     if (i === 0) {
+        //       item.param[3].value[mLen - 1] = size.slice(-2)
+        //     } else {
+        //       item.param[3].value[mLen - 1 - i] = size.slice(-2 * (i + 1), -2 * i)
+        //     }
+        //   }
+        //   var rawLen = parseInt(item.param[1].value[0], 16)
+        //   if (((rawLen & 0xf0) >> 4) < len) {
+        //     item.param[1].value[0] = ((rawLen & 0x0f) + (len * 16)).toString(16)
+        //   }
+        // }
       }
       for (var z in this.userParamData) {
         item.param.push({

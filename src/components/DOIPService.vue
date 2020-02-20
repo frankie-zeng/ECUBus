@@ -9,17 +9,30 @@
                         :key="item.value"
                         :label="item.name"
                         :value="item.value"
-                        :disabled="item.disabled">
+                        :disabled="item.disabled"
+                       >
                           <span style="float: left">{{ item.name }}</span>
                           <span style="float: right; color: #8492a6; font-size: 13px">0x{{ key }}</span>
                         </el-option>
                     </el-select>
             </el-row>
+            <el-row>
+                地址名字：
+                <el-select v-model="addrIndex" placeholder="请选择">
+                    <el-option
+                    v-for="(item, index) in tpTable"
+                    :key="index"
+                    :value="index"
+                    :label="item.name">
+                    </el-option>
+                </el-select>
+              </el-row>
               <el-row v-if="hasParam">
                 <div v-for="(item,index) in itemInfo.param"
                   :key="index">
                   <el-tag style="margin-bottom:10px;margin-top:10px">参数{{index+1}} {{item.name}}:</el-tag>
                   <Input :minLen="lenLimit[index][0]" :maxLen="lenLimit[index][1]" :index="index" @change="dataChange" :readonly="item.readonly?true:false"/>
+                  <span v-if="item.msg" style="font-size:14px;"><i class="el-icon-warning"></i>{{item.msg}}</span>
                 </div>
 
               </el-row>
@@ -108,6 +121,9 @@ export default {
     }
   },
   computed: {
+    tpTable: function () {
+      return this.$store.state.doipAddrTable
+    },
     connect: function () {
       return this.$store.state.ipConnect
     },
@@ -174,7 +190,13 @@ export default {
       this.userParamData[index].data.pop()
     },
     addService () {
+      if (!this.tpTable[this.addrIndex]) {
+        this.$message.error('请选择正确的地址')
+        this.addrIndex = ''
+        return
+      }
       var item = {}
+      item.addr = this.tpTable[this.addrIndex]
       item.service = {
         value: this.itemInfo.value,
         name: this.itemInfo.name
@@ -187,6 +209,10 @@ export default {
             value: JSON.parse(JSON.stringify(this.paramData[j]))
           })
         }
+      }
+      if(this.itemInfo.value===0X0005){
+        item.param[0].value[1]=(this.tpTable[this.addrIndex].SA&0xff).toString(16)
+        item.param[0].value[0]=((this.tpTable[this.addrIndex].SA&0xff00)>>8).toString(16)
       }
       for (var z in this.userParamData) {
         item.param.push({

@@ -9,10 +9,10 @@
             </el-form-item>
             <el-form-item required>
                 <el-col :span="10">
-                    <div>SA:</div><el-input style="width:250px" v-model="tpConfig.SA" placeholder="SA" maxlength="6" show-word-limit ></el-input>
+                    <div>SA:</div><el-input style="width:250px" v-model="tpConfig.SA" placeholder="SA" maxlength="5" show-word-limit ></el-input>
                 </el-col>
                 <el-col :span="10" :offset="1">
-                    <div>TA:</div><el-input  style="width:250px" v-model="tpConfig.TA" placeholder="TA" maxlength="6" show-word-limit></el-input>
+                    <div>TA:</div><el-input  style="width:250px" v-model="tpConfig.TA" placeholder="TA" maxlength="5" show-word-limit></el-input>
                 </el-col>
             </el-form-item>
             <el-form-item style="text-align:right">

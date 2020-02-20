@@ -84,29 +84,6 @@ export default {
         message: 'Excute failed'
       })
     },
-    step () {
-      window.clearTimeout(this.udsTimer)
-      if (this.udsTable[this.index]) {
-        if (this.mode === 'can') {
-          var err = ipcRenderer.sendSync('can-write', this.udsTable[this.index])
-        }
-        if (err.err !== 0) {
-          this.$notify.error({
-            title: 'Error',
-            message: err.msg
-          })
-        } else {
-          this.index += 1
-        }
-      } else {
-        this.$store.commit('runChange', false)
-        this.$notify({
-          title: 'success',
-          message: 'Excute success',
-          type: 'success'
-        })
-      }
-    },
     run () {
       this.$store.commit('runChange', true)
       this.logText = ''

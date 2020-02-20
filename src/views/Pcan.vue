@@ -26,6 +26,7 @@
         <el-row style="text-align:right">
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
+        <div class="UDSTable">DOCAN UDS Services:</div>
         <UDS :index="0"/>
         </div>
         <Excute mode="can"/>
@@ -115,6 +116,13 @@ export default {
 }
 </script>
 <style scoped>
+    .UDSTable{
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 20px;
+      color: #409EFF;
+      padding: 10px;
+      margin: 10px;
+    }
     .header{
         margin: 30px;
     }
