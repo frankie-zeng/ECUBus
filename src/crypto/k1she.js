@@ -2,7 +2,7 @@ const MP = require('./mp.js')
 const crypto = require('crypto')
 const aesCmac = require('node-aes-cmac').aesCmac;
 
-const KEY_UPDATE_ENC_C='010153484500800000000000000000B0'
+const KEY_UPDATE_ENC_C='010153484500800000000000000000b0'
 const KEY_UPDATE_MAC_C='010253484500800000000000000000B0'
 
 
@@ -17,9 +17,6 @@ function genM1M2M3(keyAuthId,keyAuthValue,keyId,keyValue,flag,cid,uid){
     var bM2=Buffer.alloc(32,0)
     var k1=KDF(keyAuthValue,Buffer.from(KEY_UPDATE_ENC_C,'hex'))
     var k2=KDF(keyAuthValue,Buffer.from(KEY_UPDATE_MAC_C,'hex'))
-    // var k1=Buffer.from('BF5A3AC8BF5A3AC8FE9D78E9FF251E7B','hex')
-    // var k2=Buffer.from('C75DA40BBF5A3AC8BF5A3AC8BF5A3AC8','hex')
-    // console.log(k1,k2)
     uid.copy(bM1)
     bM1[15]=(((keyId&0x0f)<<4)|(keyAuthId&0x0f))
     

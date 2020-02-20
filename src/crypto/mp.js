@@ -16,25 +16,20 @@ const bxor = function (bufferA, bufferB) {
     return output;
   }
 function MPCompress(value){
+    // var constPad=Buffer.from('80000000000000000000000000000100','hex')
+    // value=Buffer.concat([value,constPad])
     var l=value.length
+    //var bitlen=l&8
     var blkSize=16
     var nblk=parseInt((l+blkSize-1)/blkSize)
-    var outCur=Buffer.alloc(16,0xff)
-    var dblk
+    var outCur=Buffer.alloc(16,0)
     var xCur
     var outPre
     for(var i=0;i<nblk;i++){
         outPre=outCur
-        dblk=value.slice(i*blkSize,(i+1)*blkSize)
-        if(dblk.length<blkSize){
-            xCur=Buffer.concat([dblk,Buffer.alloc(blkSize-dblk.length).fill(0)],blkSize)
-        }else{
-            xCur=dblk
-        }
-        outCur=encrypt(outPre,dblk)
+        xCur=value.slice(i*blkSize,(i+1)*blkSize)
+        outCur=encrypt(outPre,xCur)
         outCur=bxor(outCur,bxor(xCur,outPre))
-        //outCur=bxor(outCur,xCur)
-        //outCur=bxor(outCur,outPre)
     }
     return outCur
 }

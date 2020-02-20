@@ -20,8 +20,8 @@
         </el-row>
         <div style="margin: 10px">
         <el-row style="text-align:right">
-                <el-button icon="el-icon-folder" @click="importConfig"  size="mini"  type="primary"  :disabled="running">导入配置<form ref="iform" style="display: none" ><input type="file" ref="import"  @change="previewFiles" accept="application/json"/></form></el-button>
-                <el-button icon="el-icon-share" @click="exportConfig" size="mini"  type="primary"  :disabled="running">导出配置<input type="file" ref="export" style="display: none"/></el-button>
+                <el-button icon="el-icon-folder" @click="importConfig"  size="mini"  type="info"  :disabled="running">导入配置<form ref="iform" style="display: none" ><input type="file" ref="import"  @change="previewFiles" accept="application/json"/></form></el-button>
+                <el-button icon="el-icon-share" @click="exportConfig" size="mini"  type="info"  :disabled="running">导出配置<input type="file" ref="export" style="display: none"/></el-button>
         </el-row>
         <el-row style="text-align:right">
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
