@@ -3,7 +3,7 @@ const os = require('os')
 const dgram = require('dgram')
 const net = require('net')
 const { ipcMain } = require('electron')
-
+const sprintf = require('sprintf-js').sprintf
 const PORT = 13400
 const VER =0x02
 
@@ -11,30 +11,40 @@ class IPUDS {
     constructor(win){
         this.win=win
         this.header=Buffer.from([VER,VER^0xff,0,0,0,0,0,0])
-
+        this.timeout=2000
+        this.sDelay=100
         this.udpFd=dgram.createSocket('udp4')
-        this.udpFd.bind(PORT)
-        this.udpFd.on('message',(msg, rinfo)=>{
-            console.log(msg)
-            var ret=this.parseData(msg)
-            ret.addr=rinfo
-            this.emit('ipAnnounce',ret)
-        })
+        this.cMap={}
         this.typeList=[0,1,2,3,4,5,6,7,8,0x4001,0x4002,0x4003,0x4004,0x8001,0x8002,0x8003]
         this.clientTypeList=[0,4,6,7,0x4002,0x4004,0x8002,0x8003]
-        ipcMain.on('ip-interface', (event, arg) => {
-            event.returnValue =os.networkInterfaces()
-        })
-        ipcMain.on('ip-bind',(event,arg)=>{
-            this.udpFd.close()
-            this.udpFd=dgram.createSocket('udp4')
-            this.udpFd.bind(PORT,arg)
-            this.udpFd.on('message',(msg, rinfo)=>{
-                console.log(msg)
-                var ret=this.parseData(msg)
-                ret.addr=rinfo
-                this.emit('ipAnnounce',ret)
-            })
+        // ipcMain.on('ip-interface', (event, arg) => {
+        //     event.returnValue =os.networkInterfaces()
+        // })
+        // ipcMain.on('ip-bind',(event,arg)=>{
+        //     this.udpFd.close()
+        //     this.udpFd=dgram.createSocket('udp4')
+        //     this.udpFd.bind(PORT,arg)
+        //     this.udpFd.on('message',(msg, rinfo)=>{
+        //         console.log(msg)
+        //         var ret=this.parseData(msg)
+        //         ret.addr=rinfo
+        //         this.emit('ipAnnounce',ret)
+        //     })
+        // })
+        ipcMain.on('doipudsExcute',(event,arg)=>{
+            var udsTable=arg.udsTable
+            var basicTable=arg.basicTable
+            var i,addr
+            var rawdata
+            this.timeout=arg.timeout
+            this.sDelay=arg.sDelay
+            /* parse basictable */
+            for( i in basicTable){
+                addr=basicTable[i].addr
+                
+            }
+
+            
         })
         ipcMain.on('ip-refresh',(event,arg)=>{
             var msg
@@ -98,6 +108,36 @@ class IPUDS {
                 })
             })
         })
+
+    }
+    step(uds,item){
+       var multiaddress=item.addr.multicast
+       var sa=item.addr.sa
+       var ta=item.addr.ta
+       var rawdata=[]
+      
+       var i,j,val
+       var type=item.service.value
+       if(uds){
+            /*uds frame*/
+       }else{
+           /*basic frame*/
+            for (i in item.param) {
+                for (j in item.param[i].value) {
+                    val = parseInt(item.param[i].value[j], 16)
+                    rawdata.push(isNaN(val) ? 0 : val)
+                }
+            }
+        }
+        this.header.writeUInt32BE(rawdata.length,type)
+        var rawBuf=Buffer.from(rawdata)
+        var buf=Buffer.concat([this.header,rawBuf])
+        if((type>4)&&(type<9)){
+            /*TCP_DATA*/
+        }else{
+            /*UDP_DATA*/
+        }
+        
 
     }
     emit(channel,msg){
