@@ -117,7 +117,30 @@ ipcMain.on('openFile', (event, arg) => {
 })
 
 ipcMain.on('saveFile', (event, arg) => {
-  event.returnValue = dialog.showSaveDialogSync(null)
+  var path=''
+  var file = dialog.showSaveDialogSync(win)
+  if(typeof file ==="string"){
+    path=file
+  }
+  event.returnValue = path
+})
+
+ipcMain.on('downloadFile', (event, arg) => {
+  var file = dialog.showOpenDialogSync(win,{
+    filters: [
+      { name: 'JSON', extensions: ['json'] },
+    ],
+  })
+  var size = 0
+  var path = ''
+  if(Array.isArray(file)){
+    path=file[0]
+    size=fs.statSync(file[0]).size
+  }
+  event.returnValue={
+    path:path,
+    size:size
+  }
 })
 
 ipcMain.on('k1SHEGen', (event, arg) => {

@@ -125,11 +125,6 @@ export default {
     margin: 5px;
 
   }
-  .el-table .uds {
-      font-weight: bold;
-      font-size: 14px;
-  }
-
   .el-table .doip {
     background: #F56C6C;
   }

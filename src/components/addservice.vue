@@ -7,7 +7,7 @@
       </el-radio-group>
     </div>
     <div class="choose">
-      <el-select
+    选择一个服务：<el-select
         v-model="itemIndex"
         placeholder="请选择"
         class="choose"
@@ -19,6 +19,21 @@
           <span
             style="float: right; color: #8492a6; font-size: 13px"
           >0x{{ item.value.toString(16) }}</span>
+        </el-option>
+      </el-select>
+    </div>
+    选择一个地址：<div class="choose">
+      <el-select
+        v-model="addrIndex"
+        placeholder="请选择"
+        class="choose"
+        style="width:100%"
+      >
+        <el-option v-for="(item,key) in addrTable" :key="key" :label="item.name" :value="key">
+          <span style="float: left">{{ item.name }}</span>
+          <span
+            style="float: right; color: #8492a6; font-size: 13px"
+          >SA:{{ item.sa}},TA:{{item.ta}}</span>
         </el-option>
       </el-select>
     </div>
@@ -42,12 +57,29 @@ export default {
       type: "uds",
       itemIndex: 0,
       refresh: true,
+      addrIndex:''
     };
   },
   props: ["mode"],
+  computed:{
+      addrTable:function(){
+           if (this.mode === "doip") {
+               return this.$store.state.doipAddrTable
+           }else if(this.mode==='can'){
+               return this.$store.state.canAddrTable
+           }else{
+               return []
+           }
+      }
+  },
   methods: {
     addItem(val) {
       //console.log(val)
+      if (!this.addrTable[this.addrIndex]) {
+        this.$message.error('请选择正确的地址')
+        this.addrIndex = ''
+        return
+      }
       if (this.mode === "doip") {
         this.$store.commit("doipTableAdd", val);
       } else if (this.mode === "can") {
