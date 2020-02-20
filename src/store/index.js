@@ -7,7 +7,7 @@ export default new Vuex.Store({
   state: {
     canConnect: false,
     canTpMapTable: [],
-    udsTable: [],
+    canTable: [],
     doipTable: [],
     doipAddrTable: [],
     running: false,
@@ -44,20 +44,20 @@ export default new Vuex.Store({
     canTpMapLoad (state, data) {
       state.canTpMapTable = data
     },
-    /*uds table*/
-    udsTableUpdate (state, index) {
-      const targetRow = state.udsTable.splice(index[1], 1)[0]
-      state.udsTable.splice(index[0], 0, targetRow)
+    /*can table*/
+    canTableUpdate (state, index) {
+      const targetRow = state.canTable.splice(index[1], 1)[0]
+      state.canTable.splice(index[0], 0, targetRow)
     },
-    udsTableAdd (state, item) {
+    canTableAdd (state, item) {
       item.date = new Date().getTime()
-      state.udsTable.push(item)
+      state.canTable.push(item)
     },
-    udsTableDelete (state, index) {
-      state.udsTable.splice(index, 1)
+    canTableDelete (state, index) {
+      state.canTable.splice(index, 1)
     },
-    udsTableLoad (state, data) {
-      state.udsTable = data
+    canTableLoad (state, data) {
+      state.canTable = data
     },
     /*doip table*/
     doipTableUpdate (state, index) {

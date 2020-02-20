@@ -5,15 +5,10 @@
                     <DOIPConnect/>
                 </div>
             </el-dialog>
-        <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
-                <div class="connect">
-                    <UDSService @addDone="uds=false" mode="doip"/>
-                </div>
-            </el-dialog>
-          <el-dialog title="添加一个DOIP服务" :visible.sync="doip"  width="80%">
-              <div class="connect">
-                  <DOIPService @addDone="doip=false"/>
-              </div>
+          <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
+            <div class="connect">
+                <ADDService @addDone="uds=false" mode="doip"/>
+            </div>
           </el-dialog>
         <el-row style="margin:0px">
             <el-col :span="12">
@@ -29,13 +24,10 @@
                 <el-button icon="el-icon-share" @click="exportConfig" size="mini"  type="info"  :disabled="running">导出配置<input type="file" ref="export" style="display: none"/></el-button>
         </el-row>
         <el-row style="text-align:right">
-                <el-button icon="el-icon-menu" @click="doip=true"   size="mini" type="warning"  :disabled="running">DOIP配置</el-button>
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
-        <div class="BasicTable">DOIP Basic Services:</div>
-        <DOIPBasic :index="0"/>
-        <div class="UDSTable">DOIP UDS Services:</div>
-        <UDS :index="1"/>
+       
+        <serviceTable :index="0" mode="doip"/>
         <Excute mode="doip"/>
         </div>
         
@@ -43,22 +35,18 @@
 </template>
 <script>
 import DOIPConnect from './../components/DOIPConnect.vue'
-import UDSService from './../components/UDSService.vue'
-import DOIPService from './../components/DOIPService.vue'
-import UDS from './../components/UDS.vue'
+import ADDService from './../components/addservice.vue'
 import Excute from './../components/excute.vue'
-import DOIPBasic from './../components/DOIPBasic.vue'
+import serviceTable from './../components/serviceTable.vue'
 
 const { ipcRenderer } = require('electron')
 
 export default {
   components: {
     DOIPConnect,
-    UDSService,
-    UDS,
     Excute,
-    DOIPBasic,
-    DOIPService
+    serviceTable,
+    ADDService
   },
   data: function () {
     return {
