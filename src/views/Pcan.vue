@@ -7,7 +7,7 @@
             </el-dialog>
         <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
                 <div class="connect">
-                    <UDSService @addDone="uds=false"  mode="can"/>
+                    <ADDService @additem="uds=false" mode="can"/>
                 </div>
             </el-dialog>
         <el-row style="margin:0px">
@@ -26,26 +26,25 @@
         <el-row style="text-align:right">
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
-        <div class="UDSTable">DOCAN UDS Services:</div>
-        <UDS :index="0"/>
+        <serviceTable  mode="can" />
         </div>
         <Excute mode="can"/>
     </div>
 </template>
 <script>
-import PConnect from './../components/PCANConnect.vue'
-import UDSService from './../components/UDSService.vue'
-import UDS from './../components/UDS.vue'
+import PConnect from './../components/connect/PCANConnect.vue'
+import ADDService from './../components/service/addservice.vue'
 import Excute from './../components/excute.vue'
+import serviceTable from './../components/service/serviceTable.vue'
 
 const { ipcRenderer } = require('electron')
 
 export default {
   components: {
     PConnect,
-    UDSService,
-    UDS,
-    Excute
+    Excute,
+    serviceTable,
+    ADDService
   },
   data: function () {
     return {

@@ -7,7 +7,7 @@
             </el-dialog>
           <el-dialog title="添加一个UDS服务" :visible.sync="uds"  width="80%">
             <div class="connect">
-                <ADDService @addDone="uds=false" mode="doip"/>
+                <ADDService @additem="uds=false" mode="doip"/>
             </div>
           </el-dialog>
         <el-row style="margin:0px">
@@ -27,7 +27,7 @@
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
         </el-row>
        
-        <serviceTable :index="0" mode="doip" @additem="uds=false"/>
+        <serviceTable mode="doip"/>
         <Excute mode="doip"/>
         </div>
         
@@ -59,14 +59,11 @@ export default {
     doipAddrTable: function () {
       return this.$store.state.doipAddrTable
     },
-    udsTable: function () {
-      return this.$store.state.udsTable
+    doipTable: function () {
+      return this.$store.state.doipTable
     },
     running: function () {
       return this.$store.state.running
-    },
-    doipTable: function () {
-      return this.$store.state.doipTable
     },
   },
   methods: {
@@ -78,8 +75,7 @@ export default {
       var output = {
         'mode': 'doip',
         'addr': this.doipAddrTable,
-        'uds': this.udsTable,
-        'basic': this.doipTable
+        'uds': this.doipTable,
       }
 
       var element = document.createElement('a')
@@ -98,29 +94,14 @@ export default {
       this.$refs.iform.reset()
       var data = JSON.parse(ipcRenderer.sendSync('openFile', filePath).toString())
       if(data.mode==='doip'){
-        this.$store.commit('doipAddrMapLoad', data.addr)
-        this.$store.commit('udsTableLoad', data.uds)
-        this.$store.commit('doipTableLoad', data.basic)
+        this.$store.commit('doipAddrLoad', data.addr)
+        this.$store.commit('doipTableLoad', data.uds)
       }
     }
   }
 }
 </script>
 <style scoped>
-    .BasicTable{
-      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-      font-size: 20px;
-      color: #E6A23C;
-      padding: 10px;
-      margin: 10px;
-    }
-    .UDSTable{
-      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-      font-size: 20px;
-      color: #409EFF;
-      padding: 10px;
-      margin: 10px;
-    }
     .header{
         margin: 30px;
     }

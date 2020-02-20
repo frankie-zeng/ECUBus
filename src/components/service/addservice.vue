@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <el-radio-group v-model="type" class="choose" @change="itemChange">
+      <el-radio-group v-model="type" class="choose" @change="itemChange1">
         <el-radio-button label="uds">UDS</el-radio-button>
         <el-radio-button label="doip" v-if="mode==='doip'">DOIP</el-radio-button>
       </el-radio-group>
@@ -32,7 +32,7 @@
           <span style="float: left">{{ item.name }}</span>
           <span
             style="float: right; color: #8492a6; font-size: 13px"
-          >SA:{{ item.sa}},TA:{{item.ta}}</span>
+          >SA:{{ item.SA}},TA:{{item.TA}}</span>
         </el-option>
       </el-select>
 
@@ -73,18 +73,23 @@ export default {
   methods: {
     addItem(val) {
       //console.log(val)
-      val.addr=this.addrTable[this.addrIndex]
+      var item=JSON.parse(JSON.stringify(val))
+      item.addr=this.addrTable[this.addrIndex]
       if (!this.addrTable[this.addrIndex]) {
         this.$message.error('请选择正确的地址')
         this.addrIndex = ''
         return
       }
       if (this.mode === "doip") {
-        this.$store.commit("doipTableAdd", val);
+        this.$store.commit("doipTableAdd", item);
       } else if (this.mode === "can") {
-        this.$store.commit("canTableAdd", val);
+        this.$store.commit("canTableAdd", item);
       }
       this.$emit('additem')
+    },
+    itemChange1(){
+      this.itemIndex=''
+      this.itemChange()
     },
     itemChange() {
       this.refresh = false;

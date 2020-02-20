@@ -6,23 +6,27 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     canConnect: false,
-    canTpMapTable: [],
+    doipConnect: false,
+    /*addr*/
+    canAddrTable: [],
+    doipAddrTable: [],
+    /* service */
     canTable: [],
     doipTable: [],
-    doipAddrTable: [],
+
     running: false,
-    ipConnect: false,
 
   },
   mutations: {
     runChange (state, run) {
       state.running = run
     },
+    /* connect*/
     canChange (state, connect) {
       state.canConnect = connect
     },
-    ipChange (state, connect) {
-      state.ipConnect = connect
+    doipChange (state, connect) {
+      state.doipConnect = connect
     },
     /* doip addr table */
     doipAddrAdd (state, item) {
@@ -31,18 +35,18 @@ export default new Vuex.Store({
     doipAddrDelete (state, index) {
       state.doipAddrTable.splice(index, 1)
     },
-    doipAddrMapLoad (state, data) {
+    doipAddrLoad (state, data) {
       state.doipAddrTable = data
     },
     /* can addr table */
-    canTpMapAdd (state, item) {
-      state.canTpMapTable.push(item)
+    canAddrAdd (state, item) {
+      state.canAddrTable.push(item)
     },
-    canTpMapDelete (state, index) {
-      state.canTpMapTable.splice(index, 1)
+    canAddrDelete (state, index) {
+      state.canAddrTable.splice(index, 1)
     },
-    canTpMapLoad (state, data) {
-      state.canTpMapTable = data
+    canAddrLoad (state, data) {
+      state.canAddrTable = data
     },
     /*can table*/
     canTableUpdate (state, index) {

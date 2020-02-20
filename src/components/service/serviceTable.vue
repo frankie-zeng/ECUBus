@@ -1,7 +1,6 @@
 <template>
     <div>
-        <el-table size="small" ref="basictable" row-key="date" border :data="doipTable" style="width: 100%;text-align: center"
-        :row-class-name="tableRowClassName">
+        <el-table size="small" ref="basictable" row-key="date" border :data="doipTable" style="width: 100%;text-align: center">
             
             <el-table-column prop="service" label="服务信息" width="300">
                <template slot-scope="scope">
@@ -10,7 +9,8 @@
             </el-table-column>
             <el-table-column prop="addr" label="地址" width="100">
                <template slot-scope="scope">
-                  {{ scope.row.addr.name}},SA:{{ scope.row.addr.sa}},TA:{{ scope.row.addr.ta}}
+                  <div><el-tag size="mini">SA</el-tag> : {{ scope.row.addr.SA}}</div>
+                  <div><el-tag size="mini">TA</el-tag> : {{ scope.row.addr.TA}}</div>
                 </template>
             </el-table-column>
            <el-table-column prop="payload" label="Payload" width="300">
@@ -72,15 +72,22 @@ export default {
     }
   },
   mounted () {
-    const table = document.querySelectorAll('.el-table__body-wrapper tbody')
+    const table = document.querySelector('.el-table__body-wrapper tbody')
     const self = this
-    this.sortable = Sortable.create(table[this.index], {
+    this.sortable = Sortable.create(table, {
       onEnd ({ newIndex, oldIndex }) {
-        self.$store.commit('doipTableUpdate', [newIndex, oldIndex])
+        if(this.mode==='can'){
+           self.$store.commit('canTableUpdate', [newIndex, oldIndex])
+        }else if(this.mode==='doip'){
+          self.$store.commit('doipTableUpdate', [newIndex, oldIndex])
+        }else{
+          return
+        }
+       
       }
     })
   },
-  props:['index','mode'],
+  props:['mode'],
   methods: {
     deleteService (index) {
         if(this.mode==='doip'){
@@ -90,15 +97,6 @@ export default {
         }else{
             return 
         }
-    },
-    // eslint-disable-next-line no-unused-vars
-    tableRowClassName({row, rowIndex}) {
-        if (row.type === 'uds') {
-            return 'uds';
-        } else if (row.type==='doip') {
-            return 'doip';
-        }
-        return '';
     },
   },
   computed: {
