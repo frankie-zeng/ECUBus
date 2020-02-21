@@ -13,148 +13,112 @@ class IPUDS {
         this.header=Buffer.from([VER,VER^0xff,0,0,0,0,0,0])
         this.timeout=2000
         this.sDelay=100
-        this.udpFd=dgram.createSocket('udp4')
         this.cMap={}
         this.typeList=[0,1,2,3,4,5,6,7,8,0x4001,0x4002,0x4003,0x4004,0x8001,0x8002,0x8003]
         this.clientTypeList=[0,4,6,7,0x4002,0x4004,0x8002,0x8003]
-        // ipcMain.on('ip-interface', (event, arg) => {
-        //     event.returnValue =os.networkInterfaces()
-        // })
-        // ipcMain.on('ip-bind',(event,arg)=>{
-        //     this.udpFd.close()
-        //     this.udpFd=dgram.createSocket('udp4')
-        //     this.udpFd.bind(PORT,arg)
-        //     this.udpFd.on('message',(msg, rinfo)=>{
-        //         console.log(msg)
-        //         var ret=this.parseData(msg)
-        //         ret.addr=rinfo
-        //         this.emit('ipAnnounce',ret)
-        //     })
-        // })
-        ipcMain.on('doipudsExcute',(event,arg)=>{
-            var udsTable=arg.udsTable
-            var basicTable=arg.basicTable
-            var i,addr
-            var rawdata
-            this.timeout=arg.timeout
-            this.sDelay=arg.sDelay
-            /* parse basictable */
-            for( i in basicTable){
-                addr=basicTable[i].addr
-                
-            }
-
-            
-        })
-        ipcMain.on('ip-refresh',(event,arg)=>{
-            var msg
-            if(arg.vin){
-                msg=this.writeReqVIN((x)=>{return x},arg.vin)
-            }else if(arg.eid){
-                msg=this.writeReqEID((x)=>{return x},arg.eid)
-            }else{
-                msg=this.writeReqMsg((x)=>{return x})
-            }
-            this.udpFd.send(msg,PORT+1,arg.multiaddress)
-        })
-        ipcMain.on('ip-deactive',(event,arg)=>{
-            this.tcpFd.destroy()
-        })
-        ipcMain.on('ip-active',(event,arg)=>{
-            var target =arg[0]
-            var active =arg[1]
-            this.tcpFd=net.createConnection(PORT,target.ip,()=>{
-                // this.emit('tcpEvent',{
-                //     err: 0,
-                //     msg:'Connect ok'
-                // })
-                var msg=this.writeRouteActive((x)=>{return x},active.sa,active.type,active.oem)
-                this.tcpFd.write(msg,()=>{
-                    this.tcpTimeout=setTimeout(() => {
-                        this.tcpFd.destroy()
-                        this.emit('tcpActive',{
-                        err: -1,
-                        msg:'Timeout wait active rounter response'
-                    })
-                    }, 2000);
-                })
-                
-            })
-            this.tcpFd.on('data',(msg)=>{
-                var ret=this.parseData(msg)
-                // this.emit('tcpData',ret)
-                if(ret.err===0){
-                    if(ret.type===0x0006){
-                        clearTimeout(this.tcpTimeout)
-                        this.emit('tcpActive',{
-                            err:0,
-                            msg:'Receive a active rounter response',
-                            data:ret.data
-                        })
-                    }
+        this.udpFd=dgram.createSocket('udp4')
+        this.udpFd.on('message',(msg, rinfo)=>{
+            var ret=this.parseData(msg)
+            if(ret.err===0){
+                if(ret.type===4){
+                    this.emit('doipDeviceFound',[ret.data,rinfo])
                 }
-                console.log(ret)
-            })
-            this.tcpFd.on('end',()=>{
-                this.emit('tcpActive',{
+            }
+        })
+        ipcMain.on('doipTcpDisconnect',(event,arg) => {
+            var key=arg.SA.toString()+arg.TA.toString()
+            clearTimeout(this.cMap[key].timer)
+            this.cMap[key].fd.destroy()
+            delete this.cMap[key]
+        })
+        ipcMain.on('doipTcpDisconnectWithKey',(event,arg) => {
+            var key=arg
+            clearTimeout(this.cMap[key].timer)
+            this.cMap[key].fd.destroy()
+            delete this.cMap[key]
+        })
+        ipcMain.on('doipTcpConnect',(event,arg) => {
+            var target=arg[0]
+            var active=arg[1]
+            var key=active.sa+target.logicalAddr
+            if(key in this.cMap){
+                this.emit('doipTcpStatus',{
+                    key:key,
                     err:-1,
-                    msg:'Disconnected from server'
+                    msg:'此连接已就存在'}
+                )
+            }else{
+                var item={}
+                this.cMap[key]=item
+                item.fd=net.createConnection(PORT,target.ip,()=>{
+                    item.active=false
+                    var msg=this.writeRouteActive(parseInt(active.sa),parseInt(active.activeType),active.option)
+                    item.fd.write(msg,()=>{
+                        item.timer=setTimeout(() => {
+                            item.fd.destroy()
+                            delete this.cMap[key]
+                            this.emit('doipTcpStatus',{
+                                key:key,
+                                err:-1,
+                                msg:'等待Active Response超时'}
+                            )
+                        }, active.timeout);
+                    })
                 })
-            })
-            this.tcpFd.on('error',(err)=>{
-                this.emit('tcpActive',{
-                    err:-2,
-                    msg:'Connect refused from server'
+                item.fd.on('error',(msg)=>{
+                    clearTimeout(item.timer)
+                    delete this.cMap[key]
+                    this.emit('doipTcpStatus',{
+                        key:key,
+                        err:-1,
+                        msg:'连接发生错误'}
+                    )
                 })
-            })
-        })
-
-    }
-    step(uds,item){
-       var multiaddress=item.addr.multicast
-       var sa=item.addr.sa
-       var ta=item.addr.ta
-       var rawdata=[]
-      
-       var i,j,val
-       var type=item.service.value
-       if(uds){
-            /*uds frame*/
-       }else{
-           /*basic frame*/
-            for (i in item.param) {
-                for (j in item.param[i].value) {
-                    val = parseInt(item.param[i].value[j], 16)
-                    rawdata.push(isNaN(val) ? 0 : val)
-                }
+                item.fd.on('end',(msg)=>{
+                    clearTimeout(item.timer)
+                    delete this.cMap[key]
+                    this.emit('doipTcpStatus',{
+                        key:key,
+                        err:-1,
+                        msg:'服务端断开连接'}
+                    )
+                })
+                item.fd.on('data',(msg)=>{
+                    clearTimeout(item.timer)
+                    var ret=this.parseData(msg)
+                    if(ret.err===0){
+                        if(ret.type===6){
+                            if(item.active===false){
+                                item.active=true
+                                this.emit('doipTcpStatus',{
+                                    key:key,
+                                    err:0,
+                                    msg:'激活成功',
+                                    data:ret.data}
+                                )
+                            }
+                        }
+                    }
+                })
             }
-        }
-        this.header.writeUInt32BE(rawdata.length,type)
-        var rawBuf=Buffer.from(rawdata)
-        var buf=Buffer.concat([this.header,rawBuf])
-        if((type>4)&&(type<9)){
-            /*TCP_DATA*/
-        }else{
-            /*UDP_DATA*/
-        }
-        
+        })
+        ipcMain.on('doipDeviceFind',(event,arg)=>{
+            
+            var msg
+            if(arg.type==='NULL'){
+                msg=this.writeReqNULL()
+            }else if(arg.type==='EID'){
+                msg=this.writeReqEID(Buffer.from(arg.eid,'hex'))
+            }else{
+                msg=this.writeReqVIN(Buffer.from(arg.vin,'ascii'))
+            }
+            this.udpFd.send(msg,PORT,arg.multicast)
+        })
+       
 
     }
     emit(channel,msg){
         this.win.webContents.send(channel, msg)
-    }
-    udpBind(address){
-        this.udpFd.bind(PORT,address)
-        this.udpFd.on('listening',()=>{
-            this.emit('ipEvnet',{
-                err:0,
-                msg:'bind ok!\r\n'
-            })
-        })
-        this.udpFd.on('message',(event,arg)=>{
-            var msg=this.writeReqMsg((x)=>{return x})
-            this.udpFd.send(msg,13400,)
-        })
     }
     parseData(msg){
         /*header handler*/
@@ -238,41 +202,36 @@ class IPUDS {
     changeType(type){
         this.header.writeUInt16BE(type,2)
     }
-    writeNACK(writer,code){
-        this.changeLen(1)
-        this.changeType(0)
-        return writer(Buffer.concat([this.header,Buffer.from([code])],this.header.length+1))
-    }
-    writeReqMsg(writer){
+    writeReqNULL(){
         this.changeLen(0)
         this.changeType(1)
-        return writer(this.header)
+        return this.header
     }
-    writeReqEID(writer,eid){
+    writeReqEID(eid){
         this.changeLen(6)
         this.changeType(2)
-        return writer(Buffer.concat([this.header,Buffer.from(eid,'binary')],this.header.length+6))
+        return Buffer.concat([this.header,Buffer.from(eid,'binary')],this.header.length+6)
     }
-    writeReqVIN(writer,vin){
+    writeReqVIN(vin){
         this.changeLen(17)
         this.changeType(3)
-        return writer(Buffer.concat([this.header,Buffer.from(vin,'ascii')],this.header.length+17))
+        return Buffer.concat([this.header,Buffer.from(vin,'ascii')],this.header.length+17)
     }
-    writeRouteActive(writer,sa,activeType,option){
+    writeRouteActive(sa,activeType,option){
         var len=0
-        if(typeof option!==undefined){
-            len=option.length
+        if(option!==''){
+            len=4
         }
         this.changeLen(7+len)
         this.changeType(5)
         var b=Buffer.alloc(7+len,0)
         if(len>0){
-            Buffer.from(option,'binary').copy(b,7)
+            Buffer.from(option,'hex').copy(b,7)
         }
         
         b.writeUInt16BE(sa,0)
         b.writeUInt8(activeType,2)
-        return writer(Buffer.concat([this.header,b],this.header.length+b.length))
+        return Buffer.concat([this.header,b],this.header.length+b.length)
     }
     writeReqAlive(writer){
         this.changeLen(0)

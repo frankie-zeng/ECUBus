@@ -15,7 +15,7 @@
                  <el-page-header @back="goBack" content="DOIP UDS"  class="header" ></el-page-header>
             </el-col>
             <el-col :span="11"  class="setup">
-                <el-button icon="el-icon-setting" @click="cd=true" class="setup" type="info" circle ></el-button>
+                <el-button icon="el-icon-setting" @click="cd=true" :class="[connected?'el-button--success':'el-button--danger']"  circle ></el-button>
             </el-col>
         </el-row>
         <div style="margin: 10px">
@@ -34,7 +34,7 @@
     </div>
 </template>
 <script>
-import DOIPConnect from './../components/DOIPConnect.vue'
+import DOIPConnect from './../components/connect/DOIPConnect.vue'
 import ADDService from './../components/service/addservice.vue'
 import Excute from './../components/excute.vue'
 import serviceTable from './../components/service/serviceTable.vue'
@@ -65,6 +65,9 @@ export default {
     running: function () {
       return this.$store.state.running
     },
+    connected: function () {
+      return this.$store.state.doipConnect
+    }
   },
   methods: {
     goBack () {
