@@ -198,6 +198,8 @@ export default {
             name: this.config.name,
             value: this.config.value
           };
+          data.suppress=false
+          data.payload={}
           for (var i in this.config.input) {
             if (this.config.input[i].type === "downloadFile") {
               if (this.filePath === "") {
@@ -212,9 +214,21 @@ export default {
                 filePath: this.filePath,
                 fileSize: this.fileSize
               };
+            } else if(this.config.input[i].type === "subfunction") {
+              if(this.inputData.suppress){
+                data.suppress=true
+              }
+              data.payload.subFunction=[parseInt(this.inputData.subFunction)]
+            } else{
+              if(this.inputData[this.config.input[i].name]&&this.inputData[this.config.input[i].name]!=''){
+                var buf=Buffer.from(this.inputData[this.config.input[i].name],'hex')
+                data.payload[this.config.input[i].name]=[...buf]
+              }else{
+                data.payload[this.config.input[i].name]=[]
+              }
             }
-            data.payload = this.inputData;
-          }
+            // data.payload = this.inputData;
+          } 
           // console.log(data)
           this.$emit("additem", data);
         }

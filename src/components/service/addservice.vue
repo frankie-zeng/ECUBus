@@ -3,7 +3,7 @@
     <div>
       <el-radio-group v-model="type" class="choose" @change="itemChange1">
         <el-radio-button label="uds">UDS</el-radio-button>
-        <el-radio-button label="doip" v-if="mode==='doip'">DOIP</el-radio-button>
+        <!-- <el-radio-button label="doip" v-if="mode==='doip'">DOIP</el-radio-button> -->
       </el-radio-group>
     </div>
     <div class="subheader">Serivce</div>

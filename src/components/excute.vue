@@ -28,27 +28,20 @@ export default {
     }
   },
   mounted () {
-    ipcRenderer.on('udsEvent', (event, val) => {
-      if (val.err === 1) {
-        this.$store.commit('runChange', false)
-        this.$notify({
-          title: 'Success',
-          message: 'Done!',
-          type: 'success'
-        })
-      }
-      if (val.err < 0) {
-        this.$store.commit('runChange', false)
-        this.$notify.error({
-          title: 'Error',
-          message: 'Excute failed,see log window for error'
-        })
-      }
-      this.logText += val.msg
+    ipcRenderer.on('udsEnd', (event, val) => {
+      console.log(val)
+    })
+    ipcRenderer.on('udsData', (event, val) => {
+      console.log(val)
+    })
+    ipcRenderer.on('udsError', (event, val) => {
+      console.log(val)
     })
   },
   destroyed () {
-    ipcRenderer.removeAllListeners('udsEvent')
+    ipcRenderer.removeAllListeners('udsEnd')
+    ipcRenderer.removeAllListeners('udsData')
+    ipcRenderer.removeAllListeners('udsError')
   },
   props: {
     mode: {
@@ -62,43 +55,42 @@ export default {
     connected: function () {
       if(this.mode==='can'){
         return this.$store.state.canConnect
+      }else if(this.mode==='doip'){
+        return this.$store.state.doipConnect
       }else{
-        return true
+        return false
       }
     },
     udsTable: function () {
-      return this.$store.state.udsTable
-    },
-    basicTable: function (){
-      return this.$store.state.doipTable
+      if(this.mode==='can'){
+        return this.$store.state.canTable
+      }else if(this.mode==='doip'){
+        return this.$store.state.doipTable
+      }else{
+        return []
+      }
     },
     running: function () {
       return this.$store.state.running
     }
   },
   methods: {
-    failed () {
+    failed (msg) {
       this.$store.commit('runChange', false)
       this.$notify.error({
         title: 'Error',
-        message: 'Excute failed'
+        message: msg
       })
     },
     run () {
+      // console.log(this.udsTable)
       this.$store.commit('runChange', true)
       this.logText = ''
-      if(this.mode==='can'){
-        ipcRenderer.send(this.mode + 'udsExcute', {
-          udsTable: this.udsTable,
-          timeout: parseInt(this.udsTimeout, 10),
-          sDelay: parseInt(this.sDelay, 10) })
-      }else if(this.mode==='doip'){
-        ipcRenderer.send(this.mode + 'udsExcute', {
-          udsTable: this.udsTable,
-          basicTable: this.basicTable,
-          timeout: parseInt(this.udsTimeout, 10),
-          sDelay: parseInt(this.sDelay, 10) })
-      }
+      ipcRenderer.send(this.mode + 'udsExcute', {
+        udsTable: this.udsTable,
+        timeout: parseInt(this.udsTimeout, 10),
+        sDelay: parseInt(this.sDelay, 10) 
+      })
     }
   }
 

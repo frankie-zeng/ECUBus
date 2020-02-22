@@ -13,6 +13,12 @@
                   <div><el-tag size="mini">TA</el-tag> : {{ scope.row.addr.TA}}</div>
                 </template>
             </el-table-column>
+            <el-table-column label="Suppress" width="76" align="center">
+              <template slot-scope="scope">
+                <i class="el-icon-circle-check" v-if="scope.row.suppress" style="color:green"></i>
+                <i class="el-icon-circle-close" v-else style="color:red"></i>
+                </template>
+            </el-table-column>
            <el-table-column prop="payload" label="Payload" width="300">
               <template slot-scope="scope">
                   <div v-if="scope.row.payload">
@@ -37,7 +43,7 @@
                   </el-input>
                 </template>
             </el-table-column>
-            <el-table-column prop="other" label="其他">
+            <el-table-column prop="other" label="其他" width="400">
               <template slot-scope="scope">
                   <div v-if="scope.row.other">
                     <div>
