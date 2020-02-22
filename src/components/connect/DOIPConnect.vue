@@ -132,7 +132,8 @@
             <el-table-column
                 prop="name"
                 label="VIN"
-                align="center">
+                align="center"
+                 width="150">
             </el-table-column>
             <el-table-column
                 prop="SA"
@@ -143,6 +144,14 @@
                 prop="TA"
                 label="目标地址"
                 align="center">
+            </el-table-column>
+            <el-table-column
+                prop="code"
+                label="CODE"
+                align="center">
+                <template slot-scope="scope">
+                  0x{{scope.row.code.toString(16)}}
+                </template>
             </el-table-column>
             <el-table-column label="操作"
             align="center"
@@ -175,6 +184,7 @@ export default {
             title: 'Error',
             message: val.msg
         })
+        this.$store.commit('doipAddrDeleteKey', val.key)
       }else{
         var testerAddr=val.data.testerAddr
         var entityAddr=val.data.entityAddr
@@ -190,7 +200,9 @@ export default {
           this.$store.commit('doipAddrAdd',JSON.parse(JSON.stringify({
             name:this.deviceList[i].vin,
             SA:testerAddr,
-            TA:entityAddr
+            TA:entityAddr,
+            key:val.key,
+            code:val.data.code
           })))
           this.$store.commit('doipChange', true)
         }else{
@@ -267,7 +279,7 @@ export default {
       })
     },
     disconnectDevice(val,index){
-      ipcRenderer.send('doipTcpDisconnect',val)
+      ipcRenderer.send('doipTcpDisconnectWithKey',val.key)
       this.$store.commit('doipAddrDelete', index)
       if(this.addrTable.length==0){
         this.$store.commit('doipChange', false)

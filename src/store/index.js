@@ -35,6 +35,17 @@ export default new Vuex.Store({
     doipAddrDelete (state, index) {
       state.doipAddrTable.splice(index, 1)
     },
+    doipAddrDeleteKey(state,key){
+      for(var i in state.doipAddrTable){
+        if(state.doipAddrTable[i].key===key){
+          state.doipAddrTable.splice(i, 1)
+          break
+        }
+      }
+      if(state.doipAddrTable.length===0){
+        state.doipConnect = false
+      }
+    },
     doipAddrLoad (state, data) {
       state.doipAddrTable = data
     },
