@@ -20,8 +20,7 @@
         </el-row>
         <div style="margin: 10px">
         <el-row style="text-align:right">
-                <el-button icon="el-icon-folder" @click="importConfig"  size="mini"  type="info"  :disabled="running">导入配置<form ref="iform" style="display: none" ><input type="file" ref="import"  @change="previewFiles" accept="application/json"/></form></el-button>
-                <el-button icon="el-icon-share" @click="exportConfig" size="mini"  type="info"  :disabled="running">导出配置<input type="file" ref="export" style="display: none"/></el-button>
+                <IE mode="doip"/>
         </el-row>
         <el-row style="text-align:right">
                 <el-button icon="el-icon-plus" @click="uds=true"   size="mini" type="primary"  :disabled="running">添加服务</el-button>
@@ -38,15 +37,17 @@ import DOIPConnect from './../components/connect/DOIPConnect.vue'
 import ADDService from './../components/service/addservice.vue'
 import Excute from './../components/excute.vue'
 import serviceTable from './../components/service/serviceTable.vue'
+import IE from './../components/importexport/importexport.vue'
 
-const { ipcRenderer } = require('electron')
+// const { ipcRenderer } = require('electron')
 
 export default {
   components: {
     DOIPConnect,
     Excute,
     serviceTable,
-    ADDService
+    ADDService,
+    IE
   },
   data: function () {
     return {
@@ -73,34 +74,6 @@ export default {
     goBack () {
       this.$router.push('/')
     },
-    exportConfig () {
-      // this.$refs.export.click()
-      var output = {
-        'mode': 'doip',
-        'addr': this.doipAddrTable,
-        'uds': this.doipTable,
-      }
-
-      var element = document.createElement('a')
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(output, null, 2)))
-      element.setAttribute('download', 'config.json')
-      element.style.display = 'none'
-      document.body.appendChild(element)
-      element.click()
-      document.body.removeChild(element)
-    },
-    importConfig () {
-      this.$refs.import.click()
-    },
-    previewFiles () {
-      var filePath = event.target.files[0].path
-      this.$refs.iform.reset()
-      var data = JSON.parse(ipcRenderer.sendSync('openFile', filePath).toString())
-      if(data.mode==='doip'){
-        this.$store.commit('doipAddrLoad', data.addr)
-        this.$store.commit('doipTableLoad', data.uds)
-      }
-    }
   }
 }
 </script>

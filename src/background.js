@@ -111,12 +111,31 @@ if (isDevelopment) {
   }
 }
 
-ipcMain.on('openFile', (event, arg) => {
-  var data = fs.readFileSync(arg)
-  event.returnValue = data
+ipcMain.on('readFile', (event, arg) => {
+  var file = dialog.showOpenDialogSync(win,{
+    filters: [
+      { name: 'JSON', extensions: ['json'] },
+    ],
+  })
+  if(Array.isArray(file)){
+    event.returnValue=fs.readFileSync(file[0])
+  }else{
+    event.returnValue=''
+  }
+})
+ipcMain.on('saveFile', (event, arg) => {
+  var file = dialog.showSaveDialogSync(win,{
+    filters: [
+      { name: 'JSON', extensions: ['json'] },
+    ],
+  })
+  if(typeof file ==="string"){
+    fs.writeFileSync(file,arg)
+  }
+  event.returnValue = file
 })
 
-ipcMain.on('saveFile', (event, arg) => {
+ipcMain.on('saveFilePath', (event, arg) => {
   var path=''
   var file = dialog.showSaveDialogSync(win)
   if(typeof file ==="string"){
@@ -125,12 +144,9 @@ ipcMain.on('saveFile', (event, arg) => {
   event.returnValue = path
 })
 
-ipcMain.on('downloadFile', (event, arg) => {
-  var file = dialog.showOpenDialogSync(win,{
-    filters: [
-      { name: 'JSON', extensions: ['json'] },
-    ],
-  })
+
+ipcMain.on('downloadFilePath', (event, arg) => {
+  var file = dialog.showOpenDialogSync(win)
   var size = 0
   var path = ''
   if(Array.isArray(file)){

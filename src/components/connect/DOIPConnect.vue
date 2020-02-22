@@ -287,31 +287,6 @@ export default {
         this.$store.commit('doipChange', true)
       }
     }
-    // handleDelete (index) {
-    //   this.$store.commit('doipAddrDelete', index)
-    // },
-    // setupAddr () {
-    //   var item = JSON.parse(JSON.stringify(this.tpConfig))
-    //   for (var i in this.addrTable) {
-    //     if (this.addrTable[i].name === item.name) {
-    //       this.$notify.error({
-    //         title: 'Error',
-    //         message: 'Name重复'
-    //       })
-    //       return
-    //     }
-    //   }
-    //   if (item.SA === item.TA) {
-    //     this.$notify.error({
-    //       title: 'Error',
-    //       message: 'SA不能等于TA'
-    //     })
-    //     return
-    //   }
-    //   item.SA = parseInt(item.SA, 10)
-    //   item.TA = parseInt(item.TA, 10)
-    //   this.$store.commit('doipAddrAdd', item)
-    // },
   }
 }
 </script>

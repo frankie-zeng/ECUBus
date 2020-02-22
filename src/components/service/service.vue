@@ -180,11 +180,11 @@ export default {
       this.jsError = report.error(result);
     },
     uploadFIle() {
-      this.filePath = ipcRenderer.sendSync("saveFile");
+      this.filePath = ipcRenderer.sendSync("saveFilePath");
       this.filePath;
     },
     downloadFIle() {
-      var val = ipcRenderer.sendSync("downloadFile");
+      var val = ipcRenderer.sendSync("downloadFilePath");
       this.filePath = val.path;
       this.fileSize = val.size;
     },
