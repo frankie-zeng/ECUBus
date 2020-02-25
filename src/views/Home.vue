@@ -5,13 +5,22 @@
       <span>ECU-BUS</span>
     </div>
 
-    <el-carousel type="card" height="200px" :autoplay="true" indicatorPosition="none">
+    <el-carousel type="card" height="200px" :autoplay="false" indicatorPosition="none">
       <el-carousel-item>
-        <div class="peak" @click="goPEAK">
+        <div class="peak">
           <img src="./../assets/PEAK.png" />
           <div class="name">UDS Over CAN/CAN-FD</div>
           <div class="button">
             <i class="el-icon-d-arrow-right" @click="goPEAK"></i>
+          </div>
+        </div>
+      </el-carousel-item>
+      <el-carousel-item>
+        <div class="doip">
+          <img src="./../assets/doip.jpg" />
+          <div class="name">UDS Over Ethernet</div>
+          <div class="button">
+            <i class="el-icon-d-arrow-right" @click="goDOIP"></i>
           </div>
         </div>
       </el-carousel-item>
@@ -103,6 +112,30 @@ export default {
 }
 .title img {
   height: 48px;
+}
+.doip{
+  background-color:white;
+  height: 98%;
+  border-radius: 10px;
+  border-style: solid;
+}
+.doip .name {
+  color: black;
+  font-size: 36px;
+  text-align: center;
+  margin: 10px;
+}
+.doip .button {
+  position: absolute;
+  color: black;
+  font-size: 25px;
+  margin: 10px;
+  right: 0px;
+  bottom: 0px;
+}
+.doip img {
+  margin:5px;
+  width: 100px;
 }
 .peak {
   background-color: black;
