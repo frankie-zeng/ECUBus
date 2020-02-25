@@ -32,7 +32,7 @@
                 </template>
             </el-table-column>
 
-            <el-table-column prop="func" label="校验函数"  width="500" >
+            <el-table-column prop="func" label="校验函数"  width="400" >
                <template slot-scope="scope">
                   <el-input
                       readonly
@@ -79,12 +79,13 @@ export default {
   },
   mounted () {
     const table = document.querySelector('.el-table__body-wrapper tbody')
+    console.log(table.length)
     const self = this
     this.sortable = Sortable.create(table, {
       onEnd ({ newIndex, oldIndex }) {
-        if(this.mode==='can'){
+        if(self.mode==='can'){
            self.$store.commit('canTableUpdate', [newIndex, oldIndex])
-        }else if(this.mode==='doip'){
+        }else if(self.mode==='doip'){
           self.$store.commit('doipTableUpdate', [newIndex, oldIndex])
         }else{
           return

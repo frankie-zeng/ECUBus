@@ -1,34 +1,5 @@
 <template>
     <div class="connect">
-         <el-form  :model="active" ref="activeForm" :rules="activeRule" label-width="100px" size="mini">
-           <el-form-item label="Timeout" prop="timeout">
-            <el-input
-                v-model.number="active.timeout"
-            />
-          </el-form-item>
-          <el-form-item label="SA:" prop="sa">
-            <el-input
-                placeholder="Source Address"
-                v-model="active.sa"
-            />
-          </el-form-item>
-          <el-form-item label="Active Type:" prop="activeType">
-            <el-select v-model="active.activeType" style="width:100%" allow-create filterable>
-              <el-option label="Default" value="00"></el-option>
-              <el-option label="WWH-OBD" value="01"></el-option>
-              <el-option label="Central security" value="e0"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item label="OEM Special:" prop="option">
-            <el-input
-                placeholder=""
-                v-model="active.option"
-                maxlength="8"
-                show-word-limit
-            />
-          </el-form-item>
-        </el-form>
-        <el-divider></el-divider>
         <div style="margin-top:20px">
         <el-form  :model="req" ref="devForm" :rules="devRule" label-width="100px" size="mini">
           <el-form-item label="Request type:" prop="type">
@@ -61,6 +32,7 @@
               <el-button @click="findDevice" type="primary">查找设备</el-button>
           </el-form-item>
         </el-form>
+        <el-divider></el-divider>
       </div>
        <el-table
             size="mini"
@@ -125,6 +97,36 @@
             </template>
             </el-table-column>
       </el-table>
+      <div style="margin-top:30px">
+        <el-form  :model="active" ref="activeForm" :rules="activeRule" label-width="100px" size="mini">
+            <el-form-item label="Timeout" prop="timeout">
+              <el-input
+                  v-model.number="active.timeout"
+              />
+            </el-form-item>
+            <el-form-item label="SA:" prop="sa">
+              <el-input
+                  placeholder="Source Address"
+                  v-model="active.sa"
+              />
+            </el-form-item>
+            <el-form-item label="Active Type:" prop="activeType">
+              <el-select v-model="active.activeType" style="width:100%" allow-create filterable>
+                <el-option label="Default" value="00"></el-option>
+                <el-option label="WWH-OBD" value="01"></el-option>
+                <el-option label="Central security" value="e0"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="OEM Special:" prop="option">
+              <el-input
+                  placeholder=""
+                  v-model="active.option"
+                  maxlength="8"
+                  show-word-limit
+              />
+            </el-form-item>
+          </el-form>
+      </div>
       <el-table
             size="mini"
             :data="addrTable"
@@ -184,7 +186,9 @@ export default {
             title: 'Error',
             message: val.msg
         })
-        this.$store.commit('doipAddrDeleteKey', val.key)
+        if(val.err<-1){
+          this.$store.commit('doipAddrDeleteKey', val.key)
+        }
       }else{
         var testerAddr=val.data.testerAddr
         var entityAddr=val.data.entityAddr
@@ -241,7 +245,10 @@ export default {
         ],
         activeType:[
            { required:true, min: 1, max: 2, message: '请输入正确的ACTIVE-TYPE', trigger: 'blur' }
-        ]
+        ],
+        option:[
+          { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+        ],
       },
       devRule:{
         vin:[

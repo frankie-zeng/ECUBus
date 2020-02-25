@@ -29,13 +29,13 @@ export default {
   },
   mounted () {
     ipcRenderer.on('udsEnd', (event, val) => {
-      console.log(val)
+      this.success(val)
     })
     ipcRenderer.on('udsData', (event, val) => {
-      console.log(val)
+      this.logText+=val
     })
     ipcRenderer.on('udsError', (event, val) => {
-      console.log(val)
+      this.failed(val)
     })
   },
   destroyed () {
@@ -76,11 +76,21 @@ export default {
   },
   methods: {
     failed (msg) {
+      this.logText+=msg
       this.$store.commit('runChange', false)
       this.$notify.error({
         title: 'Error',
         message: msg
       })
+    },
+    success(msg){
+      this.logText+=msg
+      this.$store.commit('runChange', false)
+      this.$notify({
+        title: 'Success',
+        message: msg,
+        type: 'success'
+      });
     },
     run () {
       // console.log(this.udsTable)

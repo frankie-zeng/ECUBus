@@ -64,23 +64,17 @@
         ></el-input>
         <div v-else-if="item.type==='downloadFile'">
           <el-button @click="downloadFIle" type="primary">点击上传</el-button>
-          <span v-if="filePath!=''" style="font-size:12px">
+          <span style="font-size:12px">
             {{filePath}}
             <strong>{{'0x'+fileSize.toString(16)}}</strong>
-          </span>
-          <span v-else style="font-size:12px;color:red">
-            <strong>{{fileError}}</strong>
           </span>
           <!-- <el-input v-model="inputData[item.name]" readonly>
           </el-input>-->
         </div>
         <div v-else-if="item.type==='uploadFile'">
           <el-button @click="uploadFIle" type="primary">点击上传</el-button>
-          <span v-if="filePath!=''" style="font-size:12px">
+          <span style="font-size:12px">
             <strong>{{filePath}}</strong>
-          </span>
-          <span v-else style="font-size:12px;color:red">
-            <strong>{{fileError}}</strong>
           </span>
           <!-- <el-input v-model="inputData[item.name]" readonly>
           </el-input>-->
@@ -113,8 +107,9 @@
         </fieldset>
       </div>
       <el-form-item style="text-align:right">
-        <el-button type="primary" @click="addService">Add Service</el-button>
+         <span style="color:red;margin-right:5px">{{error}}</span><el-button type="primary" @click="addService">Add Service</el-button>
       </el-form-item>
+     
     </el-form>
   </div>
 </template>
@@ -129,7 +124,7 @@ export default {
       inputData: {},
       filePath: "",
       fileSize: 0,
-      fileError: "Please choose a file",
+      error: "",
       jsFn: "return true;",
       jsError: ""
     };
@@ -201,19 +196,27 @@ export default {
           data.suppress=false
           data.payload={}
           for (var i in this.config.input) {
-            if (this.config.input[i].type === "downloadFile") {
+            if ((this.config.input[i].type === "downloadFile")||(this.config.input[i].type === "uploadFile") ) {
               if (this.filePath === "") {
-                return;
+                this.error="Please chhose a file"
+                return
               }
+              if(parseInt(this.inputData.memorySize,16)<=0){
+                this.error="MemorySize should more than 0"
+                return
+              }
+              if(this.config.input[i].type === "downloadFile"){
+                if(parseInt(this.inputData.memorySize,16)>this.fileSize){
+                  this.error="MemorySize should less than file size"
+                  return
+                }
+              }
+              this.error=''
               data.other = {
                 filePath: this.filePath,
-                fileSize: this.fileSize
-              };
-            } else if (this.config.input[i].type === "uploadFile") {
-              data.other = {
-                filePath: this.filePath,
-                fileSize: this.fileSize
-              };
+                fileSize: parseInt(this.inputData.memorySize,16)
+              }; 
+
             } else if(this.config.input[i].type === "subfunction") {
               if(this.inputData.suppress){
                 data.suppress=true
@@ -227,9 +230,7 @@ export default {
                 data.payload[this.config.input[i].name]=[]
               }
             }
-            // data.payload = this.inputData;
           } 
-          // console.log(data)
           this.$emit("additem", data);
         }
       });
