@@ -16,7 +16,7 @@
               <el-input v-model="k1she.name" style="width:300px"></el-input>
             </el-form-item>
             <el-form-item label="Auth Key ID:" prop="authKeyId">
-              <el-input v-model="k1she.authKeyId" style="width:100px" maxlength="2" show-word-limit></el-input>
+              <el-input v-model.number="k1she.authKeyId" style="width:100px" maxlength="2" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="Auth Key Vaue:" prop="authKeyValue">
               <el-input
@@ -27,7 +27,7 @@
               ></el-input>
             </el-form-item>
             <el-form-item label="New Key ID:" prop="keyId">
-              <el-input v-model="k1she.keyId" style="width:100px" maxlength="2" show-word-limit></el-input>
+              <el-input v-model.number="k1she.keyId" style="width:100px" maxlength="2" show-word-limit></el-input>
             </el-form-item>
             <el-form-item label="New Key Vaue:" prop="keyValue">
               <el-input v-model="k1she.keyValue" placeholder="hex" maxlength="32" show-word-limit></el-input>
@@ -92,9 +92,9 @@ export default {
       activeName: "1",
       k1she: {
         name: "test",
-        authKeyId: "2",
+        authKeyId: 2,
         authKeyValue: "492c29292b031f4571a870207c47056e",
-        keyId: "1",
+        keyId: 1,
         keyValue: "492c29292b031f4571a870207c47056e",
         flag: ["WRITE_PROT"],
         // flag:{
@@ -116,7 +116,8 @@ export default {
           {
             required: true,
             message: "请输入用于验证的KEY-ID，必须是数字",
-            trigger: "blur"
+            trigger: "blur",
+            type: "number"
           }
         ],
         authKeyValue: [
@@ -132,7 +133,8 @@ export default {
           {
             required: true,
             message: "请输入用于验证的KEY-ID，必须是数字",
-            trigger: "blur"
+            trigger: "blur",
+            type: "number"
           }
         ],
         keyValue: [
@@ -201,6 +203,28 @@ export default {
           }
           this.mma += sprintf(
             "uint8_t %sM3[16]=[%s];\r\n",
+            this.k1she.name,
+            a.toString("hex")
+          );
+          /* M4 */
+          a = [];
+          mstr = m.M4.toString("hex");
+          for (i = 0; i < mstr.length / 2; i++) {
+            a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
+          }
+          this.mma += sprintf(
+            "uint8_t %sM4[32]=[%s];\r\n",
+            this.k1she.name,
+            a.toString("hex")
+          );
+          /* M5 */
+          a = [];
+          mstr = m.M5.toString("hex");
+          for (i = 0; i < mstr.length / 2; i++) {
+            a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
+          }
+          this.mma += sprintf(
+            "uint8_t %sM5[16]=[%s];\r\n",
             this.k1she.name,
             a.toString("hex")
           );

@@ -15,8 +15,11 @@ function KDF(k, constant) {
 function genM1M2M3(keyAuthId, keyAuthValue, keyId, keyValue, flag, cid, uid) {
     var bM1 = Buffer.alloc(16, 0)
     var bM2 = Buffer.alloc(32, 0)
+    var bM4 = Buffer.alloc(32, 0)
     var k1 = KDF(keyAuthValue, Buffer.from(KEY_UPDATE_ENC_C, 'hex'))
     var k2 = KDF(keyAuthValue, Buffer.from(KEY_UPDATE_MAC_C, 'hex'))
+    var k3 = KDF(keyValue, Buffer.from(KEY_UPDATE_ENC_C, 'hex'))
+    var k4 = KDF(keyValue, Buffer.from(KEY_UPDATE_MAC_C, 'hex'))
     uid.copy(bM1)
     bM1[15] = (((keyId & 0x0f) << 4) | (keyAuthId & 0x0f))
 
@@ -50,14 +53,29 @@ function genM1M2M3(keyAuthId, keyAuthValue, keyId, keyValue, flag, cid, uid) {
     aescbc.final()
     //cmac k2
     var bM3 = aesCmac(k2, Buffer.concat([bM1, bM2], bM1.length + bM2.length), { returnAsBuffer: true })
-
+    //M4
+    uid.copy(bM4)
+    bM4[15] = (((keyId & 0x0f) << 4) | (keyAuthId & 0x0f))
+    var bM4T = Buffer.alloc(16, 0)
+    bM4T.writeUInt32BE(((cid << 4) & 0xfffffff0), 0)
+    t = bM4T.readUInt8(3)
+    t |= 0x08
+    bM4T.writeUInt8(t, 3)
+    var aesecb = crypto.createCipheriv('aes-128-ecb', k3, null)
+    var bM4T1 = aesecb.update(bM4T)
+    aesecb.final()
+    bM4T1.copy(bM4, 16)
+    //m5
+    var bM5 = aesCmac(k4, bM4, { returnAsBuffer: true })
 
 
 
     return {
         M1: bM1,
         M2: bM2,
-        M3: bM3
+        M3: bM3,
+        M4: bM4,
+        M5: bM5
     }
 }
 
