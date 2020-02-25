@@ -93,7 +93,6 @@ export default {
       this.deviceList.push(item);
     });
     ipcRenderer.on("doipTcpStatus", (event, val) => {
-      console.log(val);
       if (val.err != 0) {
         this.$notify.error({
           title: "Error",

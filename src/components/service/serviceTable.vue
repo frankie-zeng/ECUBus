@@ -93,7 +93,6 @@ export default {
   },
   mounted() {
     const table = document.querySelector(".el-table__body-wrapper tbody");
-    console.log(table.length);
     const self = this;
     this.sortable = Sortable.create(table, {
       onEnd({ newIndex, oldIndex }) {

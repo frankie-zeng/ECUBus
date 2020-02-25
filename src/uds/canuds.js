@@ -108,7 +108,6 @@ class CANUDS {
     var err
     var msg = {}
     err = this.cantp.TpRead(this.channel, msg)
-    console.log(msg)
     if (err === 0) {
       switch (msg.MSGTYPE) {
         case PCANTP.PCANTP_MESSAGE_REQUEST_CONFIRMATION:
@@ -289,7 +288,6 @@ class CANUDS {
       this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
       return
     }
-    console.log(this.index)
     var item = this.udsTable[this.index]
     this.index++;
     var rawdata = []

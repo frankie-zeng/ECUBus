@@ -167,7 +167,6 @@ ipcMain.on('k1SHEGen', (event, arg) => {
     }
     return fo
   }
-  console.log(arg)
   var ret=k1SHEGen(
     parseInt(arg.authKeyId),//auth key id
     Buffer.from(arg.authKeyValue,'hex'), //auth key value
