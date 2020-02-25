@@ -107,9 +107,9 @@
         </fieldset>
       </div>
       <el-form-item style="text-align:right">
-         <span style="color:red;margin-right:5px">{{error}}</span><el-button type="primary" @click="addService">Add Service</el-button>
+        <span style="color:red;margin-right:5px">{{error}}</span>
+        <el-button type="primary" @click="addService">Add Service</el-button>
       </el-form-item>
-     
     </el-form>
   </div>
 </template>
@@ -162,7 +162,7 @@ export default {
         convert: true,
         for: true,
         single: true,
-        this: true,
+        this: true
       };
       /* workaroud unused arg */
       var result = jslint(
@@ -193,44 +193,52 @@ export default {
             name: this.config.name,
             value: this.config.value
           };
-          data.suppress=false
-          data.payload={}
+          data.suppress = false;
+          data.payload = {};
           for (var i in this.config.input) {
-            if ((this.config.input[i].type === "downloadFile")||(this.config.input[i].type === "uploadFile") ) {
+            if (
+              this.config.input[i].type === "downloadFile" ||
+              this.config.input[i].type === "uploadFile"
+            ) {
               if (this.filePath === "") {
-                this.error="Please chhose a file"
-                return
+                this.error = "Please chhose a file";
+                return;
               }
-              if(parseInt(this.inputData.memorySize,16)<=0){
-                this.error="MemorySize should more than 0"
-                return
+              if (parseInt(this.inputData.memorySize, 16) <= 0) {
+                this.error = "MemorySize should more than 0";
+                return;
               }
-              if(this.config.input[i].type === "downloadFile"){
-                if(parseInt(this.inputData.memorySize,16)>this.fileSize){
-                  this.error="MemorySize should less than file size"
-                  return
+              if (this.config.input[i].type === "downloadFile") {
+                if (parseInt(this.inputData.memorySize, 16) > this.fileSize) {
+                  this.error = "MemorySize should less than file size";
+                  return;
                 }
               }
-              this.error=''
+              this.error = "";
               data.other = {
                 filePath: this.filePath,
-                fileSize: parseInt(this.inputData.memorySize,16)
-              }; 
-
-            } else if(this.config.input[i].type === "subfunction") {
-              if(this.inputData.suppress){
-                data.suppress=true
+                fileSize: parseInt(this.inputData.memorySize, 16)
+              };
+            } else if (this.config.input[i].type === "subfunction") {
+              if (this.inputData.suppress) {
+                data.suppress = true;
               }
-              data.payload.subFunction=[parseInt(this.inputData.subFunction)]
-            } else{
-              if(this.inputData[this.config.input[i].name]&&this.inputData[this.config.input[i].name]!=''){
-                var buf=Buffer.from(this.inputData[this.config.input[i].name],'hex')
-                data.payload[this.config.input[i].name]=[...buf]
-              }else{
-                data.payload[this.config.input[i].name]=[]
+              data.payload.subFunction = [parseInt(this.inputData.subFunction)];
+            } else {
+              if (
+                this.inputData[this.config.input[i].name] &&
+                this.inputData[this.config.input[i].name] != ""
+              ) {
+                var buf = Buffer.from(
+                  this.inputData[this.config.input[i].name],
+                  "hex"
+                );
+                data.payload[this.config.input[i].name] = [...buf];
+              } else {
+                data.payload[this.config.input[i].name] = [];
               }
             }
-          } 
+          }
           this.$emit("additem", data);
         }
       });
@@ -255,82 +263,82 @@ export default {
   font-size: 25px;
   margin-bottom: 10px;
 }
-.fnInput{
+.fnInput {
   color: darkblue;
 }
 #JSLINT_ fieldset {
-    background-color: gainsboro;
-    border: 0;
-    clear: both;
-    margin-bottom: 1em;
-    margin-left: 1%;
-    margin-right: 1%;
-    margin-top: 5px;
-    padding: 0;
-    width: auto;
+  background-color: gainsboro;
+  border: 0;
+  clear: both;
+  margin-bottom: 1em;
+  margin-left: 1%;
+  margin-right: 1%;
+  margin-top: 5px;
+  padding: 0;
+  width: auto;
 }
-#JSLINT_  legend {
-    background-color: darkslategray;
-    border: 0;
-    color: white;
-    font-size: 100%;
-    font-style: normal;
-    font-weight: normal;
-    margin: 0;
-    padding-bottom: 0.25em;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 0.25em;
-    text-align: center;
-    width: 100%;
+#JSLINT_ legend {
+  background-color: darkslategray;
+  border: 0;
+  color: white;
+  font-size: 100%;
+  font-style: normal;
+  font-weight: normal;
+  margin: 0;
+  padding-bottom: 0.25em;
+  padding-left: 0;
+  padding-right: 0;
+  padding-top: 0.25em;
+  text-align: center;
+  width: 100%;
 }
 #JSLINT_ address {
-    color: black;
-    display: block;
-    float: right;
-    font-family: serif;
-    font-size: 90%;
-    margin-left: 1em;
+  color: black;
+  display: block;
+  float: right;
+  font-family: serif;
+  font-size: 90%;
+  margin-left: 1em;
 }
-#JSLINT_WARNINGS>legend {
-    background-color: indianred;
+#JSLINT_WARNINGS > legend {
+  background-color: indianred;
 }
-#JSLINT_WARNINGS>div {
-    background-color: pink;
-    padding: 1px;
+#JSLINT_WARNINGS > div {
+  background-color: pink;
+  padding: 1px;
 }
 #JSLINT_WARNINGS cite {
-    color: black;
-    display: block;
-    font-family: serif;
-    font-size: 100%;
-    font-style: normal;
-    margin-bottom: 4pt;
-    margin-left: 20pt;
-    margin-right: 20pt;
-    margin-top: 4pt;
-    overflow-x: hidden;
+  color: black;
+  display: block;
+  font-family: serif;
+  font-size: 100%;
+  font-style: normal;
+  margin-bottom: 4pt;
+  margin-left: 20pt;
+  margin-right: 20pt;
+  margin-top: 4pt;
+  overflow-x: hidden;
 }
 #JSLINT_WARNINGS samp {
-    background-color: lavenderblush;
-    color: black;
-    display: block;
-    font-family: Programma, monospace;
-    font-size: 100%;
-    font-style: normal;
-    font-weight: bold;
-    padding: 4pt;
-    margin-bottom: 0;
-    margin-left: 16pt;
-    margin-right: 16pt;
-    margin-top: 0;
-    white-space: pre-wrap;
+  background-color: lavenderblush;
+  color: black;
+  display: block;
+  font-family: Programma, monospace;
+  font-size: 100%;
+  font-style: normal;
+  font-weight: bold;
+  padding: 4pt;
+  margin-bottom: 0;
+  margin-left: 16pt;
+  margin-right: 16pt;
+  margin-top: 0;
+  white-space: pre-wrap;
 }
 #JSLINT_WARNINGS dl address {
-    color: black;
-    display: inline;
-    float: none;
-    font-size: 80%;
-    margin: 0;
+  color: black;
+  display: inline;
+  float: none;
+  font-size: 80%;
+  margin: 0;
 }
 </style>

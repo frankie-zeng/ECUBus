@@ -18,75 +18,75 @@ export default new Vuex.Store({
 
   },
   mutations: {
-    runChange (state, run) {
+    runChange(state, run) {
       state.running = run
     },
     /* connect*/
-    canChange (state, connect) {
+    canChange(state, connect) {
       state.canConnect = connect
     },
-    doipChange (state, connect) {
+    doipChange(state, connect) {
       state.doipConnect = connect
     },
     /* doip addr table */
-    doipAddrAdd (state, item) {
+    doipAddrAdd(state, item) {
       state.doipAddrTable.push(item)
     },
-    doipAddrDelete (state, index) {
+    doipAddrDelete(state, index) {
       state.doipAddrTable.splice(index, 1)
     },
-    doipAddrDeleteKey(state,key){
-      for(var i in state.doipAddrTable){
-        if(state.doipAddrTable[i].key===key){
+    doipAddrDeleteKey(state, key) {
+      for (var i in state.doipAddrTable) {
+        if (state.doipAddrTable[i].key === key) {
           state.doipAddrTable.splice(i, 1)
           break
         }
       }
-      if(state.doipAddrTable.length===0){
+      if (state.doipAddrTable.length === 0) {
         state.doipConnect = false
       }
     },
-    doipAddrLoad (state, data) {
+    doipAddrLoad(state, data) {
       state.doipAddrTable = data
     },
     /* can addr table */
-    canAddrAdd (state, item) {
+    canAddrAdd(state, item) {
       state.canAddrTable.push(item)
     },
-    canAddrDelete (state, index) {
+    canAddrDelete(state, index) {
       state.canAddrTable.splice(index, 1)
     },
-    canAddrLoad (state, data) {
+    canAddrLoad(state, data) {
       state.canAddrTable = data
     },
     /*can table*/
-    canTableUpdate (state, index) {
+    canTableUpdate(state, index) {
       const targetRow = state.canTable.splice(index[1], 1)[0]
       state.canTable.splice(index[0], 0, targetRow)
     },
-    canTableAdd (state, item) {
+    canTableAdd(state, item) {
       item.date = new Date().getTime()
       state.canTable.push(item)
     },
-    canTableDelete (state, index) {
+    canTableDelete(state, index) {
       state.canTable.splice(index, 1)
     },
-    canTableLoad (state, data) {
+    canTableLoad(state, data) {
       state.canTable = data
     },
     /*doip table*/
-    doipTableUpdate (state, index) {
+    doipTableUpdate(state, index) {
       const targetRow = state.doipTable.splice(index[1], 1)[0]
       state.doipTable.splice(index[0], 0, targetRow)
     },
-    doipTableAdd (state, item) {
+    doipTableAdd(state, item) {
       item.date = new Date().getTime()
       state.doipTable.push(item)
     },
-    doipTableDelete (state, index) {
+    doipTableDelete(state, index) {
       state.doipTable.splice(index, 1)
     },
-    doipTableLoad (state, data) {
+    doipTableLoad(state, data) {
       state.doipTable = data
     }
   },

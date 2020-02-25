@@ -23,16 +23,16 @@ class IPUDS {
         this.index = 0
         this.writeFile = (writeData, readData) => {
             var cb
-            if(this.blockNum===0){
-                cb=255
-            }else{
-                cb=this.blockNum-1;
+            if (this.blockNum === 0) {
+                cb = 255
+            } else {
+                cb = this.blockNum - 1;
             }
-            if(readData[0]===cb){
+            if (readData[0] === cb) {
                 this.fStream.write(new Uint8Array(readData.slice(1)))
                 return true
-            }else{
-                this.log(sprintf("[error]:Block number error,hope:%d,get:%d\r\n",cb,readData[0]))
+            } else {
+                this.log(sprintf("[error]:Block number error,hope:%d,get:%d\r\n", cb, readData[0]))
                 return false
             }
         }
@@ -130,7 +130,7 @@ class IPUDS {
                                 if (item.timer.hasRef()) {
                                     this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
                                 } else {
-                                      /* auto34 insert? */
+                                    /* auto34 insert? */
                                     if (this.writeData[0] === 0x35) {
                                         this.auto35(ret.data.payload)
                                         setTimeout(() => {
@@ -142,7 +142,7 @@ class IPUDS {
                                         setTimeout(() => {
                                             this.step()
                                         }, 5);
-                                    }else{
+                                    } else {
                                         this.step()
                                     }
                                 }
@@ -154,8 +154,8 @@ class IPUDS {
                             clearTimeout(item.timer)
                             this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
                         }
-                    }else{
-                        this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n",reg.msg,new Date().getTime() - this.startTime))
+                    } else {
+                        this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", reg.msg, new Date().getTime() - this.startTime))
                     }
                 })
             }
@@ -197,7 +197,6 @@ class IPUDS {
         this.win.webContents.send(channel, msg)
     }
     auto35(readData) {
-        console.log(readData)
         if (readData.length > 2 && readData[0] === 0x75) {
             var len = (readData[1] & 0xf0) >> 4
             var i
@@ -210,8 +209,8 @@ class IPUDS {
                     blockLen -= 2
                     /* response is ok */
                     /* insert */
-                    var usedTable = this.udsTable.slice(0, this.index + 1)
-                    var unusedTable = this.udsTable.slice(this.index + 1)
+                    var usedTable = this.udsTable.slice(0, this.index)
+                    var unusedTable = this.udsTable.slice(this.index)
                     var newTable = [].concat(usedTable)
                     for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
                         newTable.push({
@@ -263,8 +262,8 @@ class IPUDS {
                     blockLen -= 2
                     /* response is ok */
                     /* insert */
-                    var usedTable = this.udsTable.slice(0, this.index + 1)
-                    var unusedTable = this.udsTable.slice(this.index + 1)
+                    var usedTable = this.udsTable.slice(0, this.index)
+                    var unusedTable = this.udsTable.slice(this.index)
                     var newTable = [].concat(usedTable)
                     for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
                         newTable.push({
@@ -310,7 +309,7 @@ class IPUDS {
             this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
             return
         }
-        
+
         var item = this.udsTable[this.index]
         this.index++;
         var rawdata = []
@@ -322,30 +321,29 @@ class IPUDS {
                 this.fileSize = item.other.fileSize
                 this.fStream = fs.createReadStream(this.fileName)
                 this.mode = 'read'
-              }
-              if (item.service.value === 0x35) {
+            }
+            if (item.service.value === 0x35) {
                 this.addr35 = item.addr
                 this.fileName = item.other.filePath
                 this.fileSize = item.other.fileSize
                 this.fStream = fs.createWriteStream(this.fileName)
                 this.mode = 'write'
-              }
-          
-              if (item.service.value === 0x36) {
+            }
+
+            if (item.service.value === 0x36) {
                 rawdata.push(this.blockNum)
                 this.blockNum++
                 if (this.blockNum === 256) {
-                  this.blockNum = 0
+                    this.blockNum = 0
                 }
                 if (this.mode === 'read') {
-                  var content = this.fStream.read(item.len)
-                  console.log(content.length)
-                  rawdata = rawdata.concat(Array.prototype.slice.call(content, 0))
+                    var content = this.fStream.read(item.len)
+                    rawdata = rawdata.concat(Array.prototype.slice.call(content, 0))
                 }
-              }
-              if (item.service.value === 0x37) {
+            }
+            if (item.service.value === 0x37) {
                 this.fStream.destroy()
-              }
+            }
             if (typeof item.func === 'string') {
                 try {
                     // eslint-disable-next-line no-eval
@@ -354,8 +352,8 @@ class IPUDS {
                     // eslint-disable-next-line no-eval
                     this.checkFunc = eval('(writeData,readData)=>{return true}')
                 }
-            }else{
-                this.checkFunc=item.func
+            } else {
+                this.checkFunc = item.func
             }
             for (var i in item.payload) {
                 rawdata = rawdata.concat(item.payload[i])
