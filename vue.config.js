@@ -41,7 +41,8 @@ module.exports = {
           'installerHeaderIcon': './public/logo.ico',
           'createDesktopShortcut': true,
           'createStartMenuShortcut': true,
-          'license': 'LICENSE.txt'
+          'license': 'LICENSE.txt',
+          'artifactName': 'ECUBus.exe'
         },
         // options placed here will be merged with default configuration and passed to electron-builder
       },

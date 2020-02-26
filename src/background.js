@@ -11,6 +11,7 @@ import {
 import { compile } from 'vue-template-compiler'
 
 const k1SHEGen = require('./crypto/k1she.js')
+const k3SHEGen = require('./crypto/k3she.js')
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const { ipcMain } = require('electron')
@@ -158,7 +159,26 @@ ipcMain.on('downloadFilePath', (event, arg) => {
     size:size
   }
 })
-
+ipcMain.on('k3SHEGen', (event, arg) => {
+  var flag2=function(flag){
+    var fo={}
+    for(var i in flag){
+      fo[flag[i]]=true
+    }
+    return fo
+  }
+  var ret=k3SHEGen(
+    arg.authKeyId,//auth key id
+    Buffer.from(arg.authKeyValue,'hex'), //auth key value
+    arg.keyId,//update key id
+    Buffer.from(arg.keyValue,'hex'), //update key value
+    flag2(arg.flag),//flag
+    parseInt(arg.counter),//cid
+    Buffer.from(arg.uid,'hex') //uid
+  )
+  
+  event.returnValue = ret
+})
 ipcMain.on('k1SHEGen', (event, arg) => {
   var flag2=function(flag){
     var fo={}
