@@ -155,7 +155,7 @@ class IPUDS {
                             this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
                         }
                     } else {
-                        this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", reg.msg, new Date().getTime() - this.startTime))
+                        this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
                     }
                 })
             }
