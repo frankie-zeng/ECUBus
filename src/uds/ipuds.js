@@ -60,6 +60,7 @@ class IPUDS {
             var target = arg[0]
             var active = arg[1]
             var key = active.sa + target.logicalAddr
+            this.startTime = new Date().getTime()
             if (key in this.cMap) {
                 this.emit('doipTcpStatus', {
                     err: -1,
@@ -155,6 +156,8 @@ class IPUDS {
                             this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
                         }
                     } else {
+                        delete this.cMap[key]
+                        item.fd.destroy()
                         this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
                     }
                 })
