@@ -18,7 +18,7 @@ class IPUDS {
         this.sDelay = 100
         this.cMap = {}
         this.typeList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0x4001, 0x4002, 0x4003, 0x4004, 0x8001, 0x8002, 0x8003]
-        this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8002, 0x8003]
+        this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8001, 0x8002, 0x8003]
         this.udpFd = dgram.createSocket('udp4')
         this.index = 0
         this.writeFile = (writeData, readData) => {
@@ -108,11 +108,11 @@ class IPUDS {
                     )
                 })
                 item.fd.on('data', (msg) => {
-                    clearTimeout(item.timer)
                     var ret = this.parseData(msg)
                     if (ret.err === 0) {
                         if (ret.type === 6) {
                             if (item.active === false) {
+                                clearTimeout(item.timer)
                                 item.active = true
                                 this.emit('doipTcpStatus', {
                                     key: key,
@@ -121,12 +121,14 @@ class IPUDS {
                                     data: ret.data
                                 }
                                 )
+                            }else{
+                                this.emit('udsData', sprintf("[error]:the router has actived,used time:%d\r\n", new Date().getTime() - this.startTime))
                             }
                         } else if (ret.type === 7) {
                             item.fd.write(this.writeAliveRes(parseInt(active.sa)))
-                        } else if (ret.type === 0x8002) {
+                        } else if (ret.type === 0x8001) {
                             clearTimeout(item.timer)
-                            this.emit('udsData', sprintf("[data]:ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
+                            this.emit('udsData', sprintf("[data]:uds response:%s.\r\n",ret.data.payload.join(',')))
                             if (this.checkFunc(this.writeData, ret.data.payload)) {
                                 if (item.timer.hasRef()) {
                                     this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
@@ -150,7 +152,32 @@ class IPUDS {
                             } else {
                                 this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
                             }
-
+                    
+                        } else if (ret.type === 0x8002) {
+                            clearTimeout(item.timer)
+                            this.emit('udsData', sprintf("[data]:ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
+                            if(item.suppress){
+                                setTimeout(()=>{
+                                    if (this.writeData[0] === 0x35) {
+                                        this.auto35(ret.data.payload)
+                                        setTimeout(() => {
+                                            this.step()
+                                        }, 5);
+                                    }
+                                    else if (this.writeData[0] === 0x34) {
+                                        this.auto34(ret.data.payload)
+                                        setTimeout(() => {
+                                            this.step()
+                                        }, 5);
+                                    } else {
+                                        this.step()
+                                    }
+                                },this.sDelay)
+                            }else{
+                                item.timer=setTimeout(()=>{
+                                    this.emit('udsError', sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                                },this.timeout)
+                            }
                         } else if (ret.type === 0x8003) {
                             clearTimeout(item.timer)
                             this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
@@ -158,6 +185,7 @@ class IPUDS {
                     } else {
                         delete this.cMap[key]
                         item.fd.destroy()
+                        clearTimeout(item.timer)
                         this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
                     }
                 })
@@ -369,19 +397,16 @@ class IPUDS {
             this.writeData = rawdata
             this.key = key
             if (key in this.cMap) {
+                if(item.suppress){
+                    this.cMap[key].suppress=item.suppress
+                }else{
+                    this.cMap[key].suppress=false
+                }
                 this.cMap[key].fd.write(msg, () => {
-                    if (item.suppress) {
-                        this.cMap[key].timer = setTimeout(() => {
-                            /*call next service*/
-                            this.step()
-                        }, this.sDelay);
-                    } else {
-                        this.cMap[key].timer = setTimeout(() => {
-                            /*no response*/
-                            this.emit('udsError', sprintf('[error]:No response,used time:%d\r\n', new Date().getTime() - this.startTime))
-                        }, this.timeout);
-                    }
-
+                    this.cMap[key].timer = setTimeout(() => {
+                        /*no response*/
+                        this.emit('udsError', sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                    }, this.timeout);
                 })
             } else {
                 this.emit('udsError', sprintf('[error]:this connection lost,used time:%d\r\n'), new Date().getTime() - this.startTime)
@@ -436,6 +461,10 @@ class IPUDS {
             if (payload.length == 13) {
                 ret.data.option = payload.readUInt32BE(9)
             }
+        } else if( type === 0x8001) {
+            ret.data.sa = payload.readUInt16BE(0)
+            ret.data.ta = payload.readUInt16BE(2)
+            ret.data.payload = [...payload.slice(4)]
         } else if (type === 0x8002) {
             ret.data.sa = payload.readUInt16BE(0)
             ret.data.ta = payload.readUInt16BE(2)
