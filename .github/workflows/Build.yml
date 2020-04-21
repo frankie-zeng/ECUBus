@@ -21,12 +21,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - uses: actions/cache@v1
-      with:
-        path: ~\AppData\Roaming\npm-cache
-        key: ${{ runner.os }}-node-${{ hashFiles('**\package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
     - run: |
         npm install
         (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
