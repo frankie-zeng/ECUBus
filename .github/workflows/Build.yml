@@ -31,7 +31,6 @@ jobs:
         npm install
         (Get-Content "node_modules/builder-util/out/util.js").Replace("^[\w","^[.\w")| out-file "node_modules/builder-util/out/util.js"
     - run: npm run lint
-    - run: 
     - run: npm run electron:build
       env:
         CI: true
