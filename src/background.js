@@ -28,7 +28,7 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ width: 1200, height: 620, minWidth:1000, webPreferences: {
-    nodeIntegration: true
+    nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
   },
   // eslint-disable-next-line no-undef
   icon: `${__static}/logo.ico` })

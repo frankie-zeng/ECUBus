@@ -1,6 +1,6 @@
 {
   "name": "ECUBus",
-  "author": "Fu Zeng <frankie.zeng@nxp.com>",
+  "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
   "version": "0.1.6",
   "private": true,
@@ -43,7 +43,7 @@
     "eslint-plugin-vue": "^6.1.2",
     "native-ext-loader": "^2.3.0",
     "node-loader": "^0.6.0",
-    "vue-cli-plugin-electron-builder": "~1.4.5",
+    "vue-cli-plugin-electron-builder": "2.0.0-beta.6",
     "vue-cli-plugin-element": "~1.0.1",
     "vue-template-compiler": "^2.6.11"
   }
