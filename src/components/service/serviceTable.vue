@@ -13,18 +13,6 @@
           slot-scope="scope"
         >{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</template>
       </el-table-column>
-      <el-table-column prop="addr" label="地址" width="100">
-        <template slot-scope="scope">
-          <div>
-            <el-tag size="mini">SA</el-tag>
-            : {{ scope.row.addr.SA}}
-          </div>
-          <div>
-            <el-tag size="mini">TA</el-tag>
-            : {{ scope.row.addr.TA}}
-          </div>
-        </template>
-      </el-table-column>
       <el-table-column label="Suppress" width="76" align="center">
         <template slot-scope="scope">
           <i class="el-icon-circle-check" v-if="scope.row.suppress" style="color:green"></i>

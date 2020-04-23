@@ -1,5 +1,20 @@
 <template>
   <div>
+    <div>
+      <el-dialog title="选择一个地址" :visible.sync="showAddr" center>
+        <el-select v-model="addrIndex" placeholder="请选择" style="width:100%" size="mini">
+          <el-option v-for="(item,key) in addrTable" :key="key" :label="item.name" :value="key">
+            <span style="float: left">{{ item.name }}</span>
+            <span
+              style="float: right; color: #8492a6; font-size: 13px"
+            >SA:{{ item.SA}},TA:{{item.TA}}</span>
+          </el-option>
+        </el-select>
+        <span slot="footer">
+          <el-button icon="el-icon-caret-right" @click="readRun" size="mini" type="primary">开始</el-button>
+        </span>
+      </el-dialog>
+    </div>
     <el-row style="margin-top:10px;">
       <el-col :span="22" :offset="1" style="text-align:right">
         Suppress Delay:
@@ -18,7 +33,8 @@
           style="width:80px"
           maxlength="6"
         ></el-input>ms
-        <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button>
+        <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
+        <el-button @click="run" size="small" type="success">开始</el-button>
       </el-col>
     </el-row>
     <el-input readonly type="textarea" :rows="5" placeholder="请输入内容" v-model="logText"></el-input>
@@ -31,7 +47,9 @@ export default {
     return {
       udsTimeout: "2000",
       sDelay: "100",
-      logText: ""
+      logText: "",
+      showAddr: false,
+      addrIndex: ""
     };
   },
   mounted() {
@@ -79,6 +97,15 @@ export default {
     },
     running: function() {
       return this.$store.state.running;
+    },
+    addrTable: function() {
+      if (this.mode === "doip") {
+        return this.$store.state.doipAddrTable;
+      } else if (this.mode === "can") {
+        return this.$store.state.canAddrTable;
+      } else {
+        return [];
+      }
     }
   },
   methods: {
@@ -99,15 +126,28 @@ export default {
         type: "success"
       });
     },
-    run() {
-      // console.log(this.udsTable)
+    readRun(){
+      var table = JSON.parse(JSON.stringify(this.udsTable));
+      if (this.addrTable[this.addrIndex]) {
+        for (var i in table) {
+          table[i].addr = this.addrTable[this.addrIndex];
+        }
+        this.showAddr = false;
+      }else{
+        return
+      }
       this.$store.commit("runChange", true);
       this.logText = "";
       ipcRenderer.send(this.mode + "udsExcute", {
-        udsTable: this.udsTable,
+        udsTable: table,
         timeout: parseInt(this.udsTimeout, 10),
         sDelay: parseInt(this.sDelay, 10)
       });
+    },
+    run() {
+      this.showAddr=true;
+      // console.log(this.udsTable)
+      
     }
   }
 };
