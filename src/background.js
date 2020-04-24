@@ -111,7 +111,6 @@ if (isDevelopment) {
     })
   }
 }
-
 ipcMain.on('readFile', (event, arg) => {
   var file = dialog.showOpenDialogSync(win,{
     filters: [

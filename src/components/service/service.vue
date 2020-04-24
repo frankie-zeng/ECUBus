@@ -162,13 +162,14 @@ export default {
         convert: true,
         for: true,
         single: true,
-        this: true
+        this: true,
+        node: true,
       };
       /* workaroud unused arg */
       var result = jslint(
-        "function check(writeData,readData){\r\nif((writeData.length===0)||(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
+        "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
           this.jsFn +
-          "\r\n}",
+          "\r\n}\r\nmodule.exports=check;",
         option,
         undefined
       );

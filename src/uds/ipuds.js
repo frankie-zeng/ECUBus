@@ -224,6 +224,13 @@ class IPUDS {
     log(msg) {
         this.emit('udsData', msg)
     }
+    changeNextFrame(name,value=[]){
+        if(this.index<this.udsTable.length){
+            if(name in this.udsTable[this.index].payload){
+                this.udsTable[this.index].payload[name]=value
+            }
+        }
+    }
     emit(channel, msg) {
         this.win.webContents.send(channel, msg)
     }

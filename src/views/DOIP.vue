@@ -29,11 +29,16 @@
       </el-row>
       <el-row style="text-align:right">
         <el-button
+          icon="el-icon-wallet"
+          @click="uds=true"
+          size="mini"
+          type="primary"
+        >保存为Group</el-button>
+        <el-button
           icon="el-icon-plus"
           @click="uds=true"
           size="mini"
           type="primary"
-          :disabled="running"
         >添加服务</el-button>
       </el-row>
 
