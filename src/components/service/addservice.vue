@@ -1,39 +1,62 @@
 <template>
   <div>
     <div>
-      <el-radio-group v-model="type" class="choose" @change="itemChange1">
+      <el-radio-group v-model="type" class="choose" @change="typeChange">
         <el-radio-button label="uds">UDS</el-radio-button>
-        <!-- <el-radio-button label="doip" v-if="mode==='doip'">DOIP</el-radio-button> -->
+        <el-radio-button label="group">GROUP</el-radio-button>
       </el-radio-group>
     </div>
-    <div class="subheader">Serivce</div>
-    <el-select
-      v-model="itemIndex"
-      placeholder="请选择"
-      class="choose"
-      @change="itemChange"
-      style="width:100%"
-    >
-      <el-option v-for="(item,key) in config[type]" :key="key" :label="item.name" :value="key">
-        <span style="float: left">{{ item.name }}</span>
-        <span style="float: right; color: #8492a6; font-size: 13px">0x{{ item.value.toString(16) }}</span>
-      </el-option>
-    </el-select>
+    <div v-if="type=='uds'">
+      <div class="subheader">Serivce</div>
+      <el-select
+        v-model="itemIndex"
+        placeholder="请选择"
+        class="choose"
+        @change="itemChange"
+        style="width:100%"
+      >
+        <el-option v-for="(item,key) in config" :key="key" :label="item.name" :value="key" >
+          <span style="float: left">{{ item.name }}</span>
+          <span style="float: right; color: #8492a6; font-size: 13px">0x{{ item.value.toString(16) }}</span>
+        </el-option>
+      </el-select>
 
-    <Service :config="config[type][itemIndex]" @additem="addItem" v-if="refresh" />
+      <Service :config="config[itemIndex]" @additem="addItem" v-if="refresh" />
+    </div>
+    <div v-else>
+      <div class="subheader">Group</div>
+      
+      <el-select
+        v-model="itemIndex"
+        placeholder="请选择"
+        class="choose"
+        @change="itemChange"
+        style="width:90%"
+      >
+        <el-option v-for="(item,key) in group" :key="key" :label="key" :value="key">
+        </el-option>
+      </el-select>
+      <el-button icon="el-icon-refresh-right" type="success" plain style="margin-left:20px" size="small" @click="typeChange('group')"></el-button>
+      <Group :config="group[itemIndex]" @additem="addItem" v-if="refresh" />
+    </div>
   </div>
 </template>
 
 <script>
 import config from "./service.js";
 import Service from "./service.vue";
+import Group from "./group.vue";
+const { ipcRenderer } = require("electron");
 export default {
   components: {
-    Service
+    Service,
+    Group
   },
   data() {
     return {
-      config: config,
+      config: config['uds'],
+      group:{},
+
       type: "uds",
       itemIndex: 0,
       refresh: true,
@@ -51,9 +74,19 @@ export default {
       }
       this.$emit("additem");
     },
-    itemChange1() {
-      this.itemIndex = "";
-      this.itemChange();
+    typeChange(val) {
+      
+      if(val==='group'){
+        this.itemIndex=''
+        var data=ipcRenderer.sendSync('readGroup');
+        var map=new Map(JSON.parse(data));
+        this.group={}
+        for (let [key, value] of map) {
+          this.group[key]=JSON.parse(value)
+        }
+      }else{
+        this.itemIndex=0
+      }
     },
     itemChange() {
       this.refresh = false;

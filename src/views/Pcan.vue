@@ -10,6 +10,11 @@
         <ADDService @additem="uds=false" mode="can" />
       </div>
     </el-dialog>
+    <el-dialog title="将多个服务绑定为一个组" :visible.sync="group" width="80%">
+      <div class="connect">
+        <Group mode="can" @added="group=false"/>
+      </div>
+    </el-dialog>
     <el-row style="margin:0px">
       <el-col :span="12">
         <el-page-header @back="goBack" content="PCAN UDS" class="header"></el-page-header>
@@ -30,6 +35,12 @@
       </el-row>
       <el-row style="text-align:right">
         <el-button
+          icon="el-icon-wallet"
+          @click="group=true"
+          size="mini"
+          type="primary"
+        >保存为Group</el-button>
+        <el-button
           icon="el-icon-plus"
           @click="uds=true"
           size="mini"
@@ -48,6 +59,7 @@ import ADDService from "./../components/service/addservice.vue";
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
 import IE from "./../components/importexport/importexport.vue";
+import Group from "./../components/service/groupservice.vue";
 
 export default {
   components: {
@@ -55,12 +67,14 @@ export default {
     Excute,
     serviceTable,
     ADDService,
-    IE
+    IE,
+    Group
   },
   data: function() {
     return {
       cd: false,
-      uds: false
+      uds: false,
+      group: false
     };
   },
   computed: {

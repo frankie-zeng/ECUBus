@@ -115,7 +115,7 @@ export default {
           name: 'AccessData / securityKey',
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -152,7 +152,7 @@ export default {
           name: 'communicationType',
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         }
@@ -212,7 +212,7 @@ export default {
           name: 'TimingParameterRequestRecord',
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -226,7 +226,7 @@ export default {
           name: 'securityDataRequestRecord',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' }
           ]
         }
       ]
@@ -337,7 +337,7 @@ export default {
           name: 'eventWindowTime',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -345,7 +345,7 @@ export default {
           name: 'eventTypeRecord',
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -380,7 +380,7 @@ export default {
           name: 'baudrateIdentifier/linkBaudrateRecord',
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -394,7 +394,7 @@ export default {
           name: 'dataIdentifier',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{4})+$/, message: '必须输入HEX格式,2字节一组', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{4})+$", message: '必须输入HEX格式,2字节一组', trigger: 'change' },
           ]
         }
       ]
@@ -408,7 +408,7 @@ export default {
           name: 'addressAndLengthFormatIdentifier',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -416,14 +416,14 @@ export default {
           name: 'memoryAddress',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
           name: 'memorySize',
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -438,7 +438,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         }
@@ -454,7 +454,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -463,7 +463,7 @@ export default {
 
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -500,7 +500,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         }
@@ -516,7 +516,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 4, max: 4, message: '长度为2个字节', trigger: 'change' }
           ]
         },
@@ -525,7 +525,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -540,7 +540,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -549,7 +549,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
@@ -557,7 +557,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
@@ -565,7 +565,7 @@ export default {
 
           type: 'text',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
       ]
@@ -580,7 +580,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 6, max: 6, message: '长度为3个字节', trigger: 'change' }
           ]
         }
@@ -697,7 +697,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 4, max: 4, message: '长度为2个字节', trigger: 'change' }
           ]
         },
@@ -706,7 +706,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
@@ -714,7 +714,7 @@ export default {
 
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -751,7 +751,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 4, max: 4, message: '长度为2个字节', trigger: 'change' }
           ]
         },
@@ -760,7 +760,7 @@ export default {
 
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -779,7 +779,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -788,7 +788,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -797,7 +797,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
@@ -805,7 +805,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -824,7 +824,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -833,7 +833,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
             { min: 2, max: 2, message: '长度为1个字节', trigger: 'change' }
           ]
         },
@@ -842,7 +842,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
         {
@@ -850,7 +850,7 @@ export default {
 
           type: 'input',
           rule: [
-            { required: true, pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         }
       ]
@@ -865,7 +865,7 @@ export default {
 
           type: 'input',
           rule: [
-            { pattern: /^([0-9a-fA-F]{2})+$/, message: '必须输入HEX格式', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
           ]
         },
       ]

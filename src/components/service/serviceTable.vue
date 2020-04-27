@@ -11,20 +11,33 @@
       <el-table-column prop="service" label="服务信息" width="300">
         <template
           slot-scope="scope"
-        >{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</template>
+        ><div v-if="scope.row.type=='uds'">{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</div>
+        <div v-else><el-tag size="mini">Group:</el-tag> <strong>{{ scope.row.service.name}}</strong></div></template>
       </el-table-column>
       <el-table-column label="Suppress" width="76" align="center">
-        <template slot-scope="scope">
-          <i class="el-icon-circle-check" v-if="scope.row.suppress" style="color:green"></i>
+        <template slot-scope="scope" v-if="scope.row.type=='uds'">
+          <i class="el-icon-circle-check" v-if="scope.row.payload[0].suppress" style="color:green"></i>
           <i class="el-icon-circle-close" v-else style="color:red"></i>
         </template>
+        
       </el-table-column>
-      <el-table-column prop="payload" label="Payload" width="300">
-        <template slot-scope="scope">
-          <div v-if="scope.row.payload">
+      <el-table-column prop="payload" label="Payload" width="500">
+        <template slot-scope="scope" >
+          <div v-if="scope.row.payload&&scope.row.type=='uds'">
             <div v-for="(item, key) in scope.row.payload" :key="key">
-              <el-tag size="mini">{{ key}}</el-tag>
-              : {{ item}}
+              <el-tag size="mini">{{item.name}}</el-tag>
+              : {{item[item.name]}}
+            </div>
+          </div>
+          <div v-else-if="scope.row.subtable&&scope.row.type=='group'" style="height:100px;overflow:auto">
+            <div v-for="(item, key) in scope.row.subtable" :key="key">
+              <div v-if="item.payload">
+                <div v-for="(subitem, subkey) in item.payload" :key="subkey">
+                  <el-tag size="mini">{{key+'-'+subitem.name}}</el-tag>
+                  : {{subitem[subitem.name]}}
+                </div>
+              </div>
+              
             </div>
           </div>
           <div v-else>NULL</div>
@@ -32,28 +45,13 @@
       </el-table-column>
 
       <el-table-column prop="func" label="校验函数" width="400">
-        <template slot-scope="scope">
+        <template slot-scope="scope" v-if="scope.row.type=='uds'">
           <el-input
             readonly
             type="textarea"
             :value="'function(writeData,readData){\r\n' + scope.row.func +'\r\n}'"
             :autosize="{ minRows:0 , maxRows: 8}"
           ></el-input>
-        </template>
-      </el-table-column>
-      <el-table-column prop="other" label="其他" width="400">
-        <template slot-scope="scope">
-          <div v-if="scope.row.other">
-            <div>
-              <el-tag size="mini">PATH</el-tag>
-              : {{scope.row.other.filePath}}
-            </div>
-            <div>
-              <el-tag size="mini">SIZE</el-tag>
-              : {{scope.row.other.fileSize}}
-            </div>
-          </div>
-          <div v-else>NULL</div>
         </template>
       </el-table-column>
       <el-table-column fixed="right" label="操作" width="50">

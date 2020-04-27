@@ -5,7 +5,7 @@
     <el-form
       :model="inputData"
       :rules="rules"
-      ref="ruleForm"
+      ref="groupForm"
       label-position="top"
       size="small"
       :validate-on-rule-change="true"
@@ -13,15 +13,15 @@
     >
       <el-form-item
         :label="item.name"
-        :prop="item.name"
+        :prop="key+'-'+item.name"
         v-for="(item,key) in config.input"
         :key="key"
       >
-        <el-input v-model="inputData[item.name]" v-if="item.type==='input'">
+        <el-input v-model="inputData[key+'-'+item.name]" v-if="item.type==='input'">
           <template slot="prepend">0x</template>
         </el-input>
         <el-select
-          v-model="inputData[item.name]"
+          v-model="inputData[key+'-'+item.name]"
           v-else-if="item.type==='select'"
           style="width:100%"
           allow-create
@@ -39,7 +39,7 @@
         </el-select>
         <div v-else-if="item.type==='subfunction'">
           <el-col :span="16">
-            <el-select v-model="inputData[item.name]" style="width:100%" allow-create filterable>
+            <el-select v-model="inputData[key+'-'+item.name]" style="width:100%" allow-create filterable>
               <el-option
                 v-for="child in item.options"
                 :key="child.value"
@@ -54,76 +54,84 @@
             </el-select>
           </el-col>
           <el-col :span="7" :offset="1" style="text-align:right">
-            <el-checkbox v-model="inputData['suppress']" label="Suppress" border></el-checkbox>
+            <el-checkbox v-model="inputData[key+'-suppress']" label="Suppress" border @change="suppressChange(key)"></el-checkbox>
           </el-col>
         </div>
         <el-input
-          v-model="inputData[item.name]"
+          v-model="inputData[key+'-'+item.name]"
           v-else-if="item.type==='text'"
           type="textarea"
           :autosize="{ minRows: 3, maxRows: 6}"
         ></el-input>
         <div v-else-if="item.type==='downloadFile'">
-          <el-button @click="downloadFIle(item.name)" type="primary">点击上传</el-button>
-          <span style="font-size:12px" v-if="inputData[item.name]">
-            {{inputData[item.name].name}}
-            <strong>{{'0x'+inputData[item.name].size.toString(16)}}</strong>
+          <el-button @click="downloadFIle(key+'-'+item.name)" type="primary">点击上传</el-button>
+          <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
+            {{inputData[key+'-'+item.name].name}}
+            <strong>{{'0x'+inputData[key+'-'+item.name].size.toString(16)}}</strong>
           </span>
         </div>
         <div v-else-if="item.type==='uploadFile'">
-          <el-button @click="uploadFIle(item.name)" type="primary">点击上传</el-button>
-          <span style="font-size:12px" v-if="inputData[item.name]">
-            <strong>{{inputData[item.name].name}}</strong>
+          <el-button @click="uploadFIle(key+'-'+item.name)" type="primary">点击上传</el-button>
+          <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
+            <strong>{{inputData[key+'-'+item.name].name}}</strong>
           </span>
           <!-- <el-input v-model="inputData[item.name]" readonly>
           </el-input>-->
         </div>
       </el-form-item>
-      <el-row style="margin-top:10px">
-        <el-col
-          :span="8"
-          style="color:gray;font-size:12px"
-        >校验函数(JS),输入参数(writeData,readData),用户可以自定义接收处理函数，返回true或者false,使用this.log('string')可以打印出log方便调试,使用this.delay(ms)可以当收到NRC(0x78)的时候进行调用</el-col>
-        <el-col :span="15" :offset="1">
-          <div class="fn">function(writeData,readData){</div>
-          <el-input
-            @blur="jsCheck"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 10}"
-            placeholder="请输入内容"
-            v-model="jsFn"
-            class="fnInput"
-          ></el-input>
-          <div class="fn">}</div>
-        </el-col>
-      </el-row>
-      <div id="JSLINT_" v-if="jsError!=''">
-        <fieldset id="JSLINT_WARNINGS" class="none">
-          <legend>Warnings</legend>
-          <div id="JSLINT_WARNINGS_LIST">
-            <p v-html="jsError"></p>
+      <el-table
+      size="mini"
+      ref="basictable"
+      row-key="date"
+      border
+      :data="config.table"
+      style="width: 100%;text-align: center"
+    >
+      <el-table-column prop="service" label="服务信息" width="300">
+        <template
+          slot-scope="scope"
+        >{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</template>
+      </el-table-column>
+      <el-table-column label="Suppress" width="76" align="center">
+        <template slot-scope="scope" >
+          <i class="el-icon-circle-check" v-if="scope.row.payload[0].suppress" style="color:green"></i>
+          <i class="el-icon-circle-close" v-else style="color:red"></i>
+        </template>
+      </el-table-column>
+      <el-table-column prop="payload" label="Payload">
+        <template slot-scope="scope">
+          <div v-if="scope.row.payload">
+            <div v-for="(item, key) in scope.row.payload" :key="key">
+                <div v-if="config.changeslot.indexOf(scope.$index+','+key)!==-1">
+                    <el-tag size="mini" type="danger">{{item.name}}</el-tag>
+                        : {{inputData[config.changeslot.indexOf(scope.$index+','+key)+'-'+item.name]}}
+                </div>
+                <div v-else>
+                    <el-tag size="mini">{{item.name}}</el-tag>
+                        : {{item[item.name]}}
+                </div>
+            </div>
           </div>
-        </fieldset>
-      </div>
-      <el-form-item style="text-align:right">
-        <span style="color:red;margin-right:5px">{{error}}</span>
-        <el-button type="primary" @click="addService">Add Service</el-button>
+          <div v-else>NULL</div>
+        </template>
+      </el-table-column>
+    </el-table>
+      <el-form-item style="text-align:right;margin-top:10px">
+        <span style="color:red;margin-right:5px;">{{error}}</span>
+        <el-button type="primary" @click="addService">Add Group</el-button>
       </el-form-item>
     </el-form>
+    
   </div>
 </template>
 
 <script>
 const { ipcRenderer } = require("electron");
-import jslint from "./../../JSLint/jslint.js";
-import report from "./../../JSLint/report.js";
 export default {
   data() {
     return {
       inputData: {},
-      error: "",
-      jsFn: "return true;",
-      jsError: "",
+      error:'',
       refresh:true
     };
   },
@@ -132,7 +140,7 @@ export default {
       var a = {};
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
-          a[this.config.input[i].name] = this.config.input[i].rule;
+          a[i+'-'+this.config.input[i].name] = this.config.input[i].rule;
         }
       }
       return a;
@@ -153,25 +161,10 @@ export default {
     }
   },
   methods: {
-    jsCheck() {
-      var option = {
-        white: true,
-        bitwise: true,
-        convert: true,
-        for: true,
-        single: true,
-        this: true,
-        node: true,
-      };
-      /* workaroud unused arg */
-      var result = jslint(
-        "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
-          this.jsFn +
-          "\r\n}\r\nmodule.exports=check;",
-        option,
-        undefined
-      );
-      this.jsError = report.error(result);
+    suppressChange(key){
+        var index=this.config.changeslot[key].split(',')[0]
+        this.config.table[index].payload[0].suppress=this.inputData[key+'-suppress']
+
     },
     uploadFIle(name) {
       this.inputData[name]={
@@ -195,66 +188,58 @@ export default {
       });
     },
     addService() {
+        
       var data = {};
-      this.$refs.ruleForm.validate(valid => {
+      this.$refs.groupForm.validate(valid => {
         if (valid) {
-          data.type = this.type;
-          data.func = this.jsFn;
+          data.type = 'group';
+         
           data.service = {
-            name: this.config.name,
-            value: this.config.value
+            name: this.config.name
           };
-          data.payload = [];
           for (var i in this.config.input) {
-            var item={}
-            item.type=this.config.input[i].type
-            item.name=this.config.input[i].name
+            var name=this.config.input[i].name
+            var key=i+'-'+name
+            var slot=this.config.changeslot[i].split(',')
+            var tableIndex=slot[0]
+            var payloadIndex=slot[1]
             if (
               this.config.input[i].type === "downloadFile" ||
               this.config.input[i].type === "uploadFile"
             ) {
-              if (!this.inputData[this.config.input[i].name]) {
+              if (!this.inputData[key]) {
                 this.error = "Please chhose a file";
                 return;
               }
-              if (parseInt(this.inputData.memorySize, 16) <= 0) {
-                this.error = "MemorySize should more than 0";
-                return;
-              }
-              if (this.config.input[i].type === "downloadFile") {
-                if (parseInt(this.inputData.memorySize, 16) > this.inputData[this.config.input[i].name].size) {
-                  this.error = "MemorySize should less than file size";
-                  return;
-                }
-              }
               this.error = "";
-              item[this.config.input[i].name]=this.inputData[this.config.input[i].name]
+              this.config.table[tableIndex].payload[payloadIndex][name]=this.inputData[key]
             } else if (this.config.input[i].type === "subfunction") {
-              item.subFunction = parseInt(this.inputData.subFunction)
-              if(this.inputData.suppress){
-                item.suppress=true
+              this.config.table[tableIndex].payload[payloadIndex][name] = parseInt(this.inputData[key])
+              if(this.config.table[tableIndex].payload[payloadIndex].suppress){
+                this.config.table[tableIndex].payload[payloadIndex].data=this.config.table[tableIndex].payload[payloadIndex][name]|0x80
               }else{
-                item.suppress=false
+                this.config.table[tableIndex].payload[payloadIndex].data=this.config.table[tableIndex].payload[payloadIndex][name]
               }
-              item.data=[parseInt(this.inputData.subFunction)|(item.suppress?0x80:0)]
             } else {
-              item[this.config.input[i].name]='0x'+this.inputData[this.config.input[i].name]
+              this.config.table[tableIndex].payload[payloadIndex][name]='0x'+this.inputData[key]
               if (
-                this.inputData[this.config.input[i].name] &&
-                this.inputData[this.config.input[i].name] != ""
+                this.inputData[key] &&
+                this.inputData[key] != ""
               ) {
                 var buf = Buffer.from(
                   this.inputData[this.config.input[i].name],
                   "hex"
                 );
-                item.data = [...buf];
+                this.config.table[tableIndex].payload[payloadIndex].data = [...buf];
               } else {
-                item.data = [];
+                this.config.table[tableIndex].payload[payloadIndex].data = [];
               }
             }
-            data.payload.push(item)
           }
+          data.subtable=this.config.table
           this.$emit("additem", data);
+          console.log(this.config.table)
+         
         }
       });
     }

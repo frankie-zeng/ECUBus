@@ -9,6 +9,7 @@ import {
   installVueDevtools 
 } from 'vue-cli-plugin-electron-builder/lib'
 import { compile } from 'vue-template-compiler'
+import { mapState } from 'vuex'
 
 const k1SHEGen = require('./crypto/k1she.js')
 const k3SHEGen = require('./crypto/k3she.js')
@@ -16,6 +17,8 @@ const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const { ipcMain } = require('electron')
 const fs = require('fs')
+const path = require('path')
+const group_file=path.join(app.getPath('userData'),'groupservice.js')
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -177,6 +180,24 @@ ipcMain.on('k3SHEGen', (event, arg) => {
   )
   
   event.returnValue = ret
+})
+if(!fs.existsSync(group_file)){
+  fs.writeFileSync(group_file,'[]')
+}
+
+fs.watchFile(group_file,()=>{
+  win.webContents.send('groupChange','')
+})
+ipcMain.on('readGroup',(event,arg)=>{
+  event.returnValue =  fs.readFileSync(group_file)
+})
+ipcMain.on('saveGroup',(event,arg)=>{
+  var err=0
+  var map
+  map = new Map(JSON.parse(fs.readFileSync(group_file)));
+  map.set(arg[0],arg[1])
+  fs.writeFileSync(group_file,JSON.stringify(Array.from(map.entries())))
+  event.returnValue = err
 })
 ipcMain.on('k1SHEGen', (event, arg) => {
   var flag2=function(flag){
