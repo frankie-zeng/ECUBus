@@ -9,6 +9,7 @@ const sprintf = require('sprintf-js').sprintf
 const PORT = 13400
 const VER = 0x02
 const fs = require('fs')
+const { decodeTable, payload2data } = require('./decode.js')
 
 class IPUDS {
     constructor(win) {
@@ -21,21 +22,7 @@ class IPUDS {
         this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8001, 0x8002, 0x8003]
         this.udpFd = dgram.createSocket('udp4')
         this.index = 0
-        this.writeFile = (writeData, readData) => {
-            var cb
-            if (this.blockNum === 0) {
-                cb = 255
-            } else {
-                cb = this.blockNum - 1;
-            }
-            if (readData[0] === cb) {
-                this.fStream.write(new Uint8Array(readData.slice(1)))
-                return true
-            } else {
-                this.log(sprintf("[error]:Block number error,hope:%d,get:%d\r\n", cb, readData[0]))
-                return false
-            }
-        }
+        this.receive = false
         this.udpFd.on('message', (msg, rinfo) => {
             var ret = this.parseData(msg)
             if (ret.err === 0) {
@@ -75,6 +62,7 @@ class IPUDS {
                     item.active = false
                     var msg = this.writeRouteActive(parseInt(active.sa), parseInt(active.activeType), active.option)
                     item.fd.write(msg, () => {
+                        this.receive=true
                         item.timer = setTimeout(() => {
                             item.fd.destroy()
                             delete this.cMap[key]
@@ -108,85 +96,66 @@ class IPUDS {
                     )
                 })
                 item.fd.on('data', (msg) => {
-                    var ret = this.parseData(msg)
-                    if (ret.err === 0) {
-                        if (ret.type === 6) {
-                            if (item.active === false) {
-                                clearTimeout(item.timer)
-                                item.active = true
-                                this.emit('doipTcpStatus', {
-                                    key: key,
-                                    err: 0,
-                                    msg: '激活成功',
-                                    data: ret.data
-                                }
-                                )
-                            }else{
-                                this.emit('udsData', sprintf("[error]:the router has actived,used time:%d\r\n", new Date().getTime() - this.startTime))
-                            }
-                        } else if (ret.type === 7) {
-                            item.fd.write(this.writeAliveRes(parseInt(active.sa)))
-                        } else if (ret.type === 0x8001) {
-                            clearTimeout(item.timer)
-                            this.emit('udsData', sprintf("[data]:uds response:%s.\r\n",ret.data.payload.join(',')))
-                            if (this.checkFunc(this.writeData, ret.data.payload)) {
-                                if (item.timer.hasRef()) {
-                                    this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
+                    if (this.receive) {
+                        var ret = this.parseData(msg)
+                        this.receive=false
+                        if (ret.err === 0) {
+                            if (ret.type === 6) {
+                                if (item.active === false) {
+                                    clearTimeout(item.timer)
+                                    item.active = true
+                                    this.emit('doipTcpStatus', {
+                                        key: key,
+                                        err: 0,
+                                        msg: '激活成功',
+                                        data: ret.data
+                                    }
+                                    )
                                 } else {
-                                    /* auto34 insert? */
-                                    if (this.writeData[0] === 0x35) {
-                                        this.auto35(ret.data.payload)
-                                        setTimeout(() => {
-                                            this.step()
-                                        }, 5);
-                                    }
-                                    else if (this.writeData[0] === 0x34) {
-                                        this.auto34(ret.data.payload)
-                                        setTimeout(() => {
-                                            this.step()
-                                        }, 5);
-                                    } else {
-                                        this.step()
-                                    }
+                                    this.emit('udsData', sprintf("[error]:the router has actived,used time:%d\r\n", new Date().getTime() - this.startTime))
                                 }
-                            } else {
-                                this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
-                            }
-                    
-                        } else if (ret.type === 0x8002) {
-                            clearTimeout(item.timer)
-                            this.emit('udsData', sprintf("[data]:ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
-                            if(item.suppress){
-                                setTimeout(()=>{
-                                    if (this.writeData[0] === 0x35) {
-                                        this.auto35(ret.data.payload)
-                                        setTimeout(() => {
+                            } else if (ret.type === 7) {
+                                item.fd.write(this.writeAliveRes(parseInt(active.sa)))
+                            } else if (ret.type === 0x8001) {
+                                clearTimeout(item.timer)
+                                this.emit('udsData', sprintf("[data]:uds response:%s.\r\n", ret.data.payload.join(',')))
+                                try{
+                                    if (this.checkFunc(this.writeData, ret.data.payload)) {
+                                        if (item.timer.hasRef()) {
+                                            this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
+                                        } else {
                                             this.step()
-                                        }, 5);
-                                    }
-                                    else if (this.writeData[0] === 0x34) {
-                                        this.auto34(ret.data.payload)
-                                        setTimeout(() => {
-                                            this.step()
-                                        }, 5);
+                                        }
                                     } else {
-                                        this.step()
+                                        this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
                                     }
-                                },this.sDelay)
-                            }else{
-                                item.timer=setTimeout(()=>{
-                                    this.emit('udsError', sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime))
-                                },this.timeout)
+                                }catch(error){
+                                    this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message,new Date().getTime() - this.startTime))
+                                }
+
+                            } else if (ret.type === 0x8002) {
+                                clearTimeout(item.timer)
+                                this.emit('udsData', sprintf("[data]:ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
+                                if (item.suppress) {
+                                    setTimeout(() => {
+                                        this.step()
+                                    }, this.sDelay)
+                                } else {
+                                    this.receive=true
+                                    item.timer = setTimeout(() => {
+                                        this.emit('udsError', sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                                    }, this.timeout)
+                                }
+                            } else if (ret.type === 0x8003) {
+                                clearTimeout(item.timer)
+                                this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
                             }
-                        } else if (ret.type === 0x8003) {
+                        } else if(ret.err<0){
+                            delete this.cMap[key]
+                            item.fd.destroy()
                             clearTimeout(item.timer)
-                            this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
+                            this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
                         }
-                    } else {
-                        delete this.cMap[key]
-                        item.fd.destroy()
-                        clearTimeout(item.timer)
-                        this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
                     }
                 })
             }
@@ -195,10 +164,13 @@ class IPUDS {
             this.sDelay = arg.sDelay
             this.timeout = arg.timeout
             this.udsTable = arg.udsTable
+            this.subTable = []
+            this.addr = arg.addr
             this.index = 0
             this.startTime = new Date().getTime()
             this.step()
-
+            // this.checkFunc(this.writeData, [0x74, 0x30, 0, 0, 128])
+               
         })
         ipcMain.on('doipDeviceFind', (event, arg) => {
 
@@ -215,6 +187,7 @@ class IPUDS {
 
 
     }
+    /*user call*/
     delay(timeout) {
         var t = typeof timeout !== 'undefined' ? timeout : this.timeout
         this.cMap[this.key].timer = setTimeout(() => {
@@ -222,203 +195,104 @@ class IPUDS {
         }, t)
     }
     log(msg) {
-        this.emit('udsData', msg)
+        this.emit('udsData', JSON.stringify(msg) + '\r\n')
     }
-    changeNextFrame(name,value=[]){
-        if(this.index<this.udsTable.length){
-            if(name in this.udsTable[this.index].payload){
-                this.udsTable[this.index].payload[name]=value
+
+    openFile(filename, flag = 'r') {
+        this.fd = fs.openSync(filename, flag)
+    }
+    readFile(size) {
+        var buf = Buffer.alloc(size)
+        var len = fs.readSync(this.fd, buf, 0, size)
+        return [...buf.slice(0, len)]
+    }
+    writeFile(data) {
+        fs.writeSync(this.fd, Buffer.from(data))
+    }
+    closeFile() {
+        fs.closeSync(this.fd)
+    }
+    changeNextFrame(name, value = []) {
+        if ((this.subTable.length == 0) && (this.udsTable.length > 0)) {
+            this.subTable = decodeTable(this.udsTable.shift())
+        }
+        if (this.subTable.length > 0) {
+            for (var i in this.subTable[0].payload) {
+                if (this.subTable[0].payload[i].name == name) {
+                    if (this.subTable[0].payload[i].data) {
+                        this.subTable[0].payload[i].data = value
+                    }
+                    break
+                }
             }
         }
     }
+    insertItem(service, payload, func = '(writeData,readData)=>{return true}') {
+        this.subTable.unshift({
+            func: func,
+            payload: payload,
+            service: service
+        })
+    }
+    /*end user call*/
     emit(channel, msg) {
         this.win.webContents.send(channel, msg)
     }
-    auto35(readData) {
-        if (readData.length > 2 && readData[0] === 0x75) {
-            var len = (readData[1] & 0xf0) >> 4
-            var i
-            if (len + 2 <= readData.length) {
-                var blockLen = 0
-                for (i = 0; i < len; i++) {
-                    blockLen += readData[2 + i] * Math.pow(256, (len - 1 - i))
-                }
-                if (blockLen > 2) {
-                    blockLen -= 2
-                    /* response is ok */
-                    /* insert */
-                    var usedTable = this.udsTable.slice(0, this.index)
-                    var unusedTable = this.udsTable.slice(this.index)
-                    var newTable = [].concat(usedTable)
-                    for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x36 },
-                            addr: this.addr35,
-                            payload: {},
-                            func: this.writeFile
-                        })
-                    }
-                    if (this.fileSize % blockLen) {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x36 },
-                            addr: this.addr35,
-                            payload: {},
-                            func: this.writeFile
-                        })
-                    }
-                    /* check next service */
-                    if (unusedTable.length > 0 && unusedTable[0].service.value === 0x37) {
-
-                    } else {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x37 },
-                            addr: this.addr35,
-                            payload: {},
-                            func: 'return true;'
-                        })
-                    }
-
-                    this.udsTable = newTable.concat(unusedTable)
-                    this.blockNum = 1
-                }
-            }
-        }
-    }
-    auto34(readData) {
-        if (readData.length > 2 && readData[0] === 0x74) {
-            var len = (readData[1] & 0xf0) >> 4
-            var i
-            if (len + 2 <= readData.length) {
-                var blockLen = 0
-                for (i = 0; i < len; i++) {
-                    blockLen += readData[2 + i] * Math.pow(256, (len - 1 - i))
-                }
-                if (blockLen > 2) {
-                    blockLen -= 2
-                    /* response is ok */
-                    /* insert */
-                    var usedTable = this.udsTable.slice(0, this.index)
-                    var unusedTable = this.udsTable.slice(this.index)
-                    var newTable = [].concat(usedTable)
-                    for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x36 },
-                            addr: this.addr34,
-                            len: blockLen,
-                            payload: {},
-                            func: 'return true;'
-                        })
-                    }
-                    if (this.fileSize % blockLen) {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x36 },
-                            addr: this.addr34,
-                            len: this.fileSize % blockLen,
-                            payload: {},
-                            func: 'return true;'
-                        })
-                    }
-                    /* check next service */
-                    if (unusedTable.length > 0 && unusedTable[0].service.value === 0x37) {
-
-                    } else {
-                        newTable.push({
-                            type: 'uds',
-                            service: { value: 0x37 },
-                            addr: this.addr34,
-                            payload: {},
-                            func: 'return true;'
-                        })
-                    }
-
-                    this.udsTable = newTable.concat(unusedTable)
-                    this.blockNum = 1
-                }
-            }
-        }
-    }
     step() {
-        if (this.index === this.udsTable.length) {
+        if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
             this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
-            return
+            return 0
+        }
+        if (this.subTable.length == 0) {
+            this.subTable = decodeTable(this.udsTable.shift())
+        }
+        var item = this.subTable.shift()
+        if (typeof item.func === 'string') {
+            try {
+                // eslint-disable-next-line no-eval
+                this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
+            } catch (error) {
+                // eslint-disable-next-line no-eval
+                this.checkFunc = eval('(writeData,readData)=>{return true}')
+            }
+        } else {
+            this.checkFunc = item.func
+        }
+        this.writeData = item.payload
+        var suppress = false
+        var data = [item.service]
+        
+
+        data = data.concat(payload2data(item.payload))
+        console.log(data)
+        /* check surpress*/
+        for (var i in this.writeData) {
+            if (this.writeData[i].type == 'subfunction') {
+                if (this.writeData[i].suppress) {
+                    suppress = true
+                }
+                break
+            }
         }
 
-        var item = this.udsTable[this.index]
-        this.index++;
-        var rawdata = []
-        if (item.type === 'uds') {
-            rawdata.push(item.service.value)
-            if (item.service.value === 0x34) {
-                this.addr34 = item.addr
-                this.fileName = item.other.filePath
-                this.fileSize = item.other.fileSize
-                this.fStream = fs.createReadStream(this.fileName)
-                this.mode = 'read'
-            }
-            if (item.service.value === 0x35) {
-                this.addr35 = item.addr
-                this.fileName = item.other.filePath
-                this.fileSize = item.other.fileSize
-                this.fStream = fs.createWriteStream(this.fileName)
-                this.mode = 'write'
-            }
+        var key = this.addr.key
+        var msg = this.writeDiaMsg(this.addr.SA, this.addr.TA, data)
 
-            if (item.service.value === 0x36) {
-                rawdata.push(this.blockNum)
-                this.blockNum++
-                if (this.blockNum === 256) {
-                    this.blockNum = 0
-                }
-                if (this.mode === 'read') {
-                    var content = this.fStream.read(item.len)
-                    rawdata = rawdata.concat(Array.prototype.slice.call(content, 0))
-                }
-            }
-            if (item.service.value === 0x37) {
-                this.fStream.destroy()
-            }
-            if (typeof item.func === 'string') {
-                try {
-                    // eslint-disable-next-line no-eval
-                    this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
-                } catch (error) {
-                    // eslint-disable-next-line no-eval
-                    this.checkFunc = eval('(writeData,readData)=>{return true}')
-                }
-            } else {
-                this.checkFunc = item.func
-            }
-            for (var i in item.payload) {
-                rawdata = rawdata.concat(item.payload[i])
-            }
-            if (item.suppress) {
-                rawdata[1] |= 0x80
-            }
-            var key = item.addr.key
-            var msg = this.writeDiaMsg(item.addr.SA, item.addr.TA, rawdata)
-            this.writeData = rawdata
-            this.key = key
-            if (key in this.cMap) {
-                if(item.suppress){
-                    this.cMap[key].suppress=item.suppress
-                }else{
-                    this.cMap[key].suppress=false
-                }
-                this.cMap[key].fd.write(msg, () => {
-                    this.cMap[key].timer = setTimeout(() => {
-                        /*no response*/
-                        this.emit('udsError', sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime))
-                    }, this.timeout);
-                })
-            } else {
-                this.emit('udsError', sprintf('[error]:this connection lost,used time:%d\r\n'), new Date().getTime() - this.startTime)
-            }
+        this.key = key
+        if (key in this.cMap) {
+            this.cMap[key].suppress=suppress
+            this.cMap[key].fd.write(msg, () => {
+                this.receive=true
+                this.cMap[key].timer = setTimeout(() => {
+                    /*no response*/
+                    this.emit('udsError', sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                }, this.timeout);
+            })
+        } else {
+            this.emit('udsError', sprintf('[error]:this connection lost,used time:%d\r\n'), new Date().getTime() - this.startTime)
         }
+
+        return 1
     }
     parseData(msg) {
         /*header handler*/
@@ -468,7 +342,7 @@ class IPUDS {
             if (payload.length == 13) {
                 ret.data.option = payload.readUInt32BE(9)
             }
-        } else if( type === 0x8001) {
+        } else if (type === 0x8001) {
             ret.data.sa = payload.readUInt16BE(0)
             ret.data.ta = payload.readUInt16BE(2)
             ret.data.payload = [...payload.slice(4)]

@@ -29,13 +29,15 @@ export default {
   methods: {
     importConfig() {
       var file = ipcRenderer.sendSync("readFile");
-      var table = JSON.parse(file);
-      if (this.mode === "doip") {
-        this.$store.commit("doipTableLoad", table);
-      } else if (this.mode === "can") {
-        this.$store.commit("canTableLoad", table);
-      } else {
-        return;
+      if(file){
+        var table = JSON.parse(file);
+        if (this.mode === "doip") {
+          this.$store.commit("doipTableLoad", table);
+        } else if (this.mode === "can") {
+          this.$store.commit("canTableLoad", table);
+        } else {
+          return;
+        }
       }
     },
     // realImport() {

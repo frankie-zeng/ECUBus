@@ -1,7 +1,7 @@
 <template>
   <div>
     <div>
-      <el-dialog title="选择一个地址" :visible.sync="showAddr" center>
+      <el-dialog title="选择一个地址" :visible.sync="showAddr" center width="30%">
         <el-select v-model="addrIndex" placeholder="请选择" style="width:100%" size="mini">
           <el-option v-for="(item,key) in addrTable" :key="key" :label="item.name" :value="key">
             <span style="float: left">{{ item.name }}</span>
@@ -129,16 +129,18 @@ export default {
     readRun(){
       var table = JSON.parse(JSON.stringify(this.udsTable));
       if (this.addrTable[this.addrIndex]) {
-        for (var i in table) {
-          table[i].addr = this.addrTable[this.addrIndex];
-        }
         this.showAddr = false;
       }else{
+        this.$notify.error({
+          title: "Error",
+          message: 'Please choose correct address.'
+        });
         return
       }
       this.$store.commit("runChange", true);
       this.logText = "";
       ipcRenderer.send(this.mode + "udsExcute", {
+        addr: this.addrTable[this.addrIndex],
         udsTable: table,
         timeout: parseInt(this.udsTimeout, 10),
         sDelay: parseInt(this.sDelay, 10)

@@ -215,30 +215,12 @@ export default {
               this.config.table[tableIndex].payload[payloadIndex][name]=this.inputData[key]
             } else if (this.config.input[i].type === "subfunction") {
               this.config.table[tableIndex].payload[payloadIndex][name] = parseInt(this.inputData[key])
-              if(this.config.table[tableIndex].payload[payloadIndex].suppress){
-                this.config.table[tableIndex].payload[payloadIndex].data=this.config.table[tableIndex].payload[payloadIndex][name]|0x80
-              }else{
-                this.config.table[tableIndex].payload[payloadIndex].data=this.config.table[tableIndex].payload[payloadIndex][name]
-              }
-            } else {
-              this.config.table[tableIndex].payload[payloadIndex][name]='0x'+this.inputData[key]
-              if (
-                this.inputData[key] &&
-                this.inputData[key] != ""
-              ) {
-                var buf = Buffer.from(
-                  this.inputData[this.config.input[i].name],
-                  "hex"
-                );
-                this.config.table[tableIndex].payload[payloadIndex].data = [...buf];
-              } else {
-                this.config.table[tableIndex].payload[payloadIndex].data = [];
-              }
+            } else{
+              this.config.table[tableIndex].payload[payloadIndex][name]=this.inputData[key]
             }
           }
           data.subtable=this.config.table
           this.$emit("additem", data);
-          console.log(this.config.table)
          
         }
       });

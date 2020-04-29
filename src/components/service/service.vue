@@ -236,21 +236,8 @@ export default {
               }else{
                 item.suppress=false
               }
-              item.data=[parseInt(this.inputData.subFunction)|(item.suppress?0x80:0)]
-            } else {
-              item[this.config.input[i].name]='0x'+this.inputData[this.config.input[i].name]
-              if (
-                this.inputData[this.config.input[i].name] &&
-                this.inputData[this.config.input[i].name] != ""
-              ) {
-                var buf = Buffer.from(
-                  this.inputData[this.config.input[i].name],
-                  "hex"
-                );
-                item.data = [...buf];
-              } else {
-                item.data = [];
-              }
+            } else{
+              item[this.config.input[i].name]=this.inputData[this.config.input[i].name]
             }
             data.payload.push(item)
           }

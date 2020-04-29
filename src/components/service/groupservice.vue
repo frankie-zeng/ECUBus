@@ -72,6 +72,16 @@ export default {
     },
     methods:{
         addGroup:function(){
+            for(var i in this.table){
+                if(this.table[i].type=='group'){
+                    this.$notify.error({
+                        title: "Error",
+                        message: 'Remove group firstly.'
+                    });
+                    return 
+                }
+                
+            }
             
             if( this.groupname===''){
                 this.$notify.error({

@@ -74,7 +74,7 @@ import Sortable from "sortablejs";
 export default {
   data: function() {
     return {
-      sortable: {}
+      sortable: {},
     };
   },
   mounted() {

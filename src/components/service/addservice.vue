@@ -46,6 +46,7 @@
 import config from "./service.js";
 import Service from "./service.vue";
 import Group from "./group.vue";
+import pregroup from './predefgroup.js'
 const { ipcRenderer } = require("electron");
 export default {
   components: {
@@ -83,6 +84,9 @@ export default {
         this.group={}
         for (let [key, value] of map) {
           this.group[key]=JSON.parse(value)
+        }
+        for (var i in pregroup) {
+          this.group[pregroup[i][0]]=JSON.parse(pregroup[i][1])
         }
       }else{
         this.itemIndex=0
