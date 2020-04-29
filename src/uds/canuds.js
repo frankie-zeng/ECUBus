@@ -2,7 +2,7 @@
 /* eslint-disable no-empty */
 const path = require('path')
 const sprintf = require('sprintf-js').sprintf
-
+const { decodeTable, payload2data } = require('./decode.js')
 const fs = require('fs')
 const { ipcMain } = require('electron')
 const ErrorText = {
@@ -27,11 +27,7 @@ class CANUDS {
     this.canfd = false
     this.channel = PCANTP.PCANTP_USBBUS1
     this.udsTimer = setTimeout(() => { }, 0)
-    this.writing = false
-    this.writeFile = (writeData, readData) => {
-      this.fStream.write(new Uint8Array(readData))
-      return true
-    }
+    this.receive = false
     clearTimeout(this.udsTimer)
     ipcMain.on('canConnect', (event, arg) => {
       var err = this.cantp.Initialize(arg[0], arg[1])
@@ -82,9 +78,10 @@ class CANUDS {
     })
     ipcMain.on('canudsExcute', (event, arg) => {
       this.udsTable = arg.udsTable
+      this.subTable = []
       this.timeout = arg.timeout
       this.sDelay = arg.sDelay
-      this.index = 0
+      this.addr = arg.addr
       this.startTime = new Date().getTime()
       this.step()
     })
@@ -101,6 +98,42 @@ class CANUDS {
   emit(channel, msg) {
     this.win.webContents.send(channel, msg)
   }
+  openFile(filename, flag = 'r') {
+    this.fd = fs.openSync(filename, flag)
+  }
+  readFile(size) {
+    var buf = Buffer.alloc(size)
+    var len = fs.readSync(this.fd, buf, 0, size)
+    return [...buf.slice(0, len)]
+  }
+  writeFile(data) {
+    fs.writeSync(this.fd, Buffer.from(data))
+  }
+  closeFile() {
+    fs.closeSync(this.fd)
+  }
+  changeNextFrame(name, value = []) {
+    if ((this.subTable.length == 0) && (this.udsTable.length > 0)) {
+      this.subTable = decodeTable(this.udsTable.shift())
+    }
+    if (this.subTable.length > 0) {
+      for (var i in this.subTable[0].payload) {
+        if (this.subTable[0].payload[i].name == name) {
+          if (this.subTable[0].payload[i].data) {
+            this.subTable[0].payload[i].data = value
+          }
+          break
+        }
+      }
+    }
+  }
+  insertItem(service, payload, func = '(writeData,readData)=>{return true}') {
+    this.subTable.unshift({
+      func: func,
+      payload: payload,
+      service: service
+    })
+  }
   Unload() {
     this.cantp.Unload()
   }
@@ -112,8 +145,8 @@ class CANUDS {
       switch (msg.MSGTYPE) {
         case PCANTP.PCANTP_MESSAGE_REQUEST_CONFIRMATION:
           if (msg.RESULT === 0) {
-            this.writing = false
-            if (this.udsTable[this.index - 1].suppress) {
+
+            if (this.suppress) {
               /* suppress, don't wait response */
               setTimeout(() => {
                 this.step()
@@ -139,31 +172,21 @@ class CANUDS {
         //   break
         case PCANTP.PCANTP_MESSAGE_DIAGNOSTIC:
         case PCANTP.PCANTP_MESSAGE_REMOTE_DIAGNOSTIC:
-          if (this.writing === false) {
+          if (this.receive) {
             clearTimeout(this.udsTimer)
             this.emit('udsData', sprintf("[data]:msg:%s.\r\n", msg.DATA.join(',')))
-            if (this.checkFunc(this.writeData, msg.DATA)) {
-              if (this.udsTimer.hasRef()) {
-                this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
-              } else {
-                /* auto34 insert? */
-                if (this.writeData[0] === 0x35) {
-                  this.auto35(msg.DATA)
-                  setTimeout(() => {
-                    this.step()
-                  }, 5);
-                }
-                else if (this.writeData[0] === 0x34) {
-                  this.auto34(msg.DATA)
-                  setTimeout(() => {
-                    this.step()
-                  }, 5);
+            try {
+              if (this.checkFunc(this.writeData, msg.DATA)) {
+                if (this.udsTimer.hasRef()) {
+                  this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
                 } else {
                   this.step()
                 }
+              } else {
+                this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
               }
-            } else {
-              this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+            } catch (error) {
+              this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
             }
           }
           break
@@ -175,184 +198,57 @@ class CANUDS {
   registerCallback(fn) {
     this.cantp.RegCb(fn)
   }
-  auto35(readData) {
-    if (readData.length > 2 && readData[0] === 0x75) {
-      var len = (readData[1] & 0xf0) >> 4
-      var i
-      if (len + 2 <= readData.length) {
-        var blockLen = 0
-        for (i = 0; i < len; i++) {
-          blockLen += readData[2 + i] * Math.pow(256, (len - 1 - i))
-        }
-        if (blockLen > 2) {
-          blockLen -= 2
-          /* response is ok */
-          /* insert */
-          var usedTable = this.udsTable.slice(0, this.index)
-          var unusedTable = this.udsTable.slice(this.index)
-          var newTable = [].concat(usedTable)
-          for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x36 },
-              addr: this.addr35,
-              payload: {},
-              func: this.writeFile
-            })
-          }
-          if (this.fileSize % blockLen) {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x36 },
-              addr: this.addr35,
-              payload: {},
-              func: this.writeFile
-            })
-          }
-          /* check next service */
-          if (unusedTable.length > 0 && unusedTable[0].service.value === 0x37) {
 
-          } else {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x37 },
-              addr: this.addr35,
-              payload: {},
-              func: 'return true;'
-            })
-          }
-
-          this.udsTable = newTable.concat(unusedTable)
-          this.blockNum = 1
-        }
-      }
-    }
-  }
-  auto34(readData) {
-    if (readData.length > 2 && readData[0] === 0x74) {
-      var len = (readData[1] & 0xf0) >> 4
-      var i
-      if (len + 2 <= readData.length) {
-        var blockLen = 0
-        for (i = 0; i < len; i++) {
-          blockLen += readData[2 + i] * Math.pow(256, (len - 1 - i))
-        }
-        if (blockLen > 2) {
-          blockLen -= 2
-          /* response is ok */
-          /* insert */
-          var usedTable = this.udsTable.slice(0, this.index)
-          var unusedTable = this.udsTable.slice(this.index)
-          var newTable = [].concat(usedTable)
-          for (i = 0; i < parseInt(this.fileSize / blockLen); i++) {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x36 },
-              addr: this.addr34,
-              len: blockLen,
-              payload: {},
-              func: 'return true;'
-            })
-          }
-          if (this.fileSize % blockLen) {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x36 },
-              addr: this.addr34,
-              len: this.fileSize % blockLen,
-              payload: {},
-              func: 'return true;'
-            })
-          }
-          /* check next service */
-          if (unusedTable.length > 0 && unusedTable[0].service.value === 0x37) {
-
-          } else {
-            newTable.push({
-              type: 'uds',
-              service: { value: 0x37 },
-              addr: this.addr34,
-              payload: {},
-              func: 'return true;'
-            })
-          }
-
-          this.udsTable = newTable.concat(unusedTable)
-          this.blockNum = 1
-        }
-      }
-    }
-  }
   step() {
-    if (this.index === this.udsTable.length) {
+    if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
       this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
-      return
+      return 0
     }
-    var item = this.udsTable[this.index]
-    this.index++;
-    var rawdata = []
-    if (item.type === 'uds') {
-      rawdata.push(item.service.value)
-      if (item.service.value === 0x34) {
-        this.addr34 = item.addr
-        this.fileName = item.other.filePath
-        this.fileSize = item.other.fileSize
-        this.fStream = fs.createReadStream(this.fileName)
-        this.mode = 'read'
+    if (this.subTable.length == 0) {
+      this.subTable = decodeTable(this.udsTable.shift())
+    }
+    var item = this.subTable.shift()
+    if (typeof item.func === 'string') {
+      try {
+        // eslint-disable-next-line no-eval
+        this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
+      } catch (error) {
+        // eslint-disable-next-line no-eval
+        this.checkFunc = eval('(writeData,readData)=>{return true}')
       }
-      if (item.service.value === 0x35) {
-        this.addr35 = item.addr
-        this.fileName = item.other.filePath
-        this.fileSize = item.other.fileSize
-        this.fStream = fs.createWriteStream(this.fileName)
-        this.mode = 'write'
-      }
+    } else {
+      this.checkFunc = item.func
+    }
+    this.writeData = item.payload
+    var suppress = false
+    var data = [item.service]
 
-      if (item.service.value === 0x36) {
-        rawdata.push(this.blockNum)
-        this.blockNum++
-        if (this.blockNum === 256) {
-          this.blockNum = 0
+
+    data = data.concat(payload2data(item.payload))
+    console.log(data)
+    /* check surpress*/
+    for (var i in this.writeData) {
+      if (this.writeData[i].type == 'subfunction') {
+        if (this.writeData[i].suppress) {
+          suppress = true
         }
-        if (this.mode === 'read') {
-          var content = this.fStream.read(item.len)
-          rawdata = rawdata.concat(Array.prototype.slice.call(content, 0))
-        }
+        break
       }
-      if (item.service.value === 0x37) {
-        this.fStream.destroy()
-      }
-      if (typeof item.func === 'string') {
-        try {
-          // eslint-disable-next-line no-eval
-          this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
-        } catch (error) {
-          // eslint-disable-next-line no-eval
-          this.checkFunc = eval('(writeData,readData)=>{return true}')
-        }
-      } else {
-        this.checkFunc = item.func
-      }
-      for (var i in item.payload) {
-        rawdata = rawdata.concat(item.payload[i])
-      }
-      if (item.suppress) {
-        rawdata[1] |= 0x80
-      }
-      var msg = item.addr
-      if (this.canfd) {
-        msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_FD
-        msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_BRS
-      }
-      this.writeData = rawdata
-      msg.DATA = rawdata
-      msg.LEN = rawdata.length
-      var err = this.cantp.TpWrite(this.channel, msg)
-      if (err !== 0) {
-        this.emit('udsError', sprintf('[error]:%s,used time:%d\r\n'), this.cantp.GetErrorText(err), new Date().getTime() - this.startTime)
-      } else {
-        this.writing = true
-      }
+    }
+    var msg = this.addr
+    this.suppress = suppress
+    if (this.canfd) {
+      msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_FD
+      msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_BRS
+    }
+
+    msg.DATA = data
+    msg.LEN = data.length
+    var err = this.cantp.TpWrite(this.channel, msg)
+    if (err !== 0) {
+      this.emit('udsError', sprintf('[error]:%s,used time:%d\r\n'), this.cantp.GetErrorText(err), new Date().getTime() - this.startTime)
+    } else {
+      this.receive = !suppress
     }
   }
 }

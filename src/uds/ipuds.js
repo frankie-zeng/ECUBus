@@ -21,7 +21,6 @@ class IPUDS {
         this.typeList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0x4001, 0x4002, 0x4003, 0x4004, 0x8001, 0x8002, 0x8003]
         this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8001, 0x8002, 0x8003]
         this.udpFd = dgram.createSocket('udp4')
-        this.index = 0
         this.receive = false
         this.udpFd.on('message', (msg, rinfo) => {
             var ret = this.parseData(msg)
@@ -62,7 +61,7 @@ class IPUDS {
                     item.active = false
                     var msg = this.writeRouteActive(parseInt(active.sa), parseInt(active.activeType), active.option)
                     item.fd.write(msg, () => {
-                        this.receive=true
+                        this.receive = true
                         item.timer = setTimeout(() => {
                             item.fd.destroy()
                             delete this.cMap[key]
@@ -98,7 +97,7 @@ class IPUDS {
                 item.fd.on('data', (msg) => {
                     if (this.receive) {
                         var ret = this.parseData(msg)
-                        this.receive=false
+                        this.receive = false
                         if (ret.err === 0) {
                             if (ret.type === 6) {
                                 if (item.active === false) {
@@ -119,7 +118,7 @@ class IPUDS {
                             } else if (ret.type === 0x8001) {
                                 clearTimeout(item.timer)
                                 this.emit('udsData', sprintf("[data]:uds response:%s.\r\n", ret.data.payload.join(',')))
-                                try{
+                                try {
                                     if (this.checkFunc(this.writeData, ret.data.payload)) {
                                         if (item.timer.hasRef()) {
                                             this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
@@ -129,8 +128,8 @@ class IPUDS {
                                     } else {
                                         this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
                                     }
-                                }catch(error){
-                                    this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message,new Date().getTime() - this.startTime))
+                                } catch (error) {
+                                    this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
                                 }
 
                             } else if (ret.type === 0x8002) {
@@ -141,7 +140,7 @@ class IPUDS {
                                         this.step()
                                     }, this.sDelay)
                                 } else {
-                                    this.receive=true
+                                    this.receive = true
                                     item.timer = setTimeout(() => {
                                         this.emit('udsError', sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime))
                                     }, this.timeout)
@@ -150,7 +149,7 @@ class IPUDS {
                                 clearTimeout(item.timer)
                                 this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
                             }
-                        } else if(ret.err<0){
+                        } else if (ret.err < 0) {
                             delete this.cMap[key]
                             item.fd.destroy()
                             clearTimeout(item.timer)
@@ -166,11 +165,10 @@ class IPUDS {
             this.udsTable = arg.udsTable
             this.subTable = []
             this.addr = arg.addr
-            this.index = 0
             this.startTime = new Date().getTime()
             this.step()
             // this.checkFunc(this.writeData, [0x74, 0x30, 0, 0, 128])
-               
+
         })
         ipcMain.on('doipDeviceFind', (event, arg) => {
 
@@ -261,7 +259,7 @@ class IPUDS {
         this.writeData = item.payload
         var suppress = false
         var data = [item.service]
-        
+
 
         data = data.concat(payload2data(item.payload))
         console.log(data)
@@ -280,9 +278,9 @@ class IPUDS {
 
         this.key = key
         if (key in this.cMap) {
-            this.cMap[key].suppress=suppress
+            this.cMap[key].suppress = suppress
             this.cMap[key].fd.write(msg, () => {
-                this.receive=true
+                this.receive = true
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
                     this.emit('udsError', sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime))
