@@ -79,23 +79,11 @@
           </el-input>-->
         </div>
       </el-form-item>
+      <div class="subheader">User function</div>
       <el-row style="margin-top:10px">
-        <el-col
-          :span="8"
-          style="color:gray;font-size:12px"
-        >校验函数(JS),输入参数(writeData,readData),用户可以自定义接收处理函数，返回true或者false,使用this.log('string')可以打印出log方便调试,使用this.delay(ms)可以当收到NRC(0x78)的时候进行调用</el-col>
-        <el-col :span="15" :offset="1">
-          <div class="fn">function(writeData,readData){</div>
-          <el-input
-            @blur="jsCheck"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 10}"
-            placeholder="请输入内容"
-            v-model="jsFn"
-            class="fnInput"
-          ></el-input>
-          <div class="fn">}</div>
-        </el-col>
+        <div class="fn">function(writeData,readData){</div>
+        <codemirror v-model="jsFn"  @blur="jsCheck"  ref="cmEditor"/>
+        <div class="fn">}</div>
       </el-row>
       <div id="JSLINT_" v-if="jsError!=''">
         <fieldset id="JSLINT_WARNINGS" class="none">
@@ -117,15 +105,23 @@
 const { ipcRenderer } = require("electron");
 import jslint from "./../../JSLint/jslint.js";
 import report from "./../../JSLint/report.js";
+
+//import "codemirror/mode/javascript/javascript.js";
 export default {
+  
   data() {
     return {
       inputData: {},
+      
       error: "",
       jsFn: "return true;",
       jsError: "",
       refresh:true
     };
+  },
+  mounted() {
+    this.codemirror.setSize('100%',200)
+    // you can use this.codemirror to do something...
   },
   computed: {
     rules: function() {
@@ -136,6 +132,9 @@ export default {
         }
       }
       return a;
+    },
+     codemirror() {
+      return this.$refs.cmEditor.codemirror
     }
   },
   props: {
@@ -250,6 +249,11 @@ export default {
 </script>
 
 <style>
+.fn{
+  margin: 5px;
+  font-size: 16px;
+  color: gray;
+}
 .subservice {
   overflow: hidden;
 }

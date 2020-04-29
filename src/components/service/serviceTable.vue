@@ -1,5 +1,20 @@
 <template>
   <div>
+    <el-dialog title="User function" :visible.sync="cd" width="80%">
+     
+      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:100%">
+        <el-option
+          v-for="(n,i) in codeNum"
+          :key="i"
+          :label="n"
+          :value="i">
+        </el-option>
+      </el-select>
+   
+      <div>function(writeData,readonly){</div>
+      <codemirror v-model="jsFn[codeIndex]"  :options="{readOnly:true}" ref="cmEditor"/>
+      <div>}</div>
+    </el-dialog>
     <el-table
       size="small"
       ref="basictable"
@@ -21,7 +36,7 @@
         </template>
         
       </el-table-column>
-      <el-table-column prop="payload" label="Payload" width="500">
+      <el-table-column prop="payload" label="Payload">
         <template slot-scope="scope" >
           <div v-if="scope.row.payload&&scope.row.type=='uds'">
             <div v-for="(item, key) in scope.row.payload" :key="key">
@@ -44,14 +59,13 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="func" label="校验函数" width="400">
-        <template slot-scope="scope" v-if="scope.row.type=='uds'">
-          <el-input
-            readonly
-            type="textarea"
-            :value="'function(writeData,readData){\r\n' + scope.row.func +'\r\n}'"
-            :autosize="{ minRows:0 , maxRows: 8}"
-          ></el-input>
+      <el-table-column prop="func" label="校验函数" width="100"  align="center">
+        <template slot-scope="scope">
+          <el-button
+            type="text"
+            icon="el-icon-document"
+            @click="showCode(scope.row)"
+          ></el-button>
         </template>
       </el-table-column>
       <el-table-column fixed="right" label="操作" width="50">
@@ -75,6 +89,10 @@ export default {
   data: function() {
     return {
       sortable: {},
+      cd:false,
+      jsFn:[" "],
+      codeIndex:0,
+      codeNum:1
     };
   },
   mounted() {
@@ -94,6 +112,21 @@ export default {
   },
   props: ["mode"],
   methods: {
+    showCode(item){
+      this.jsFn=[]
+      this.codeIndex=0
+      if(item.type=='uds'){
+        this.codeNum=1
+        this.jsFn[0]=item.func
+      }else{
+        for(var i in item.subtable){
+          this.jsFn[i]=item.subtable[i].func
+        }
+        this.codeNum=item.subtable.length
+      }
+     
+      this.cd=true
+    },
     deleteService(index) {
       if (this.mode === "doip") {
         this.$store.commit("doipTableDelete", index);
