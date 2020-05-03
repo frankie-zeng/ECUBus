@@ -40,34 +40,19 @@ export default {
         }
       }
     },
-    // realImport() {
-    //   if (this.addrTable[this.addrIndex]) {
-    //     var file = ipcRenderer.sendSync("readFile");
-    //     var table = JSON.parse(file);
-    //     for (var i in table) {
-    //       table[i].addr = this.addrTable[this.addrIndex];
-    //     }
-    //     if (this.mode === "doip") {
-    //       this.$store.commit("doipTableLoad", table);
-    //     } else if (this.mode === "can") {
-    //       this.$store.commit("canTableLoad", table);
-    //     } else {
-    //       return;
-    //     }
-    //     this.showAddr = false;
-    //   }
-    // },
     exportConfig() {
       var val = JSON.parse(JSON.stringify(this.udsTable));
       for (var i in val) {
         delete val[i]["addr"];
       }
       var file = ipcRenderer.sendSync("saveFile", JSON.stringify(val));
-      this.$notify({
-        title: "成功",
-        message: "保存成功：" + file,
-        type: "success"
-      });
+      if(file!=null){
+        this.$notify({
+          title: "成功",
+          message: "保存成功：" + file,
+          type: "success"
+        });
+      }
     }
   }
 };

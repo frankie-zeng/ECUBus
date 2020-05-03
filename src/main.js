@@ -1,8 +1,8 @@
 import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
-import './plugins/element.js'
+import App from './render/App.vue'
+import router from './render/router'
+import store from './render/store'
+import './render/plugins/element.js'
 
 import VueCodemirror from "vue-codemirror";
 import "codemirror/lib/codemirror.css";

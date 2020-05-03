@@ -11,14 +11,10 @@ import {
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
 
-const k1SHEGen = require('./crypto/k1she.js')
-const k3SHEGen = require('./crypto/k3she.js')
+
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
-const { ipcMain } = require('electron')
-const fs = require('fs')
-const path = require('path')
-const group_file=path.join(app.getPath('userData'),'groupservice.js')
+
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -114,108 +110,4 @@ if (isDevelopment) {
     })
   }
 }
-ipcMain.on('readFile', (event, arg) => {
-  var file = dialog.showOpenDialogSync(win,{
-    filters: [
-      { name: 'JSON', extensions: ['json'] },
-    ],
-  })
-  if(Array.isArray(file)){
-    event.returnValue=fs.readFileSync(file[0])
-  }else{
-    event.returnValue=''
-  }
-})
-ipcMain.on('saveFile', (event, arg) => {
-  var file = dialog.showSaveDialogSync(win,{
-    filters: [
-      { name: 'JSON', extensions: ['json'] },
-    ],
-  })
-  if(typeof file ==="string"){
-    fs.writeFileSync(file,arg)
-  }
-  event.returnValue = file
-})
-
-ipcMain.on('saveFilePath', (event, arg) => {
-  var path=''
-  var file = dialog.showSaveDialogSync(win)
-  if(typeof file ==="string"){
-    path=file
-  }
-  event.returnValue = path
-})
-
-
-ipcMain.on('downloadFilePath', (event, arg) => {
-  var file = dialog.showOpenDialogSync(win)
-  var size = 0
-  var path = ''
-  if(Array.isArray(file)){
-    path=file[0]
-    size=fs.statSync(file[0]).size
-  }
-  event.returnValue={
-    path:path,
-    size:size
-  }
-})
-ipcMain.on('k3SHEGen', (event, arg) => {
-  var flag2=function(flag){
-    var fo={}
-    for(var i in flag){
-      fo[flag[i]]=true
-    }
-    return fo
-  }
-  var ret=k3SHEGen(
-    arg.authKeyId,//auth key id
-    Buffer.from(arg.authKeyValue,'hex'), //auth key value
-    arg.keyId,//update key id
-    Buffer.from(arg.keyValue,'hex'), //update key value
-    flag2(arg.flag),//flag
-    parseInt(arg.counter),//cid
-    Buffer.from(arg.uid,'hex') //uid
-  )
-  
-  event.returnValue = ret
-})
-if(!fs.existsSync(group_file)){
-  fs.writeFileSync(group_file,'[]')
-}
-
-fs.watchFile(group_file,()=>{
-  win.webContents.send('groupChange','')
-})
-ipcMain.on('readGroup',(event,arg)=>{
-  event.returnValue =  fs.readFileSync(group_file)
-})
-ipcMain.on('saveGroup',(event,arg)=>{
-  var err=0
-  var map
-  map = new Map(JSON.parse(fs.readFileSync(group_file)));
-  map.set(arg[0],arg[1])
-  fs.writeFileSync(group_file,JSON.stringify(Array.from(map.entries())))
-  event.returnValue = err
-})
-ipcMain.on('k1SHEGen', (event, arg) => {
-  var flag2=function(flag){
-    var fo={}
-    for(var i in flag){
-      fo[flag[i]]=true
-    }
-    return fo
-  }
-  var ret=k1SHEGen(
-    parseInt(arg.authKeyId),//auth key id
-    Buffer.from(arg.authKeyValue,'hex'), //auth key value
-    parseInt(arg.keyId),//update key id
-    Buffer.from(arg.keyValue,'hex'), //update key value
-    flag2(arg.flag),//flag
-    parseInt(arg.counter),//cid
-    Buffer.from(arg.uid,'hex') //uid
-  )
-  
-  event.returnValue = ret
-})
+require('./events')
