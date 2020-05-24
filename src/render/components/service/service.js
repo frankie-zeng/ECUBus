@@ -873,6 +873,95 @@ export default {
           ]
         },
       ]
+    },
+    {
+      name: 'RequestFileTransfer',
+      value: 0x38,
+      input: [
+        {
+          name: 'Upload File',
+          type: 'uploadFile',
+        },
+        {
+          name: 'Download File',
+          type: 'downloadFile',
+        },
+        {
+          name: 'modeOfOperation',
+          type: 'select',
+          rule: [
+            { required: true },
+          ],
+          options: [
+            {
+              name: 'AddFile',
+              value: 1
+            },
+            {
+              name: 'DeleteFile',
+              value: 2
+            },
+            {
+              name: 'ReplaceFile',
+              value: 3
+            },
+            {
+              name: 'ReadFile',
+              value: 4
+            },
+            {
+              name: 'ReadDir',
+              value: 5
+            }
+          ]
+        },
+        {
+          name: 'filePathAndNameLength',
+          type: 'input',
+          rule: [
+            // eslint-disable-next-line no-useless-escape
+            { required: true, pattern: "^(([0-9a-fA-F]{2}){2}|len\\(filePathAndName\\))$", message: '必须输入HEX格式,或者len(filePathAndName)', trigger: 'change' },
+          ]
+        },
+        {
+          name: 'filePathAndName',
+          type: 'text',
+          rule:[
+            { required: true},
+            { min: 1, }
+          ]
+        },
+        {
+          name: 'dataFormatIdentifier',
+          type: 'input',
+          rule:[
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
+            { max: 2, message: '长度为1个字节', trigger: 'change' }
+          ]
+        },
+        {
+          name: 'fileSizeParameterLength',
+          type: 'input',
+          rule:[
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
+            { max: 2, message: '长度为1个字节', trigger: 'change' }
+          ]
+        },
+        {
+          name: 'fileSizeUnCompressed',
+          type: 'input',
+          rule:[
+            { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
+          ]
+        },
+        {
+          name: 'fileSizeCompressed',
+          type: 'input',
+          rule:[
+            { pattern: "^(([0-9a-fA-F]{2})+|equal\\(fileSizeUnCompressed\\))$", message: '必须输入HEX格式,或者equal(fileSizeUnCompressed)', trigger: 'change' },
+          ]
+        }
+      ]
     }
   ],
   'doip': [

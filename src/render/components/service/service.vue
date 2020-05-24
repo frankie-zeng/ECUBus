@@ -212,7 +212,7 @@ export default {
               this.config.input[i].type === "downloadFile" ||
               this.config.input[i].type === "uploadFile"
             ) {
-              if (!this.inputData[this.config.input[i].name]) {
+              if ((!this.inputData[this.config.input[i].name])&&(this.config.input[i].require)) {
                 this.error = "Please chhose a file";
                 return;
               }
@@ -221,9 +221,11 @@ export default {
                 return;
               }
               if (this.config.input[i].type === "downloadFile") {
-                if (parseInt(this.inputData.memorySize, 16) > this.inputData[this.config.input[i].name].size) {
-                  this.error = "MemorySize should less than file size";
-                  return;
+                if(this.inputData[this.config.input[i].name]){
+                  if (parseInt(this.inputData.memorySize, 16) > this.inputData[this.config.input[i].name].size) {
+                    this.error = "MemorySize should less than file size";
+                    return;
+                  }
                 }
               }
               this.error = "";

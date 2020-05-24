@@ -167,7 +167,9 @@ class IPUDS {
             this.addr = arg.addr
             this.startTime = new Date().getTime()
             this.step()
-            // this.checkFunc(this.writeData, [0x74, 0x30, 0, 0, 128])
+            // while(this.step()!=0){
+            //     this.checkFunc(this.writeData, [0x78, 0x4, 0x2, 0, 128,0,0,2,0,10,0,10])
+            // }
 
         })
         ipcMain.on('doipDeviceFind', (event, arg) => {
@@ -262,7 +264,8 @@ class IPUDS {
 
 
         data = data.concat(payload2data(item.payload))
-        console.log(data)
+        // console.log(data)
+        // return 1
         /* check surpress*/
         for (var i in this.writeData) {
             if (this.writeData[i].type == 'subfunction') {

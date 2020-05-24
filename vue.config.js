@@ -89,7 +89,7 @@ module.exports = {
       //       .end()
       //   }
       // },
-      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js']
+      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js','src/uds/decode.js']
     }
   },
   publicPath: './',
