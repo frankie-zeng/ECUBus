@@ -127,6 +127,7 @@ class CANUDS {
       }
     }
   }
+  // eslint-disable-next-line no-unused-vars
   insertItem(service, payload, func = (writeData,readData)=>{return true}) {
     this.subTable.unshift({
       func: func,

@@ -2,7 +2,7 @@
   <div>
     <el-dialog title="User function" :visible.sync="cd" width="80%">
         
-      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:70%"> 
+      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:70%" @change="selectChange"> 
         <el-option
           v-for="(n,i) in codeNum"
           :key="i"
@@ -10,8 +10,8 @@
           :value="i">
         </el-option>
       </el-select>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean"/>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" v-else/>
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean" @click="editorCtrlS"/>
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" @click="editorCtrlS" v-else/>
       <div>function(writeData,readonly){</div>
       <codemirror v-model="jsFn[codeIndex]"  :options="codeOption" ref="cmEditor" @input="codeChange"/>
       <div>}</div>
@@ -123,6 +123,11 @@ export default {
     codeChange(){
       this.codeClean=this.$refs.cmEditor.codemirror.isClean();
     },
+    selectChange(){
+      this.$nextTick(() => {
+         this.codeClean=true;
+      });
+    },
     editorCtrlS(){
       this.$store.commit("changeFunc", {
         tableName:this.mode=="doip"?'doipTable':'canTable',
@@ -132,6 +137,12 @@ export default {
       });
       this.$refs.cmEditor.codemirror.markClean();
       this.codeClean=this.$refs.cmEditor.codemirror.isClean();
+      this.$notify({
+        title: "Success",
+        message: "Saved!",
+        type: "success",
+        duration: 1000,
+      });
     },
     showCode(item){
       this.codeItem=item;
