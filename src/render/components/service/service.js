@@ -944,7 +944,7 @@ export default {
           type: 'input',
           rule:[
             { pattern: "^([0-9a-fA-F]{2})+$", message: '必须输入HEX格式', trigger: 'change' },
-            { max: 2, message: '长度为1个字节', trigger: 'change' }
+            { min:4,max: 4, message: '长度为2个字节', trigger: 'change' }
           ]
         },
         {

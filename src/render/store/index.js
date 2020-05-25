@@ -83,6 +83,16 @@ export default new Vuex.Store({
       item.date = new Date().getTime()
       state.doipTable.push(item)
     },
+    changeFunc(state,obj){
+      var i=state[obj.tableName].indexOf(obj.item)
+      if(i!=-1){
+        if(state[obj.tableName][i].type=='uds'){
+          state[obj.tableName][i].func=obj.func
+        }else{
+          state[obj.tableName][i].subtable[obj.index].func=obj.func
+        }
+      }
+    },
     doipTableDelete(state, index) {
       state.doipTable.splice(index, 1)
     },

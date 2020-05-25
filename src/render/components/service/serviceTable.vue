@@ -1,8 +1,8 @@
 <template>
   <div>
     <el-dialog title="User function" :visible.sync="cd" width="80%">
-     
-      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:100%">
+        
+      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:70%"> 
         <el-option
           v-for="(n,i) in codeNum"
           :key="i"
@@ -10,9 +10,10 @@
           :value="i">
         </el-option>
       </el-select>
-   
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean"/>
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" v-else/>
       <div>function(writeData,readonly){</div>
-      <codemirror v-model="jsFn[codeIndex]"  :options="{readOnly:true}" ref="cmEditor"/>
+      <codemirror v-model="jsFn[codeIndex]"  :options="codeOption" ref="cmEditor" @input="codeChange"/>
       <div>}</div>
     </el-dialog>
     <el-table
@@ -92,7 +93,14 @@ export default {
       cd:false,
       jsFn:[" "],
       codeIndex:0,
-      codeNum:1
+      codeNum:1,
+      codeOption:{
+        extraKeys: {
+            "Ctrl-S": this.editorCtrlS
+        }
+      },
+      codeClean:true,
+      codeItem:''
     };
   },
   mounted() {
@@ -112,7 +120,21 @@ export default {
   },
   props: ["mode"],
   methods: {
+    codeChange(){
+      this.codeClean=this.$refs.cmEditor.codemirror.isClean();
+    },
+    editorCtrlS(){
+      this.$store.commit("changeFunc", {
+        tableName:this.mode=="doip"?'doipTable':'canTable',
+        item:this.codeItem,
+        index:this.codeIndex,
+        func:this.jsFn[this.codeIndex]
+      });
+      this.$refs.cmEditor.codemirror.markClean();
+      this.codeClean=this.$refs.cmEditor.codemirror.isClean();
+    },
     showCode(item){
+      this.codeItem=item;
       this.jsFn=[]
       this.codeIndex=0
       if(item.type=='uds'){
@@ -149,7 +171,7 @@ export default {
     },
     running: function() {
       return this.$store.state.running;
-    }
+    },
   }
 };
 </script>
