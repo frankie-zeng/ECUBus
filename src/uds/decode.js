@@ -42,7 +42,7 @@ function payload2data(payload) {
                 payload[i][payload[i].name] != ""
             ) {
                 let reg = /^([0-9a-fA-F]{2})+$/
-                if ((reg.test(payload[i][payload[i].name]) == false)&&(Array.isArray(payload[i][payload[i].name])==false)) {
+                if ((reg.test(payload[i][payload[i].name]) == false) && (Array.isArray(payload[i][payload[i].name]) == false)) {
                     let reg = /(\w+)\((\w+)\)/
                     let res = payload[i][payload[i].name].match(reg)
                     let way = res[1]
@@ -91,8 +91,7 @@ function payload2data(payload) {
             }
         } else if ((payload[i].type === 'number') || (payload[i].type === 'select')) {
             if (
-                payload[i][payload[i].name] &&
-                payload[i][payload[i].name] != ""
+                typeof(payload[i][payload[i].name]) != 'undefined'
             ) {
 
                 rawdata.push(payload[i][payload[i].name]);

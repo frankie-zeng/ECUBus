@@ -2,7 +2,7 @@
   <div>
     <el-dialog title="User function" :visible.sync="cd" width="80%">
         
-      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:70%" @change="selectChange"> 
+      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:80%" @change="selectChange"> 
         <el-option
           v-for="(n,i) in codeNum"
           :key="i"
@@ -10,8 +10,8 @@
           :value="i">
         </el-option>
       </el-select>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean" @click="editorCtrlS"/>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" @click="editorCtrlS" v-else/>
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean" @click="editorCtrlS">Saved</el-button>
+      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" @click="editorCtrlS" v-else>Changed</el-button>
       <div>function(writeData,readonly){</div>
       <codemirror v-model="jsFn[codeIndex]"  :options="codeOption" ref="cmEditor" @input="codeChange"/>
       <div>}</div>
