@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-page-header @back="goBack" content="SHE GENERATE" class="header"></el-page-header>
+    <el-page-header @back="goBack" content="SHE GENERATE" class="header" title=""></el-page-header>
     <div>
       <el-collapse v-model="activeName" accordion style="margin:50px">
         <el-collapse-item title="S32K1 CSEC SHE M1|M2|M3 Generate" name="1">

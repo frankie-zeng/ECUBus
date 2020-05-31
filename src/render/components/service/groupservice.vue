@@ -1,10 +1,10 @@
 <template>
   <div style="text-align:center">
       <div >
-        <el-transfer v-model="value" :data="group" :titles="['服务的输入参数', '组的参数']"  style="text-align: left; display: inline-block"></el-transfer>
+        <el-transfer v-model="value" :data="group" :titles="['Service', 'Group']"  style="text-align: left; display: inline-block"></el-transfer>
       </div>
       
-      服务名字：<el-input v-model="groupname" placeholder="Group Name" style="width:50%;margin:20px;"></el-input><el-button type="primary" @click="addGroup">添加服务</el-button>
+      Group Name：<el-input v-model="groupname" placeholder="Group Name" style="width:50%;margin:20px;"></el-input><el-button type="primary" @click="addGroup">Save Group</el-button>
   </div>
 </template>
 

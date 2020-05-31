@@ -26,6 +26,7 @@
           style="width:100%"
           allow-create
           filterable
+          placeholder="Choose"
         >
           <el-option
             v-for="child in item.options"
@@ -39,7 +40,7 @@
         </el-select>
         <div v-else-if="item.type==='subfunction'">
           <el-col :span="16">
-            <el-select v-model="inputData[item.name]" style="width:100%" allow-create filterable>
+            <el-select v-model="inputData[item.name]" style="width:100%" allow-create filterable placeholder="Sub-Function">
               <el-option
                 v-for="child in item.options"
                 :key="child.value"
@@ -64,14 +65,14 @@
           :autosize="{ minRows: 3, maxRows: 6}"
         ></el-input>
         <div v-else-if="item.type==='downloadFile'">
-          <el-button @click="downloadFIle(item.name)" type="primary">点击上传</el-button>
+          <el-button @click="downloadFIle(item.name)" type="primary">Choose File</el-button>
           <span style="font-size:12px" v-if="inputData[item.name]">
             {{inputData[item.name].name}}
             <strong>{{'0x'+inputData[item.name].size.toString(16)}}</strong>
           </span>
         </div>
         <div v-else-if="item.type==='uploadFile'">
-          <el-button @click="uploadFIle(item.name)" type="primary">点击上传</el-button>
+          <el-button @click="uploadFIle(item.name)" type="primary">Choose File</el-button>
           <span style="font-size:12px" v-if="inputData[item.name]">
             <strong>{{inputData[item.name].name}}</strong>
           </span>

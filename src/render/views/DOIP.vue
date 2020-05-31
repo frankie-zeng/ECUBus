@@ -1,23 +1,23 @@
 <template>
   <div>
-    <el-dialog title="DOIP 配置" :visible.sync="cd" width="80%">
+    <el-dialog title="DOIP Setting" :visible.sync="cd" width="80%">
       <div class="connect">
         <DOIPConnect />
       </div>
     </el-dialog>
-    <el-dialog title="添加一个UDS服务" :visible.sync="uds" width="80%">
+    <el-dialog title="Add UDS Serivce" :visible.sync="uds" width="80%">
       <div class="connect">
         <ADDService @additem="uds=false" mode="doip" />
       </div>
     </el-dialog>
-    <el-dialog title="将多个服务绑定为一个组" :visible.sync="group" width="80%">
+    <el-dialog title="Combine Multi Service Into Group" :visible.sync="group" width="80%">
       <div class="connect">
         <Group mode="doip" @added="group=false"/>
       </div>
     </el-dialog>
     <el-row style="margin:0px">
       <el-col :span="12">
-        <el-page-header @back="goBack" content="DOIP UDS" class="header"></el-page-header>
+        <el-page-header @back="goBack" content="DOIP UDS" class="header" title=""></el-page-header>
       </el-col>
       <el-col :span="11" class="setup">
         <el-button
@@ -38,13 +38,13 @@
           @click="group=true"
           size="mini"
           type="primary"
-        >保存为Group</el-button>
+        >Save Group</el-button>
         <el-button
           icon="el-icon-plus"
           @click="uds=true"
           size="mini"
           type="primary"
-        >添加服务</el-button>
+        >Add Service</el-button>
       </el-row>
 
       <serviceTable mode="doip" />

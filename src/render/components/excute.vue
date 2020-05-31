@@ -1,8 +1,8 @@
 <template>
   <div>
     <div>
-      <el-dialog title="选择一个地址" :visible.sync="showAddr" center width="30%">
-        <el-select v-model="addrIndex" placeholder="请选择" style="width:100%" size="mini">
+      <el-dialog title="Address" :visible.sync="showAddr" center width="30%">
+        <el-select v-model="addrIndex" placeholder="Address" style="width:100%" size="mini">
           <el-option v-for="(item,key) in addrTable" :key="key" :label="item.name" :value="key">
             <span style="float: left">{{ item.name }}</span>
             <span
@@ -11,7 +11,7 @@
           </el-option>
         </el-select>
         <span slot="footer">
-          <el-button icon="el-icon-caret-right" @click="readRun" size="mini" type="primary">开始</el-button>
+          <el-button icon="el-icon-caret-right" @click="readRun" size="mini" type="primary">Start</el-button>
         </span>
       </el-dialog>
     </div>
@@ -21,7 +21,7 @@
         <el-input
           v-model="sDelay"
           size="small"
-          placeholder="请输入内容"
+          placeholder="Delay"
           style="width:80px"
           maxlength="6"
         ></el-input>ms,
@@ -29,15 +29,15 @@
         <el-input
           v-model="udsTimeout"
           size="small"
-          placeholder="请输入内容"
+          placeholder="Timeout"
           style="width:80px"
           maxlength="6"
         ></el-input>ms
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
-        <el-button @click="run" size="small" type="success">开始</el-button>
+        <el-button @click="run" size="small" type="success">Start</el-button>
       </el-col>
     </el-row>
-    <el-input readonly type="textarea" :rows="5" placeholder="请输入内容" v-model="logText"></el-input>
+    <el-input readonly type="textarea" :rows="5" placeholder="LOG" v-model="logText"></el-input>
   </div>
 </template>
 <script>

@@ -64,14 +64,14 @@
           :autosize="{ minRows: 3, maxRows: 6}"
         ></el-input>
         <div v-else-if="item.type==='downloadFile'">
-          <el-button @click="downloadFIle(key+'-'+item.name)" type="primary">点击上传</el-button>
+          <el-button @click="downloadFIle(key+'-'+item.name)" type="primary">Choose File</el-button>
           <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
             {{inputData[key+'-'+item.name].name}}
             <strong>{{'0x'+inputData[key+'-'+item.name].size.toString(16)}}</strong>
           </span>
         </div>
         <div v-else-if="item.type==='uploadFile'">
-          <el-button @click="uploadFIle(key+'-'+item.name)" type="primary">点击上传</el-button>
+          <el-button @click="uploadFIle(key+'-'+item.name)" type="primary">Choose File</el-button>
           <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
             <strong>{{inputData[key+'-'+item.name].name}}</strong>
           </span>
@@ -87,7 +87,7 @@
       :data="config.table"
       style="width: 100%;text-align: center"
     >
-      <el-table-column prop="service" label="服务信息" width="300">
+      <el-table-column prop="service" label="Service Info" width="300">
         <template
           slot-scope="scope"
         >{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</template>
