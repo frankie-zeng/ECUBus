@@ -45,7 +45,7 @@ export default {
       for (var i in val) {
         delete val[i]["addr"];
       }
-      var file = ipcRenderer.sendSync("saveFile", JSON.stringify(val));
+      var file = ipcRenderer.sendSync("saveFile", JSON.stringify(val,null,'\t'));
       if(file!=null){
         this.$notify({
           title: "Success",
