@@ -2,7 +2,7 @@
   <div>
     <el-dialog title="User function" :visible.sync="cd" width="80%">
         
-      <el-select v-model="codeIndex" placeholder="请选择" size="mini" style="margin-bottom:20px;width:80%" @change="selectChange"> 
+      <el-select v-model="codeIndex" placeholder="Index" size="mini" style="margin-bottom:20px;width:80%" @change="selectChange"> 
         <el-option
           v-for="(n,i) in codeNum"
           :key="i"
@@ -23,8 +23,9 @@
       border
       :data="doipTable"
       style="width: 100%;text-align: center"
+      empty-text="No Service"
     >
-      <el-table-column prop="service" label="服务信息" width="300">
+      <el-table-column prop="service" label="Service Info" width="300">
         <template
           slot-scope="scope"
         ><div v-if="scope.row.type=='uds'">{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</div>
@@ -60,7 +61,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column prop="func" label="校验函数" width="100"  align="center">
+      <el-table-column prop="func" label="Script" width="100"  align="center">
         <template slot-scope="scope">
           <el-button
             type="text"
@@ -69,7 +70,7 @@
           ></el-button>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="操作" width="50">
+      <el-table-column fixed="right" label="Action" width="70">
         <template slot-scope="scope">
           <el-button
             type="danger"

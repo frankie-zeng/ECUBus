@@ -51,7 +51,7 @@ class IPUDS {
                 this.emit('doipTcpStatus', {
                     err: -1,
                     key: key,
-                    msg: '此连接已就存在'
+                    msg: 'This Connection Existed'
                 }
                 )
             } else {
@@ -68,7 +68,7 @@ class IPUDS {
                             this.emit('doipTcpStatus', {
                                 key: key,
                                 err: -1,
-                                msg: '等待Active Response超时'
+                                msg: 'Active Response Timeout'
                             }
                             )
                         }, active.timeout);
@@ -80,7 +80,7 @@ class IPUDS {
                     this.emit('doipTcpStatus', {
                         key: key,
                         err: -2,
-                        msg: '连接发生错误'
+                        msg: 'Connecting Error'
                     }
                     )
                 })
@@ -90,7 +90,7 @@ class IPUDS {
                     this.emit('doipTcpStatus', {
                         key: key,
                         err: -2,
-                        msg: '服务端断开连接'
+                        msg: 'Server Close'
                     }
                     )
                 })
@@ -106,7 +106,7 @@ class IPUDS {
                                     this.emit('doipTcpStatus', {
                                         key: key,
                                         err: 0,
-                                        msg: '激活成功',
+                                        msg: 'Active Success',
                                         data: ret.data
                                     }
                                     )

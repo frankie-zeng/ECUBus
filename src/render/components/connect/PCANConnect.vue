@@ -7,7 +7,7 @@
     </el-row>
     <el-row>
       <el-col :span="11">
-        <el-select v-model="device" placeholder="请选择" :disabled="connected">
+        <el-select v-model="device" placeholder="Deivce" :disabled="connected">
           <el-option
             v-for="item in deviceList"
             :key="item.value"
@@ -28,7 +28,7 @@
       </el-row>
       <el-row>
         <el-col :span="11">
-          <el-select v-model="speed" placeholder="请选择" :disabled="connected">
+          <el-select v-model="speed" placeholder="Speed" :disabled="connected">
             <el-option
               v-for="item in canSpeed"
               :key="item.value"
@@ -50,7 +50,7 @@
       </el-row>
       <el-row>
         <el-col :span="11">
-          <el-select v-model="nomSpeed" placeholder="请选择" :disabled="connected">
+          <el-select v-model="nomSpeed" placeholder="Speed" :disabled="connected">
             <el-option
               v-for="item in canNomSpeed"
               :key="item.value"
@@ -60,7 +60,7 @@
           </el-select>
         </el-col>
         <el-col :span="11" :offset="1">
-          <el-select v-model="dataSpeed" placeholder="请选择" :disabled="connected">
+          <el-select v-model="dataSpeed" placeholder="Speed" :disabled="connected">
             <el-option
               v-for="item in canDataSpeed"
               :key="item.value"
@@ -86,7 +86,7 @@
           <el-input v-model="tpConfig.name" placeholder="Name" maxlength="20" style="width:180px"></el-input>
         </el-form-item>
         <el-form-item label="Format:">
-          <el-select v-model="tpConfig.FORMAT" placeholder="地址格式">
+          <el-select v-model="tpConfig.FORMAT" placeholder="Address Format">
             <el-option
               v-for="item in formatList"
               :key="item.value"
@@ -97,14 +97,14 @@
         </el-form-item>
         <el-form-item label="Address:">
           <el-radio-group v-model="tpConfig.TA_TYPE">
-            <el-radio-button :label="1">物理地址</el-radio-button>
-            <el-radio-button :label="2">功能地址</el-radio-button>
+            <el-radio-button :label="1">Physical</el-radio-button>
+            <el-radio-button :label="2">Functional</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Message:">
           <el-radio-group v-model="tpConfig.MSGTYPE">
-            <el-radio-button :label="1">本地</el-radio-button>
-            <el-radio-button :label="2">远程</el-radio-button>
+            <el-radio-button :label="1">Local</el-radio-button>
+            <el-radio-button :label="2">Remote</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="CAN ID:">
@@ -151,7 +151,7 @@
             </el-input>
           </el-col>
         </el-form-item>
-        <el-alert v-if="mapMust" title="ID和地址的映射是必须的" type="info" effect="dark" :closable="false"></el-alert>
+        <el-alert v-if="mapMust" title="The map between IP and ID is necessary." type="info" effect="dark" :closable="false"></el-alert>
         <!-- <div v-else>
                     <div>TX-CANID: <span class="header">0x{{txId}}</span></div>
                     <div>RX-CANID: <span class="header">0x{{rxId}}</span></div>
@@ -175,20 +175,20 @@
         </el-form-item>
       </el-form>
     </div>
-    <el-table size="mini" :data="addrTable" style="width: 100%">
+    <el-table size="mini" :data="addrTable" style="width: 100%" empty-text="No Data">
       <el-table-column type="index" width="50" align="center"></el-table-column>
-      <el-table-column prop="name" label="名字" width="150" align="center"></el-table-column>
-      <el-table-column prop="txId" label="发送ID" width="150" align="center">
+      <el-table-column prop="name" label="Name" width="100" align="center"></el-table-column>
+      <el-table-column prop="txId" label="Send ID" width="150" align="center">
         <template slot-scope="scope">
           <el-tag size="medium" type="info">0X{{scope.row.txId}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="rxId" label="接受ID" width="150" align="center">
+      <el-table-column prop="rxId" label="Receive ID" width="150" align="center">
         <template slot-scope="scope">
           <el-tag size="medium" type="info">0X{{scope.row.rxId}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="maped" label="地址映射" width="50" align="center">
+      <el-table-column prop="maped" label="Maped" width="70" align="center">
         <template slot-scope="scope">
           <i class="el-icon-circle-check" v-if="scope.row.maped" style="color:green"></i>
           <i class="el-icon-circle-close" v-else style="color:red"></i>
@@ -204,10 +204,10 @@
           <el-tag size="medium" type="info">0X{{scope.row.TA.toString(16)}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="TA_TYPE" label="目标地址类型" align="center" width="150">
+      <el-table-column prop="TA_TYPE" label="TA Type" align="center" width="150">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.TA_TYPE==1" size="medium">物理地址</el-tag>
-          <el-tag v-else size="medium" type="success">功能地址</el-tag>
+          <el-tag v-if="scope.row.TA_TYPE==1" size="medium">Physical</el-tag>
+          <el-tag v-else size="medium" type="success">Functional</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="RA" label="RA" width="100" align="center">
@@ -215,7 +215,7 @@
           <el-tag size="medium" type="info">0X{{scope.row.RA.toString(16)}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="FORMAT" label="地址格式" width="200" align="center">
+      <el-table-column prop="FORMAT" label="Format" width="200" align="center">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.FORMAT==1" type="warning" size="medium">Normal addressing</el-tag>
           <el-tag
@@ -228,26 +228,26 @@
           <el-tag v-else size="medium" type="warning">Enhanced addressing</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="IDTYPE" label="ID长度" align="center">
+      <el-table-column prop="IDTYPE" label="ID Length" align="center">
         <template slot-scope="scope">
           <el-tag v-if="scope.row.IDTYPE==1" size="medium">11 Bits</el-tag>
           <el-tag v-else size="medium" type="success">29 Bits</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="MSGTYPE" label="帧格式" align="center">
+      <el-table-column prop="MSGTYPE" label="Frame" align="center">
         <template slot-scope="scope">
-          <el-tag v-if="scope.row.MSGTYPE==1" size="medium">本地帧</el-tag>
-          <el-tag v-else size="medium" type="success">远程帧</el-tag>
+          <el-tag v-if="scope.row.MSGTYPE==1" size="medium">Local</el-tag>
+          <el-tag v-else size="medium" type="success">Remote</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center">
+      <el-table-column label="Action" align="center">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="danger"
             :disabled="!connected"
             @click="handleDelete(scope.$index)"
-          >删除</el-button>
+          >Delete</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -415,7 +415,7 @@ export default {
         if (this.addrTable[i].name === item.name) {
           this.$notify.error({
             title: "Error",
-            message: "Name重复"
+            message: "Name Exist"
           });
           return;
         }
@@ -423,14 +423,14 @@ export default {
       if (item.SA === item.TA) {
         this.$notify.error({
           title: "Error",
-          message: "SA不能等于TA"
+          message: "SA Equal TA"
         });
         return;
       }
       if (item.txId === item.rxId) {
         this.$notify.error({
           title: "Error",
-          message: "TX_ID不能等于RX_ID"
+          message: "TX_ID Equal RX_ID"
         });
         return;
       }

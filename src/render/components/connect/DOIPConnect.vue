@@ -10,24 +10,24 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="VIN:" v-if="req.type==='VIN'" prop="vin" required>
-          <el-input placeholder="请输入VIN,ASCII" v-model="req.vin" maxlength="17" show-word-limit />
+          <el-input placeholder="Input VIN,ASCII" v-model="req.vin" maxlength="17" show-word-limit />
         </el-form-item>
         <el-form-item label="EID:" v-if="req.type==='EID'" prop="eid" required>
-          <el-input placeholder="请输入EID,HEX" v-model="req.eid" maxlength="12" show-word-limit />
+          <el-input placeholder="Input EID,HEX" v-model="req.eid" maxlength="12" show-word-limit />
         </el-form-item>
-        <el-form-item label="组播地址:" prop="multicast">
+        <el-form-item label="Multicast:" prop="multicast">
           <el-input v-model="req.multicast" placeholder="255.255.255.255"></el-input>
         </el-form-item>
         <el-form-item style="text-align:right">
-          <el-button @click="findDevice" type="primary">查找设备</el-button>
+          <el-button @click="findDevice" type="primary">Search Device</el-button>
         </el-form-item>
       </el-form>
       <el-divider></el-divider>
     </div>
-    <el-table size="mini" :data="deviceList" style="width: 100%">
-      <el-table-column prop="ip" label="IP地址" width="150" align="center"></el-table-column>
+    <el-table size="mini" :data="deviceList" style="width: 100%" empty-text="No Device">
+      <el-table-column prop="ip" label="IP Address" width="150" align="center"></el-table-column>
       <el-table-column prop="vin" label="VIN" width="150" align="center"></el-table-column>
-      <el-table-column prop="logicalAddr" label="逻辑地址" width="100" align="center"></el-table-column>
+      <el-table-column prop="logicalAddr" label="Logical Address" width="150" align="center"></el-table-column>
       <el-table-column prop="eid" label="EID" width="120" align="center">
         <template slot-scope="scope">0x{{scope.row.eid}}</template>
       </el-table-column>
@@ -35,10 +35,10 @@
         <template slot-scope="scope">0x{{scope.row.gid}}</template>
       </el-table-column>
       <el-table-column prop="fAction" label="Action" width="100" align="center"></el-table-column>
-      <el-table-column prop="syncStatus" label="同步状态" width="100" align="center"></el-table-column>
-      <el-table-column label="操作" align="center" fixed="right">
+      <el-table-column prop="syncStatus" label="Sync" width="100" align="center"></el-table-column>
+      <el-table-column label="Action" align="center" fixed="right">
         <template slot-scope="scope">
-          <el-button size="mini" type="danger" @click="connectDevice(scope.row)">连接</el-button>
+          <el-button size="mini" type="danger" @click="connectDevice(scope.row)">Connect</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -64,18 +64,18 @@
     </div>
     <el-table size="mini" :data="addrTable" style="width: 100%">
       <el-table-column prop="name" label="VIN" align="center" width="150"></el-table-column>
-      <el-table-column prop="SA" label="源地址" align="center"></el-table-column>
-      <el-table-column prop="TA" label="目标地址" align="center"></el-table-column>
-      <el-table-column prop="code" label="CODE" align="center">
+      <el-table-column prop="SA" label="Source" align="center"></el-table-column>
+      <el-table-column prop="TA" label="Target" align="center"></el-table-column>
+      <el-table-column prop="code" label="Code" align="center">
         <template slot-scope="scope">0x{{scope.row.code.toString(16)}}</template>
       </el-table-column>
-      <el-table-column label="操作" align="center" fixed="right">
+      <el-table-column label="Action" align="center" fixed="right">
         <template slot-scope="scope">
           <el-button
             size="mini"
             type="danger"
             @click="disconnectDevice(scope.row,scope.$index)"
-          >断开连接</el-button>
+          >Close</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -129,7 +129,7 @@ export default {
         } else {
           this.$notify.error({
             title: "Error",
-            message: "地址不匹配"
+            message: "Address Unmatch"
           });
           ipcRenderer.send("doipTcpDisconnectWithKey", val.key);
         }
@@ -154,40 +154,40 @@ export default {
       activeRule: {
         timeout: [{ required: true, type: "number", trigger: "blur" }],
         sa: [
-          { required: true, message: "请输入SA,必须是数字", trigger: "blur" }
+          { required: true, message: "Please Input SA", trigger: "blur" }
         ],
         activeType: [
           {
             required: true,
             min: 1,
             max: 2,
-            message: "请输入正确的ACTIVE-TYPE",
+            message: "Please Input ACTIVE-TYPE",
             trigger: "blur"
           }
         ],
         option: [
           {
             pattern: /^([0-9a-fA-F]{2})+$/,
-            message: "必须输入HEX格式",
+            message: "Please Input HEX format",
             trigger: "change"
           }
         ]
       },
       devRule: {
-        vin: [{ min: 17, max: 17, message: "长度为17个字符", trigger: "blur" }],
+        vin: [{ min: 17, max: 17, message: "Length Need 17", trigger: "blur" }],
         eid: [
           {
             pattern: /^([0-9a-fA-F]{2})+$/,
-            message: "必须输入HEX格式",
+            message: "Please Input HEX format",
             trigger: "change"
           },
-          { min: 12, max: 12, message: "长度为6个字节", trigger: "blur" }
+          { min: 12, max: 12, message: "Length Need 6 Bytes", trigger: "blur" }
         ],
         multicast: [
           {
             required: true,
             pattern: /^((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)$/,
-            message: "请输入组播地址",
+            message: "Please Input IP Address",
             trigger: "change"
           }
         ]

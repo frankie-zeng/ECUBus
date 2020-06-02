@@ -1,23 +1,23 @@
 <template>
   <div>
-    <el-dialog title="PEAK TP 配置" :visible.sync="cd" width="80%">
+    <el-dialog title="PEAK TP Setting" :visible.sync="cd" width="80%">
       <div class="connect">
         <PConnect />
       </div>
     </el-dialog>
-    <el-dialog title="添加一个UDS服务" :visible.sync="uds" width="80%">
+    <el-dialog title="Add UDS Service" :visible.sync="uds" width="80%">
       <div class="connect">
         <ADDService @additem="uds=false" mode="can" />
       </div>
     </el-dialog>
-    <el-dialog title="将多个服务绑定为一个组" :visible.sync="group" width="80%">
+    <el-dialog title="Combine Multi Service Into Group" :visible.sync="group" width="80%">
       <div class="connect">
         <Group mode="can" @added="group=false"/>
       </div>
     </el-dialog>
     <el-row style="margin:0px">
       <el-col :span="12">
-        <el-page-header @back="goBack" content="PCAN UDS" class="header"></el-page-header>
+        <el-page-header @back="goBack" content="PCAN UDS" class="header" title=""></el-page-header>
       </el-col>
       <el-col :span="11" class="setup">
         <el-button
@@ -39,14 +39,14 @@
           @click="group=true"
           size="mini"
           type="primary"
-        >保存为Group</el-button>
+        >Save Group</el-button>
         <el-button
           icon="el-icon-plus"
           @click="uds=true"
           size="mini"
           type="primary"
           :disabled="running"
-        >添加服务</el-button>
+        >Add Service</el-button>
       </el-row>
       <serviceTable mode="can" />
     </div>

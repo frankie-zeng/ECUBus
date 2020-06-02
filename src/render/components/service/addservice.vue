@@ -10,7 +10,7 @@
       <div class="subheader">Serivce</div>
       <el-select
         v-model="itemIndex"
-        placeholder="请选择"
+        placeholder="Service"
         class="choose"
         @change="itemChange"
         style="width:100%"
@@ -28,7 +28,7 @@
       
       <el-select
         v-model="itemIndex"
-        placeholder="请选择"
+        placeholder="Group Service"
         class="choose"
         @change="itemChange"
         style="width:90%"

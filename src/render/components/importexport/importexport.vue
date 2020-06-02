@@ -1,8 +1,8 @@
 <template>
   <div>
     
-    <el-button icon="el-icon-folder" @click="importConfig" size="mini" type="info">导入配置</el-button>
-    <el-button icon="el-icon-share" @click="exportConfig" size="mini" type="info">导出配置</el-button>
+    <el-button icon="el-icon-folder" @click="importConfig" size="mini" type="info">Import</el-button>
+    <el-button icon="el-icon-share" @click="exportConfig" size="mini" type="info">Export</el-button>
   </div>
 </template>
 
@@ -45,11 +45,11 @@ export default {
       for (var i in val) {
         delete val[i]["addr"];
       }
-      var file = ipcRenderer.sendSync("saveFile", JSON.stringify(val));
+      var file = ipcRenderer.sendSync("saveFile", JSON.stringify(val,null,'\t'));
       if(file!=null){
         this.$notify({
-          title: "成功",
-          message: "保存成功：" + file,
+          title: "Success",
+          message: "Saved：" + file,
           type: "success"
         });
       }
