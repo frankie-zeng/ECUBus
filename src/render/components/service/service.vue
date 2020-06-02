@@ -80,7 +80,23 @@
           </el-input>-->
         </div>
       </el-form-item>
-      <div class="subheader">User function</div>
+      <div >
+        <span class="subheader">User function</span>
+        <el-popover
+          placement="top-start"
+          title="Tips"
+          width="600"
+          trigger="hover"
+          style="margin:10px;font-size:16px;">
+          <el-table :data="tipsData" height="300px">
+            <el-table-column width="150" property="func" label="Function"></el-table-column>
+            <el-table-column width="100" property="params" label="Params"></el-table-column>
+            <el-table-column width="300" property="desc" label="Description"></el-table-column>
+          </el-table>
+          <i class="el-icon-warning-outline" slot="reference"></i>
+          <!-- <el-button slot="reference" icon="el-icon-warning-outline"></el-button> -->
+        </el-popover>
+      </div>
       <el-row style="margin-top:10px">
         <div class="fn">function(writeData,readData){</div>
         <codemirror v-model="jsFn"  @blur="jsCheck"  ref="cmEditor"/>
@@ -113,11 +129,47 @@ export default {
   data() {
     return {
       inputData: {},
-      
       error: "",
       jsFn: "return true;",
       jsError: "",
-      refresh:true
+      refresh:true,
+      tipsData:[
+        {
+          func:'this.log(msg)',
+          params:'msg can be any type',
+          desc:'Ouput log information'
+        },
+        {
+          func:'this.delay(ms)',
+          params:"ms,type int",
+          desc:"Insert a new delay and wait another new reponse"
+        },
+        {
+          func:'this.openFile(filename,flag)',
+          params:"filename is a absolute file name path,flag:default is 'r'",
+          desc:"Open a file,this function must be call before using readFile,WriteFile and CloseFile"
+        },
+        {
+          func:'this.readFile(size)',
+          params:"size,type int",
+          desc:"Read data from a file,return type is a array, the length of array maybe less than size"
+        },
+        {
+          func:'this.writeFile(data)',
+          params:"data,type array of buffer",
+          desc:"Write data to a file"
+        },
+        {
+          func:'this.closeFile()',
+          params:"null",
+          desc:"Close a file"
+        },
+        {
+          func:'this.changeNextFrame(name,value)',
+          params:'name:should be payload name,value:the change value',
+          desc:"Change the next service data in the schedule table"
+        }
+      ]
     };
   },
   mounted() {
