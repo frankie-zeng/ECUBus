@@ -226,7 +226,6 @@ class CANUDS {
 
 
     data = data.concat(payload2data(item.payload))
-    console.log(data)
     /* check surpress*/
     for (var i in this.writeData) {
       if (this.writeData[i].type == 'subfunction') {
