@@ -86,7 +86,7 @@
           placement="top-start"
           title="Tips"
           width="600"
-          trigger="hover"
+          trigger="click"
           style="margin:10px;font-size:16px;">
           <el-table :data="tipsData" height="300px">
             <el-table-column width="150" property="func" label="Function"></el-table-column>
@@ -128,7 +128,41 @@ export default {
   
   data() {
     return {
-      inputData: {},
+      inputData: {
+        suppress:false,
+        subFunction: '',
+        'AccessData / securityKey': '',
+        communicationType: '',
+        TimingParameterRequestRecord: '',
+        securityDataRequestRecord: '',
+        eventWindowTime: '',
+        eventTypeRecord: '',
+        'baudrateIdentifier/linkBaudrateRecord': '',
+        dataIdentifier: '',
+        addressAndLengthFormatIdentifier: '',
+        memoryAddress: '',
+        memorySize: '',
+        transmissionMode: '',
+        periodicDataIdentifier: '',
+        dynamicallyDefinedDataIdentifier: '',
+        dataRecord: '',
+        groupOfDTC: '',
+        controlOptionRecord: '',
+        controlEnableMaskRecord: '',
+        routineIdentifier: '',
+        routineControlOptionRecord: '',
+        'routineControlOptionRecord-ascii': '',
+        'Download File': '',
+        dataFormatIdentifier: '',
+        'Upload File': '',
+        transferRequestParameterRecord: '',
+        modeOfOperation: '',
+        filePathAndNameLength: '',
+        filePathAndName: '',
+        fileSizeParameterLength: '',
+        fileSizeUnCompressed: '',
+        fileSizeCompressed: ''
+      },
       error: "",
       jsFn: "return true;",
       jsError: "",
@@ -174,7 +208,15 @@ export default {
   },
   mounted() {
     this.codemirror.setSize('100%',200)
-    // you can use this.codemirror to do something...
+  },
+  created(){
+    var val=this.input
+    for(var j in val.payload){
+      this.inputData[val.payload[j].name]=val.payload[j][val.payload[j].name]
+      if(val.payload[j].type=='subfunction'){
+        this.inputData['suppress']=val.payload[j]['suppress']
+      }
+    }
   },
   computed: {
     rules: function() {
@@ -201,6 +243,12 @@ export default {
       type: String,
       default: function() {
         return "uds";
+      }
+    },
+    input: {
+      type: Object,
+      default: function() {
+        return {}
       }
     }
   },

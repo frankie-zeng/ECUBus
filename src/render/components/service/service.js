@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-export default {
+module.exports={
   'uds': [
     {
       name: 'DiagnosticSessionControl',

@@ -1,7 +1,9 @@
 <template>
   <div>
-    <el-dialog title="User function" :visible.sync="cd" width="80%">
-        
+    <el-dialog title="User function" :visible.sync="cd1" width="80%"> 
+      <Service :config="this.editCfg" :input="editVal" v-if="refresh"/>
+    </el-dialog>
+    <el-dialog title="User function" :visible.sync="cd" width="80%"> 
       <el-select v-model="codeIndex" placeholder="Index" size="mini" style="margin-bottom:20px;width:80%" @change="selectChange"> 
         <el-option
           v-for="(n,i) in codeNum"
@@ -70,7 +72,7 @@
           ></el-button>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="Action" width="70">
+      <el-table-column fixed="right" label="Action" width="90" align="center">
         <template slot-scope="scope">
           <el-button
             type="danger"
@@ -80,6 +82,14 @@
             @click="deleteService(scope.$index)"
             :disabled="running"
           ></el-button>
+          <el-button
+            type="primary"
+            size="mini"
+            icon="el-icon-edit-outline"
+            circle
+            @click="editService(scope.row)"
+            :disabled="running"
+          ></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -87,11 +97,21 @@
 </template>
 <script>
 import Sortable from "sortablejs";
+import config from "./service.js";
+import Service from "./service.vue";
 export default {
+  components:{
+    Service
+  },
   data: function() {
     return {
+      refresh:false,
       sortable: {},
       cd:false,
+      cd1:false,
+      config:config['uds'],
+      editCfg:{},
+      editVal:{},
       jsFn:[" "],
       codeIndex:0,
       codeNum:1,
@@ -168,6 +188,24 @@ export default {
         this.$store.commit("canTableDelete", index);
       } else {
         return;
+      }
+    },
+    editService(val){
+      if(val.type=='uds'){
+        for(var i in this.config){
+          if(this.config[i].value==val.service.value){
+            this.editCfg=this.config[i]
+            this.editVal=JSON.parse(JSON.stringify(val))
+            this.cd1=true
+            this.refresh=false
+            this.$nextTick(() => {
+               this.refresh=true  
+            });
+            
+          
+            break
+          }
+        }
       }
     }
   },
