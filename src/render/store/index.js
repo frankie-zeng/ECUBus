@@ -74,6 +74,10 @@ export default new Vuex.Store({
     canTableLoad(state, data) {
       state.canTable = data
     },
+    canItemChange(state,val){
+      val.data.date=new Date().getTime()
+      Vue.set(state.canTable,val.index,val.data)
+    },
     /*doip table*/
     doipTableUpdate(state, index) {
       const targetRow = state.doipTable.splice(index[1], 1)[0]
@@ -98,6 +102,10 @@ export default new Vuex.Store({
     },
     doipTableLoad(state, data) {
       state.doipTable = data
+    },
+    doipItemChange(state,val){
+      val.data.date=new Date().getTime()
+      Vue.set(state.doipTable,val.index,val.data)
     }
   },
   actions: {

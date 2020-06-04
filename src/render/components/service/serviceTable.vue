@@ -1,21 +1,19 @@
 <template>
   <div>
     <el-dialog title="User function" :visible.sync="cd1" width="80%"> 
-      <Service :config="this.editCfg" :input="editVal" v-if="refresh"/>
+      <Service :config="this.editCfg" :input="editVal" v-if="refresh" change @edititem="editItem"/>
     </el-dialog>
     <el-dialog title="User function" :visible.sync="cd" width="80%"> 
-      <el-select v-model="codeIndex" placeholder="Index" size="mini" style="margin-bottom:20px;width:80%" @change="selectChange"> 
-        <el-option
-          v-for="(n,i) in codeNum"
-          :key="i"
-          :label="n"
-          :value="i">
-        </el-option>
-      </el-select>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" v-if="codeClean" @click="editorCtrlS">Saved</el-button>
-      <el-button size="mini" style="float:right" icon="el-icon-document-copy" type="primary" @click="editorCtrlS" v-else>Changed</el-button>
-      <div>function(writeData,readonly){</div>
-      <codemirror v-model="jsFn[codeIndex]"  :options="codeOption" ref="cmEditor" @input="codeChange"/>
+      <div style="text-align:center">
+        <el-pagination
+          layout="prev, pager, next"
+          hide-on-single-page
+          :total="codeNum*10"
+          @current-change="showNewCode">
+        </el-pagination>
+      </div>
+      <div>function(writeData,readData){</div>
+      <codemirror v-model="jsFn[codeIndex]"  :options="codeOption" ref="cmEditor"/>
       <div>}</div>
     </el-dialog>
     <el-table
@@ -87,7 +85,7 @@
             size="mini"
             icon="el-icon-edit-outline"
             circle
-            @click="editService(scope.row)"
+            @click="editService(scope.$index,scope.row)"
             :disabled="running"
           ></el-button>
         </template>
@@ -112,16 +110,13 @@ export default {
       config:config['uds'],
       editCfg:{},
       editVal:{},
+      editIndex:0,
       jsFn:[" "],
       codeIndex:0,
       codeNum:1,
       codeOption:{
-        extraKeys: {
-            "Ctrl-S": this.editorCtrlS
-        }
+        readOnly:true,
       },
-      codeClean:true,
-      codeItem:''
     };
   },
   mounted() {
@@ -138,33 +133,29 @@ export default {
         }
       }
     });
+    
   },
   props: ["mode"],
   methods: {
-    codeChange(){
-      this.codeClean=this.$refs.cmEditor.codemirror.isClean();
+    showNewCode(val){
+      this.codeIndex=val-1
     },
-    selectChange(){
-      this.$nextTick(() => {
-         this.codeClean=true;
-      });
-    },
-    editorCtrlS(){
-      this.$store.commit("changeFunc", {
-        tableName:this.mode=="doip"?'doipTable':'canTable',
-        item:this.codeItem,
-        index:this.codeIndex,
-        func:this.jsFn[this.codeIndex]
-      });
-      this.$refs.cmEditor.codemirror.markClean();
-      this.codeClean=this.$refs.cmEditor.codemirror.isClean();
-      this.$notify({
-        title: "Success",
-        message: "Saved!",
-        type: "success",
-        duration: 1000,
-      });
-    },
+    // editorCtrlS(){
+    //   this.$store.commit("changeFunc", {
+    //     tableName:this.mode=="doip"?'doipTable':'canTable',
+    //     item:this.codeItem,
+    //     index:this.codeIndex,
+    //     func:this.jsFn[this.codeIndex]
+    //   });
+    //   this.$refs.cmEditor.codemirror.markClean();
+    //   this.codeClean=this.$refs.cmEditor.codemirror.isClean();
+    //   this.$notify({
+    //     title: "Success",
+    //     message: "Saved!",
+    //     type: "success",
+    //     duration: 1000,
+    //   });
+    // },
     showCode(item){
       this.codeItem=item;
       this.jsFn=[]
@@ -190,7 +181,22 @@ export default {
         return;
       }
     },
-    editService(val){
+    editItem(val){
+      if (this.mode === "doip") {
+        this.$store.commit("doipItemChange",{
+          index:this.editIndex,
+          data:JSON.parse(JSON.stringify(val))
+        })
+      }else{
+        this.$store.commit("canItemChange",{
+          index:this.editIndex,
+          data:JSON.parse(JSON.stringify(val))
+        })
+      }
+      this.cd1=false
+    },
+    editService(index,val){
+      this.editIndex=index
       if(val.type=='uds'){
         for(var i in this.config){
           if(this.config[i].value==val.service.value){

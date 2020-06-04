@@ -9,7 +9,6 @@
       label-position="top"
       size="small"
       :validate-on-rule-change="true"
-      v-if="refresh"
     >
       <el-form-item
         :label="item.name"
@@ -99,7 +98,7 @@
       </div>
       <el-row style="margin-top:10px">
         <div class="fn">function(writeData,readData){</div>
-        <codemirror v-model="jsFn"  @blur="jsCheck"  ref="cmEditor"/>
+        <codemirror v-model="inputData.script"  @blur="jsCheck"  ref="cmEditor"/>
         <div class="fn">}</div>
       </el-row>
       <div id="JSLINT_" v-if="jsError!=''">
@@ -112,7 +111,8 @@
       </div>
       <el-form-item style="text-align:right">
         <span style="color:red;margin-right:5px">{{error}}</span>
-        <el-button type="primary" @click="addService">Add Service</el-button>
+        <el-button type="primary" @click="addService('additem')" v-if="!change">Add Service</el-button>
+        <el-button type="warning" @click="addService('edititem')" v-else>Change Service</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -130,6 +130,7 @@ export default {
     return {
       inputData: {
         suppress:false,
+        script:'return true;',
         subFunction: '',
         'AccessData / securityKey': '',
         communicationType: '',
@@ -164,9 +165,7 @@ export default {
         fileSizeCompressed: ''
       },
       error: "",
-      jsFn: "return true;",
       jsError: "",
-      refresh:true,
       tipsData:[
         {
           func:'this.log(msg)',
@@ -210,12 +209,15 @@ export default {
     this.codemirror.setSize('100%',200)
   },
   created(){
-    var val=this.input
-    for(var j in val.payload){
-      this.inputData[val.payload[j].name]=val.payload[j][val.payload[j].name]
-      if(val.payload[j].type=='subfunction'){
-        this.inputData['suppress']=val.payload[j]['suppress']
+    if(typeof this.input != 'undefined'){
+      var val=this.input
+      for(var j in val.payload){
+        this.inputData[val.payload[j].name]=val.payload[j][val.payload[j].name]
+        if(val.payload[j].type=='subfunction'){
+          this.inputData['suppress']=val.payload[j]['suppress']
+        }
       }
+      this.inputData.script=val.func
     }
   },
   computed: {
@@ -245,10 +247,16 @@ export default {
         return "uds";
       }
     },
+    change: {
+      type: Boolean,
+      default: function() {
+        return false
+      }
+    },
     input: {
       type: Object,
       default: function() {
-        return {}
+        return undefined
       }
     }
   },
@@ -266,7 +274,7 @@ export default {
       /* workaroud unused arg */
       var result = jslint(
         "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
-          this.jsFn +
+          this.inputData.script +
           "\r\n}\r\nmodule.exports=check;",
         option,
         undefined
@@ -278,10 +286,6 @@ export default {
         name:ipcRenderer.sendSync("saveFilePath"),
         size:0
       }
-      this.refresh=false
-      this.$nextTick(() => {
-        this.refresh = true;
-      });
     },
     downloadFIle(name) {
       var val = ipcRenderer.sendSync("downloadFilePath");
@@ -289,17 +293,13 @@ export default {
         name:val.path,
         size:val.size
       }
-      this.refresh=false
-      this.$nextTick(() => {
-        this.refresh = true;
-      });
     },
-    addService() {
+    addService(event) {
       var data = {};
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
           data.type = this.type;
-          data.func = this.jsFn;
+          data.func = this.inputData.script;
           data.service = {
             name: this.config.name,
             value: this.config.value
@@ -343,7 +343,7 @@ export default {
             }
             data.payload.push(item)
           }
-          this.$emit("additem", data);
+          this.$emit(event, data);
         }
       });
     }
