@@ -105,7 +105,6 @@ export default {
   },
   methods: {
     addItem(val) {
-      console.log(val);
       var item = JSON.parse(JSON.stringify(val));
       if (this.mode === "doip") {
         this.$store.commit("doipTableAdd", item);
@@ -129,7 +128,6 @@ export default {
         for (var i in pregroup) {
           this.group[pregroup[i][0]] = JSON.parse(pregroup[i][1]);
         }
-        console.log(this.group);
       } else {
         this.itemIndex = 0;
       }

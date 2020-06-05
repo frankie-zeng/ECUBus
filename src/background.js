@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 'use strict'
 
-import { app, protocol, BrowserWindow, dialog} from 'electron'
+import { app, protocol, BrowserWindow, dialog, Menu} from 'electron'
 // import CANUDS from './uds/canuds.js'
 
 import {
@@ -21,6 +21,9 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win
 let canuds
 let ipuds
+var menuTemplate = [{
+  label: app.getVersion(),
+}];
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
 
@@ -31,7 +34,8 @@ function createWindow () {
   },
   // eslint-disable-next-line no-undef
   icon: `${__static}/logo.ico` })
- 
+  const menu = Menu.buildFromTemplate(menuTemplate)
+  Menu.setApplicationMenu(menu)
   canuds = new CANUDS(win)
   canuds.registerCallback(() => {
     canuds.eventHandle()
