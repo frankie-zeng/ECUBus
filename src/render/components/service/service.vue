@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 <template>
   <div class="subservice">
-    <div class="subheader">{{config.name}}</div>
+    <div class="subheader" v-if="!group">{{config.name}}</div>
     <el-form
       :model="inputData"
       :rules="rules"
@@ -39,7 +39,13 @@
         </el-select>
         <div v-else-if="item.type==='subfunction'">
           <el-col :span="16">
-            <el-select v-model="inputData[item.name]" style="width:100%" allow-create filterable placeholder="Sub-Function">
+            <el-select
+              v-model="inputData[item.name]"
+              style="width:100%"
+              allow-create
+              filterable
+              placeholder="Sub-Function"
+            >
               <el-option
                 v-for="child in item.options"
                 :key="child.value"
@@ -79,42 +85,53 @@
           </el-input>-->
         </div>
       </el-form-item>
-      <div >
-        <span class="subheader">User function</span>
-        <el-popover
-          placement="top-start"
-          title="Tips"
-          width="600"
-          trigger="click"
-          style="margin:10px;font-size:16px;">
-          <el-table :data="tipsData" height="300px">
-            <el-table-column width="150" property="func" label="Function"></el-table-column>
-            <el-table-column width="100" property="params" label="Params"></el-table-column>
-            <el-table-column width="300" property="desc" label="Description"></el-table-column>
-          </el-table>
-          <i class="el-icon-warning-outline" slot="reference"></i>
-          <!-- <el-button slot="reference" icon="el-icon-warning-outline"></el-button> -->
-        </el-popover>
-      </div>
-      <el-row style="margin-top:10px">
-        <div class="fn">function(writeData,readData){</div>
-        <codemirror v-model="inputData.script"  @blur="jsCheck"  ref="cmEditor"/>
-        <div class="fn">}</div>
-      </el-row>
-      <div id="JSLINT_" v-if="jsError!=''">
-        <fieldset id="JSLINT_WARNINGS" class="none">
-          <legend>Warnings</legend>
-          <div id="JSLINT_WARNINGS_LIST">
-            <p v-html="jsError"></p>
-          </div>
-        </fieldset>
-      </div>
-      <el-form-item style="text-align:right">
-        <span style="color:red;margin-right:5px">{{error}}</span>
-        <el-button type="primary" @click="addService('additem')" v-if="!change">Add Service</el-button>
-        <el-button type="warning" @click="addService('edititem')" v-else>Change Service</el-button>
-      </el-form-item>
     </el-form>
+    <el-collapse v-model="activeNames">
+      <el-collapse-item name="1">
+        <template slot="title">
+          User function
+          <el-popover
+            placement="top-start"
+            title="Tips"
+            width="600"
+            trigger="hover"
+            style="margin:10px;font-size:16px;"
+          >
+            <el-table :data="tipsData" height="300px">
+              <el-table-column width="150" property="func" label="Function"></el-table-column>
+              <el-table-column width="100" property="params" label="Params"></el-table-column>
+              <el-table-column width="300" property="desc" label="Description"></el-table-column>
+            </el-table>
+            <i class="el-icon-warning-outline" slot="reference"></i>
+            <!-- <el-button slot="reference" icon="el-icon-warning-outline"></el-button> -->
+          </el-popover>
+        </template>
+
+        <el-row>
+          <div class="fn">function(writeData,readData){</div>
+          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" />
+          <div class="fn">}</div>
+        </el-row>
+        <div id="JSLINT_" v-if="jsError!=''">
+          <fieldset id="JSLINT_WARNINGS" class="none">
+            <legend>Warnings</legend>
+            <div id="JSLINT_WARNINGS_LIST">
+              <p v-html="jsError"></p>
+            </div>
+          </fieldset>
+        </div>
+      </el-collapse-item>
+    </el-collapse>
+    <div style="text-align:right;margin-top:10px" v-if="!group">
+      <span style="color:red;margin-right:5px">{{error}}</span>
+      <el-button
+        type="primary"
+        @click="addService('additem')"
+        v-if="!change"
+        size="small"
+      >Add Service</el-button>
+      <el-button type="warning" @click="addService('edititem')" size="small" v-else>Change Service</el-button>
+    </div>
   </div>
 </template>
 
@@ -125,99 +142,109 @@ import report from "./../../JSLint/report.js";
 
 //import "codemirror/mode/javascript/javascript.js";
 export default {
-  
   data() {
     return {
+      jsFn: "return true;",
+      activeNames: ["1"],
       inputData: {
-        suppress:false,
-        script:'return true;',
-        subFunction: '',
-        'AccessData / securityKey': '',
-        communicationType: '',
-        TimingParameterRequestRecord: '',
-        securityDataRequestRecord: '',
-        eventWindowTime: '',
-        eventTypeRecord: '',
-        'baudrateIdentifier/linkBaudrateRecord': '',
-        dataIdentifier: '',
-        addressAndLengthFormatIdentifier: '',
-        memoryAddress: '',
-        memorySize: '',
-        transmissionMode: '',
-        periodicDataIdentifier: '',
-        dynamicallyDefinedDataIdentifier: '',
-        dataRecord: '',
-        groupOfDTC: '',
-        controlOptionRecord: '',
-        controlEnableMaskRecord: '',
-        routineIdentifier: '',
-        routineControlOptionRecord: '',
-        'routineControlOptionRecord-ascii': '',
-        'Download File': '',
-        dataFormatIdentifier: '',
-        'Upload File': '',
-        transferRequestParameterRecord: '',
-        modeOfOperation: '',
-        filePathAndNameLength: '',
-        filePathAndName: '',
-        fileSizeParameterLength: '',
-        fileSizeUnCompressed: '',
-        fileSizeCompressed: ''
+        suppress: false,
+        subFunction: "",
+        "AccessData / securityKey": "",
+        communicationType: "",
+        TimingParameterRequestRecord: "",
+        securityDataRequestRecord: "",
+        eventWindowTime: "",
+        eventTypeRecord: "",
+        "baudrateIdentifier/linkBaudrateRecord": "",
+        dataIdentifier: "",
+        addressAndLengthFormatIdentifier: "",
+        memoryAddress: "",
+        memorySize: "",
+        transmissionMode: "",
+        periodicDataIdentifier: "",
+        dynamicallyDefinedDataIdentifier: "",
+        dataRecord: "",
+        groupOfDTC: "",
+        controlOptionRecord: "",
+        controlEnableMaskRecord: "",
+        routineIdentifier: "",
+        routineControlOptionRecord: "",
+        "routineControlOptionRecord-ascii": "",
+        "Download File": "",
+        dataFormatIdentifier: "",
+        "Upload File": "",
+        transferRequestParameterRecord: "",
+        modeOfOperation: "",
+        filePathAndNameLength: "",
+        filePathAndName: "",
+        fileSizeParameterLength: "",
+        fileSizeUnCompressed: "",
+        fileSizeCompressed: ""
       },
       error: "",
       jsError: "",
-      tipsData:[
+      tipsData: [
         {
-          func:'this.log(msg)',
-          params:'msg can be any type',
-          desc:'Ouput log information'
+          func: "this.log(msg)",
+          params: "msg can be any type",
+          desc: "Ouput log information"
         },
         {
-          func:'this.delay(ms)',
-          params:"ms,type int",
-          desc:"Insert a new delay and wait another new reponse"
+          func: "this.delay(ms)",
+          params: "ms,type int",
+          desc: "Insert a new delay and wait another new reponse"
         },
         {
-          func:'this.openFile(filename,flag)',
-          params:"filename is a absolute file name path,flag:default is 'r'",
-          desc:"Open a file,this function must be call before using readFile,WriteFile and CloseFile"
+          func: "this.openFile(filename,flag)",
+          params: "filename is a absolute file name path,flag:default is 'r'",
+          desc:
+            "Open a file,this function must be call before using readFile,WriteFile and CloseFile"
         },
         {
-          func:'this.readFile(size)',
-          params:"size,type int",
-          desc:"Read data from a file,return type is a array, the length of array maybe less than size"
+          func: "this.readFile(size)",
+          params: "size,type int",
+          desc:
+            "Read data from a file,return type is a array, the length of array maybe less than size"
         },
         {
-          func:'this.writeFile(data)',
-          params:"data,type array of buffer",
-          desc:"Write data to a file"
+          func: "this.writeFile(data)",
+          params: "data,type array of buffer",
+          desc: "Write data to a file"
         },
         {
-          func:'this.closeFile()',
-          params:"null",
-          desc:"Close a file"
+          func: "this.closeFile()",
+          params: "null",
+          desc: "Close a file"
         },
         {
-          func:'this.changeNextFrame(name,value)',
-          params:'name:should be payload name,value:the change value',
-          desc:"Change the next service data in the schedule table"
+          func: "this.changeNextFrame(name,value)",
+          params: "name:should be payload name,value:the change value",
+          desc: "Change the next service data in the schedule table"
         }
       ]
     };
   },
   mounted() {
-    this.codemirror.setSize('100%',200)
+    if (!this.group) {
+      this.codemirror.setSize("100%", 200);
+    }
   },
-  created(){
-    if(typeof this.input != 'undefined'){
-      var val=this.input
-      for(var j in val.payload){
-        this.inputData[val.payload[j].name]=val.payload[j][val.payload[j].name]
-        if(val.payload[j].type=='subfunction'){
-          this.inputData['suppress']=val.payload[j]['suppress']
+  created() {
+    if (typeof this.input != "undefined") {
+      var val = this.input;
+      for (var j in val.payload) {
+        this.inputData[val.payload[j].name] =
+          val.payload[j][val.payload[j].name];
+        if (val.payload[j].type == "subfunction") {
+          this.inputData["suppress"] = val.payload[j]["suppress"];
         }
       }
-      this.inputData.script=val.func
+      this.jsFn = val.func;
+      if (this.group) {
+        this.$nextTick(() => {
+          this.activeNames = [];
+        });
+      }
     }
   },
   computed: {
@@ -230,11 +257,17 @@ export default {
       }
       return a;
     },
-     codemirror() {
-      return this.$refs.cmEditor.codemirror
+    codemirror() {
+      return this.$refs.cmEditor.codemirror;
     }
   },
   props: {
+    group: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
     config: {
       type: Object,
       default: function() {
@@ -250,13 +283,13 @@ export default {
     change: {
       type: Boolean,
       default: function() {
-        return false
+        return false;
       }
     },
     input: {
       type: Object,
       default: function() {
-        return undefined
+        return undefined;
       }
     }
   },
@@ -269,12 +302,12 @@ export default {
         for: true,
         single: true,
         this: true,
-        node: true,
+        node: true
       };
       /* workaroud unused arg */
       var result = jslint(
         "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
-          this.inputData.script +
+          this.jsFn +
           "\r\n}\r\nmodule.exports=check;",
         option,
         undefined
@@ -282,38 +315,41 @@ export default {
       this.jsError = report.error(result);
     },
     uploadFIle(name) {
-      this.inputData[name]={
-        name:ipcRenderer.sendSync("saveFilePath"),
-        size:0
-      }
+      this.inputData[name] = {
+        name: ipcRenderer.sendSync("saveFilePath"),
+        size: 0
+      };
     },
     downloadFIle(name) {
       var val = ipcRenderer.sendSync("downloadFilePath");
-      this.inputData[name]={
-        name:val.path,
-        size:val.size
-      }
+      this.inputData[name] = {
+        name: val.path,
+        size: val.size
+      };
     },
     addService(event) {
       var data = {};
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
           data.type = this.type;
-          data.func = this.inputData.script;
+          data.func = this.jsFn;
           data.service = {
             name: this.config.name,
             value: this.config.value
           };
           data.payload = [];
           for (var i in this.config.input) {
-            var item={}
-            item.type=this.config.input[i].type
-            item.name=this.config.input[i].name
+            var item = {};
+            item.type = this.config.input[i].type;
+            item.name = this.config.input[i].name;
             if (
               this.config.input[i].type === "downloadFile" ||
               this.config.input[i].type === "uploadFile"
             ) {
-              if ((!this.inputData[this.config.input[i].name])&&(this.config.input[i].require)) {
+              if (
+                !this.inputData[this.config.input[i].name] &&
+                this.config.input[i].require
+              ) {
                 this.error = "Please chhose a file";
                 return;
               }
@@ -322,26 +358,33 @@ export default {
                 return;
               }
               if (this.config.input[i].type === "downloadFile") {
-                if(this.inputData[this.config.input[i].name]){
-                  if (parseInt(this.inputData.memorySize, 16) > this.inputData[this.config.input[i].name].size) {
+                if (this.inputData[this.config.input[i].name]) {
+                  if (
+                    parseInt(this.inputData.memorySize, 16) >
+                    this.inputData[this.config.input[i].name].size
+                  ) {
                     this.error = "MemorySize should less than file size";
                     return;
                   }
                 }
               }
               this.error = "";
-              item[this.config.input[i].name]=this.inputData[this.config.input[i].name]
+              item[this.config.input[i].name] = this.inputData[
+                this.config.input[i].name
+              ];
             } else if (this.config.input[i].type === "subfunction") {
-              item.subFunction = parseInt(this.inputData.subFunction)
-              if(this.inputData.suppress){
-                item.suppress=true
-              }else{
-                item.suppress=false
+              item.subFunction = parseInt(this.inputData.subFunction);
+              if (this.inputData.suppress) {
+                item.suppress = true;
+              } else {
+                item.suppress = false;
               }
-            } else{
-              item[this.config.input[i].name]=this.inputData[this.config.input[i].name]
+            } else {
+              item[this.config.input[i].name] = this.inputData[
+                this.config.input[i].name
+              ];
             }
-            data.payload.push(item)
+            data.payload.push(item);
           }
           this.$emit(event, data);
         }
@@ -352,7 +395,7 @@ export default {
 </script>
 
 <style>
-.fn{
+.fn {
   margin: 5px;
   font-size: 16px;
   color: gray;

@@ -1,7 +1,7 @@
 <template>
   <div style="text-align:center">
       <div >
-        <el-transfer v-model="value" :data="group" :titles="['Service', 'Group']"  style="text-align: left; display: inline-block"></el-transfer>
+        <el-transfer v-model="value" :data="group" :titles="['Service', 'Group']"  style="text-align: left; display: inline-block" @change="tChange"></el-transfer>
       </div>
       
       Group Name：<el-input v-model="groupname" placeholder="Group Name" style="width:50%;margin:20px;"></el-input><el-button type="primary" @click="addGroup">Save Group</el-button>
@@ -10,6 +10,7 @@
 
 <script>
 import config from "./service.js";
+// eslint-disable-next-line no-unused-vars
 const { ipcRenderer } = require("electron");
 export default {
     props: ["mode"],
@@ -17,8 +18,11 @@ export default {
         return{
             value:[],
             groupname:'',
-            config:config['uds']
+            config:config['uds'],
         }
+    },
+    created(){
+        this.value=[]
     },
     computed: {
         table: function(){
@@ -46,32 +50,14 @@ export default {
             }
             return payload
         },
-        inputParams:function() {
-            var input=[]
-            if(this.value.length===0){
-                return input
-            }
-            for(var i in this.value){
-                var s=this.value[i].split(',')
-                var tableIndex=parseInt(s[0])
-                var payloadIndex=parseInt(s[1])
-                for(var j in this.config){
-                    if(this.config[j].value===this.table[tableIndex].service.value){
-                        for(var z in this.config[j].input){
-                            if(this.config[j].input[z].name===this.table[tableIndex].payload[payloadIndex].name){
-                                input.push(this.config[j].input[z])
-                                break
-                            }
-                        }
-                        break
-                    }
-                }
-            }
-            return input
-        }
     },
     methods:{
+        tChange:function(){
+            
+           
+        },
         addGroup:function(){
+            var service=[]
             for(var i in this.table){
                 if(this.table[i].type=='group'){
                     this.$notify.error({
@@ -80,9 +66,28 @@ export default {
                     });
                     return 
                 }
-                
+                service[i]={
+                    name:i+'-'+this.table[i].service.name,
+                    value:this.table[i].service.value,
+                    input:[]
+                }
             }
-            
+            for(i in this.value){
+                var s=this.value[i].split(',')
+                var tableIndex=parseInt(s[0])
+                var payloadIndex=parseInt(s[1])
+                for(var j in this.config){
+                    if(this.config[j].value===this.table[tableIndex].service.value){
+                        for(var z in this.config[j].input){
+                            if(this.config[j].input[z].name===this.table[tableIndex].payload[payloadIndex].name){
+                                service[tableIndex].input.push(this.config[j].input[z])
+                                break
+                            }
+                        }
+                        break
+                    }
+                }
+            }
             if( this.groupname===''){
                 this.$notify.error({
                     title: "Error",
@@ -99,8 +104,8 @@ export default {
             }
             var newgroup={
                 name:this.groupname,
-                input:this.inputParams,
-                changeslot:this.value,
+                service:service,
+                // changeslot:this.value,
                 table:JSON.parse(JSON.stringify(this.table))
             }
             ipcRenderer.sendSync("saveGroup", [this.groupname,JSON.stringify(newgroup)])

@@ -1,43 +1,59 @@
 <template>
   <div>
-    <div>
+    <div v-if="!editService">
       <el-radio-group v-model="type" class="choose" @change="typeChange">
         <el-radio-button label="uds">UDS</el-radio-button>
         <el-radio-button label="group">GROUP</el-radio-button>
       </el-radio-group>
-    </div>
-    <div v-if="type=='uds'">
-      <div class="subheader">Serivce</div>
-      <el-select
-        v-model="itemIndex"
-        placeholder="Service"
-        class="choose"
-        @change="itemChange"
-        style="width:100%"
-      >
-        <el-option v-for="(item,key) in config" :key="key" :label="item.name" :value="key" >
-          <span style="float: left">{{ item.name }}</span>
-          <span style="float: right; color: #8492a6; font-size: 13px">0x{{ item.value.toString(16) }}</span>
-        </el-option>
-      </el-select>
+      <div v-if="type=='uds'">
+        <div class="subheader">Serivce</div>
+        <el-select
+          v-model="itemIndex"
+          placeholder="Service"
+          class="choose"
+          @change="itemChange"
+          style="width:100%"
+        >
+          <el-option v-for="(item,key) in config" :key="key" :label="item.name" :value="key">
+            <span style="float: left">{{ item.name }}</span>
+            <span
+              style="float: right; color: #8492a6; font-size: 13px"
+            >0x{{ item.value.toString(16) }}</span>
+          </el-option>
+        </el-select>
 
-      <Service :config="config[itemIndex]" @additem="addItem" v-if="refresh" />
+        <Service :config="config[itemIndex]" @additem="addItem" v-if="refresh" />
+      </div>
+      <div v-else>
+        <div class="subheader">Group</div>
+
+        <el-select
+          v-model="itemIndex"
+          placeholder="Group Service"
+          class="choose"
+          @change="itemChange"
+          style="width:80%"
+        >
+          <el-option v-for="(item,key) in group" :key="key" :label="key" :value="key"></el-option>
+        </el-select>
+        <el-button
+          icon="el-icon-refresh-right"
+          type="success"
+          plain
+          style="margin-left:20px"
+          size="small"
+          @click="typeChange('group')"
+        ></el-button>
+        <Group :config="group[itemIndex]" @additem="addItem" v-if="refresh" />
+      </div>
     </div>
     <div v-else>
-      <div class="subheader">Group</div>
-      
-      <el-select
-        v-model="itemIndex"
-        placeholder="Group Service"
-        class="choose"
-        @change="itemChange"
-        style="width:90%"
-      >
-        <el-option v-for="(item,key) in group" :key="key" :label="key" :value="key">
-        </el-option>
-      </el-select>
-      <el-button icon="el-icon-refresh-right" type="success" plain style="margin-left:20px" size="small" @click="typeChange('group')"></el-button>
-      <Group :config="group[itemIndex]" @additem="addItem" v-if="refresh" />
+      <div v-if="service.type=='uds'">
+         <Service :config="service.cfg" :input="service.val" change @edititem="editItem" v-if="refresh"/>
+      </div>
+      <div v-else>
+        <Group :config="service.cfg" :input="service.val" @edititem="editItem" change/>
+      </div>
     </div>
   </div>
 </template>
@@ -46,7 +62,7 @@
 import config from "./service.js";
 import Service from "./service.vue";
 import Group from "./group.vue";
-import pregroup from './predefgroup.js'
+import pregroup from "./predefgroup.js";
 const { ipcRenderer } = require("electron");
 export default {
   components: {
@@ -55,18 +71,41 @@ export default {
   },
   data() {
     return {
-      config: config['uds'],
-      group:{},
-
+      config: config["uds"],
+      group: {},
       type: "uds",
       itemIndex: 0,
       refresh: true,
     };
   },
-  props: ["mode"],
+  
+  props: {
+    mode: {
+      type: String,
+      default: function() {
+        return "doip";
+      }
+    },
+    editService: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    service: {
+      type: Object,
+      default: function() {
+        return {
+          type:'uds',
+          cfg:'',
+          val:''
+        };
+      }
+    }
+  },
   methods: {
     addItem(val) {
-      //console.log(val)
+      console.log(val);
       var item = JSON.parse(JSON.stringify(val));
       if (this.mode === "doip") {
         this.$store.commit("doipTableAdd", item);
@@ -75,21 +114,24 @@ export default {
       }
       this.$emit("additem");
     },
+    editItem(val) {
+       this.$emit("edititem",val);
+    },
     typeChange(val) {
-      
-      if(val==='group'){
-        this.itemIndex=''
-        var data=ipcRenderer.sendSync('readGroup');
-        var map=new Map(JSON.parse(data));
-        this.group={}
+      if (val === "group") {
+        this.itemIndex = "";
+        var data = ipcRenderer.sendSync("readGroup");
+        var map = new Map(JSON.parse(data));
+        this.group = {};
         for (let [key, value] of map) {
-          this.group[key]=JSON.parse(value)
+          this.group[key] = JSON.parse(value);
         }
         for (var i in pregroup) {
-          this.group[pregroup[i][0]]=JSON.parse(pregroup[i][1])
+          this.group[pregroup[i][0]] = JSON.parse(pregroup[i][1]);
         }
-      }else{
-        this.itemIndex=0
+        console.log(this.group);
+      } else {
+        this.itemIndex = 0;
       }
     },
     itemChange() {

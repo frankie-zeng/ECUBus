@@ -2,151 +2,32 @@
 <template>
   <div class="subservice">
     <div class="subheader">{{config.name}}</div>
-    <el-form
-      :model="inputData"
-      :rules="rules"
-      ref="groupForm"
-      label-position="top"
-      size="small"
-      :validate-on-rule-change="true"
-      v-if="refresh"
-    >
-      <el-form-item
-        :label="item.name"
-        :prop="key+'-'+item.name"
-        v-for="(item,key) in config.input"
-        :key="key"
-      >
-        <el-input v-model="inputData[key+'-'+item.name]" v-if="item.type==='input'">
-          <template slot="prepend">0x</template>
-        </el-input>
-        <el-select
-          v-model="inputData[key+'-'+item.name]"
-          v-else-if="item.type==='select'"
-          style="width:100%"
-          allow-create
-          filterable
-        >
-          <el-option
-            v-for="child in item.options"
-            :key="child.value"
-            :label="child.name"
-            :value="child.value"
-          >
-            <span style="float: left">{{ child.name }}</span>
-            <span style="float: right; color: #8492a6; font-size: 13px">{{ child.value }}</span>
-          </el-option>
-        </el-select>
-        <div v-else-if="item.type==='subfunction'">
-          <el-col :span="16">
-            <el-select
-              v-model="inputData[key+'-'+item.name]"
-              style="width:100%"
-              allow-create
-              filterable
-            >
-              <el-option
-                v-for="child in item.options"
-                :key="child.value"
-                :label="child.name"
-                :value="child.value"
-              >
-                <span style="float: left">{{ child.name }}</span>
-                <span
-                  style="float: right; color: #8492a6; font-size: 13px"
-                >{{ '0x'+child.value.toString(16) }}</span>
-              </el-option>
-            </el-select>
-          </el-col>
-          <el-col :span="7" :offset="1" style="text-align:right">
-            <el-checkbox
-              v-model="inputData[key+'-suppress']"
-              label="Suppress"
-              border
-              @change="suppressChange(key)"
-            ></el-checkbox>
-          </el-col>
-        </div>
-        <el-input
-          v-model="inputData[key+'-'+item.name]"
-          v-else-if="item.type==='text'"
-          type="textarea"
-          :autosize="{ minRows: 3, maxRows: 6}"
-        ></el-input>
-        <div v-else-if="item.type==='downloadFile'">
-          <el-button @click="downloadFIle(key+'-'+item.name)" type="primary">Choose File</el-button>
-          <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
-            {{inputData[key+'-'+item.name].name}}
-            <strong>{{'0x'+inputData[key+'-'+item.name].size.toString(16)}}</strong>
-          </span>
-        </div>
-        <div v-else-if="item.type==='uploadFile'">
-          <el-button @click="uploadFIle(key+'-'+item.name)" type="primary">Choose File</el-button>
-          <span style="font-size:12px" v-if="inputData[key+'-'+item.name]">
-            <strong>{{inputData[key+'-'+item.name].name}}</strong>
-          </span>
-          <!-- <el-input v-model="inputData[item.name]" readonly>
-          </el-input>-->
-        </div>
-      </el-form-item>
-      <el-table
-        size="mini"
-        ref="basictable"
-        row-key="date"
-        border
-        :data="config.table"
-        style="width: 100%;text-align: center"
-      >
-        <el-table-column prop="service" label="Service Info" width="300">
-          <template
-            slot-scope="scope"
-          >{{ scope.row.service.name}} (0X{{ scope.row.service.value.toString(16)}})</template>
-        </el-table-column>
-        <el-table-column label="Suppress" width="76" align="center">
-          <template slot-scope="scope">
-            <i
-              class="el-icon-circle-check"
-              v-if="scope.row.payload[0].suppress"
-              style="color:green"
-            ></i>
-            <i class="el-icon-circle-close" v-else style="color:red"></i>
-          </template>
-        </el-table-column>
-        <el-table-column prop="payload" label="Payload">
-          <template slot-scope="scope">
-            <div v-if="scope.row.payload">
-              <div v-for="(item, key) in scope.row.payload" :key="key">
-                <div v-if="config.changeslot.indexOf(scope.$index+','+key)!==-1">
-                  <el-tag size="mini" type="danger">{{item.name}}</el-tag>
-                  : {{inputData[config.changeslot.indexOf(scope.$index+','+key)+'-'+item.name]}}
-                </div>
-                <div v-else>
-                  <el-tag size="mini">{{item.name}}</el-tag>
-                  : {{item[item.name]}}
-                </div>
-              </div>
-            </div>
-            <div v-else>NULL</div>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-form-item style="text-align:right;margin-top:10px">
-        <span style="color:red;margin-right:5px;">{{error}}</span>
-        <el-button type="primary" @click="addService">Add Group</el-button>
-      </el-form-item>
-    </el-form>
+    <div v-for="(item,key) in config.service" :key="key">
+       <Service :config="item" :input="change?input.subtable[key]:config.table[key]" group @groupitem="groupChange" ref="service"/>
+    </div>
+    <div style="text-align:right;margin-top:10px">
+      <el-button type="primary" @click="addGroup" size="small" v-if="!change">Add Group</el-button>
+      <el-button type="warning" @click="addGroup" size="small" v-else>Change Group</el-button>
+    </div>
   </div>
 </template>
 
 <script>
 const { ipcRenderer } = require("electron");
+import Service from './service.vue'
 export default {
   data() {
     return {
+      cnt:0,
+      group:[],
       inputData: {},
       error: "",
-      refresh: true
+      refresh: true,
+
     };
+  },
+  components:{
+    Service
   },
   computed: {
     rules: function() {
@@ -171,9 +52,48 @@ export default {
       default: function() {
         return "uds";
       }
+    },
+    change: {
+      type: Boolean,
+      default: function() {
+        return false;
+      }
+    },
+    input: {
+      type: Object,
+      default: function() {
+        return undefined;
+      }
     }
   },
   methods: {
+    groupChange(val){
+      this.group[this.cnt].func=val.func
+      for(var i in val.payload){
+        for(var j in this.group[this.cnt].payload){
+          let name=this.group[this.cnt].payload[j].name
+          if(val.payload[i].name==name){
+            this.group[this.cnt].payload[j][name]=val.payload[i][name]
+            if(this.group[this.cnt].payload[j].type=='subfunction'){
+              this.group[this.cnt].payload[j].suppress=val.payload[i].suppress
+            }
+            break;
+          }
+        }
+      }
+      this.cnt++;
+      if(this.cnt==this.group.length){
+         this.$emit(this.change?"edititem":"additem", {
+           service:{
+             name:this.config.name,
+           },
+           type:'group',
+           subtable:this.group
+         });
+
+      }
+     
+    },
     suppressChange(key) {
       var index = this.config.changeslot[key].split(",")[0];
       this.config.table[index].payload[0].suppress = this.inputData[
@@ -200,6 +120,14 @@ export default {
       this.$nextTick(() => {
         this.refresh = true;
       });
+    },
+    addGroup(){
+      this.group=JSON.parse(JSON.stringify(this.config.table))
+      for(var i in this.$refs.service){
+        this.$refs.service[i].addService('groupitem')
+      }
+      this.cnt=0;
+      
     },
     addService() {
       var data = {};
