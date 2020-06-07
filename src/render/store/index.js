@@ -10,10 +10,12 @@ export default new Vuex.Store({
     /*addr*/
     canAddrTable: [],
     doipAddrTable: [],
-    /* service */
+    /* service */ 
     canTable: [],
     doipTable: [],
-
+    emulateTable:[{
+      name:'emulate'
+    }],
     running: false,
 
   },

@@ -29,18 +29,25 @@
     <div class="catalog">UDS ISO-14299</div>
     <div class="card">
       <el-row>
-        <el-col :span="7" :offset="1">
+        <el-col :span="6" :offset="1">
           <el-card shadow="always">
             <div class="name">DoCAN ISO-15765-2</div>
             <div class="tip">UDS Over CAN/CAN-FD</div>
             <el-button @click="goPEAK" type="text">GO</el-button>
           </el-card>
         </el-col>
-        <el-col :span="7" :offset="1">
+        <el-col :span="6" :offset="1">
           <el-card shadow="always">
             <div class="name">DoIP ISO-13400-2</div>
             <div class="tip">UDS Over Ethernet</div>
             <el-button @click="goDOIP" type="text">GO</el-button>
+          </el-card>
+        </el-col>
+        <el-col :span="6" :offset="1">
+          <el-card shadow="always">
+            <div class="name">UDS Loopback</div>
+            <div class="tip">UDS Loopback Test</div>
+            <el-button @click="goEmulate" type="text">GO</el-button>
           </el-card>
         </el-col>
       </el-row>
@@ -48,7 +55,7 @@
     <div class="catalog">SECURITY</div>
     <div class="card">
       <el-row>
-        <el-col :span="7" :offset="1">
+        <el-col :span="6" :offset="1">
           <el-card shadow="always">
             <div class="name">SHE KEY GENERATE</div>
             <div class="tip">S32K1-CSEC | S32K3-HSE</div>
@@ -84,6 +91,9 @@ export default {
     },
     goDOIP() {
       this.$router.push("/doip");
+    },
+    goEmulate() {
+      this.$router.push("/udsEmulate");
     },
     resizeHandle() {
       this.height = window.innerHeight;

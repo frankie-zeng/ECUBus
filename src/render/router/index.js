@@ -4,6 +4,7 @@ import PCAN from './../views/Pcan.vue'
 import HOME from './../views/Home.vue'
 import SHE from './../views/SHE.vue'
 import DOIP from './../views/DOIP.vue'
+import UDS_EMULATE from './../views/udsEmulate.vue'
 
 Vue.use(VueRouter)
 
@@ -17,6 +18,11 @@ const routes = [
     path: '/pcan',
     name: 'pcan',
     component: PCAN
+  },
+  {
+    path: '/udsEmulate',
+    name: 'udsEmulate',
+    component: UDS_EMULATE
   },
   {
     path: '/security',
