@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div class="title">
+    <div class="title1">
       <img src="./../assets/logo256.png" />
       <span>ECU-BUS</span>
     </div>
@@ -100,17 +100,17 @@ export default {
   margin: 20px;
   color: gray;
 }
-.title {
+.title1 {
   height: 48px;
   line-height: 48px;
   margin: 10px;
 }
-.title span {
+.title1 span {
   position: absolute;
   margin-left: 5px;
   font-size: 32px;
 }
-.title img {
+.title1 img {
   height: 48px;
 }
 .doip{

@@ -86,7 +86,7 @@
         </div>
       </el-form-item>
     </el-form>
-    <el-collapse v-model="activeNames">
+    <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
         <template slot="title">
           User function
@@ -109,7 +109,7 @@
 
         <el-row>
           <div class="fn">function(writeData,readData){</div>
-          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" />
+          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" v-if="showCode"/>
           <div class="fn">}</div>
         </el-row>
         <div id="JSLINT_" v-if="jsError!=''">
@@ -145,6 +145,7 @@ export default {
   data() {
     return {
       jsFn: "return true;",
+      showCode:true,
       activeNames: ["1"],
       inputData: {
         suppress: false,
@@ -241,9 +242,10 @@ export default {
       }
       this.jsFn = val.func;
       if (this.group) {
-        this.$nextTick(() => {
-          this.activeNames = [];
-        });
+        // this.$nextTick(() => {
+        //   this.activeNames = [];
+        // });
+        this.activeNames = [];
       }
     }
   },
@@ -294,6 +296,16 @@ export default {
     }
   },
   methods: {
+    colChange(val){
+      if(val=="1"){
+        this.showCode=false;
+        this.$nextTick(() => {
+          this.showCode = true;
+        });
+      }else{
+        this.showCode=false;
+      }
+    },
     jsCheck() {
       var option = {
         white: true,
