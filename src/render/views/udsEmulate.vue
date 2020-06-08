@@ -119,7 +119,7 @@ export default {
   methods: {
     array2hex(val) {
       return Array.from(val, function(byte) {
-        return "0x" + ("0" + (byte & 0xff).toString(16)).slice(-2);
+        return ("0" + (byte & 0xff).toString(16)).slice(-2);
       }).join(",");
     },
     goBack() {
@@ -171,9 +171,11 @@ export default {
   top: 10px;
 }
 .msg2 {
+  max-width: 70%;
+  word-wrap:break-word; 
+  text-align: left;
   background-color: rgb(195, 252, 89);
-  line-height: 15px;
-  height: 15px;
+  line-height: 20px;
   margin: 5px;
   display: inline-block;
   padding: 10px;
@@ -181,9 +183,12 @@ export default {
   vertical-align: middle;
 }
 .msg1 {
+  max-width: 70%;
+  word-wrap:break-word; 
+  /* word-break:break-all;  */
   background-color: whitesmoke;
-  line-height: 15px;
-  height: 15px;
+  line-height: 20px;
+  /* height: 15px; */
   margin: 5px;
   display: inline-block;
   padding: 10px;

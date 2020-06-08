@@ -29,7 +29,8 @@
       row-key="date"
       border
       :data="doipTable"
-      style="width: 100%;text-align: center"
+      max-height="600px"
+      style="width: 100%;text-align: center;"
       empty-text="No Service"
     >
       <el-table-column prop="service" label="Service Info" width="300">

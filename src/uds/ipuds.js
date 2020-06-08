@@ -219,13 +219,13 @@ class IPUDS {
         if (this.subTable.length > 0) {
             for (var i in this.subTable[0].payload) {
                 if (this.subTable[0].payload[i].name == name) {
-                    this.subTable[0].payload[i].data = value
+                    this.subTable[0].payload[i][name] = value
                     break
                 }
             }
         }
     }
-    insertItem(service, payload, func = (writeData,readData)=>{return true}) {
+    insertItem(service, payload, func = (writeData, readData) => { return true }) {
         this.subTable.unshift({
             func: func,
             payload: payload,
