@@ -119,9 +119,7 @@ class CANUDS {
     if (this.subTable.length > 0) {
       for (var i in this.subTable[0].payload) {
         if (this.subTable[0].payload[i].name == name) {
-          if (this.subTable[0].payload[i].data) {
-            this.subTable[0].payload[i].data = value
-          }
+          this.subTable[0].payload[i].data = value
           break
         }
       }

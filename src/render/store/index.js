@@ -10,12 +10,15 @@ export default new Vuex.Store({
     /*addr*/
     canAddrTable: [],
     doipAddrTable: [],
+    lpAddrTable:[{
+      name:'emulate-lp',
+      SA:0,
+      TA:1
+    }],
     /* service */ 
     canTable: [],
     doipTable: [],
-    emulateTable:[{
-      name:'emulate'
-    }],
+    lpTable:[],
     running: false,
 
   },
@@ -89,16 +92,6 @@ export default new Vuex.Store({
       item.date = new Date().getTime()
       state.doipTable.push(item)
     },
-    changeFunc(state,obj){
-      var i=state[obj.tableName].indexOf(obj.item)
-      if(i!=-1){
-        if(state[obj.tableName][i].type=='uds'){
-          state[obj.tableName][i].func=obj.func
-        }else{
-          state[obj.tableName][i].subtable[obj.index].func=obj.func
-        }
-      }
-    },
     doipTableDelete(state, index) {
       state.doipTable.splice(index, 1)
     },
@@ -108,6 +101,25 @@ export default new Vuex.Store({
     doipItemChange(state,val){
       val.data.date=new Date().getTime()
       Vue.set(state.doipTable,val.index,val.data)
+    },
+    /*loopback table*/
+    lpTableUpdate(state, index) {
+      const targetRow = state.lpTable.splice(index[1], 1)[0]
+      state.lpTable.splice(index[0], 0, targetRow)
+    },
+    lpTableAdd(state, item) {
+      item.date = new Date().getTime()
+      state.lpTable.push(item)
+    },
+    lpTableDelete(state, index) {
+      state.lpTable.splice(index, 1)
+    },
+    lpTableLoad(state, data) {
+      state.lpTable = data
+    },
+    lpItemChange(state,val){
+      val.data.date=new Date().getTime()
+      Vue.set(state.lpTable,val.index,val.data)
     }
   },
   actions: {

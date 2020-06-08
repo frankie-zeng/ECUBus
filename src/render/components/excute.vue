@@ -32,9 +32,10 @@
           placeholder="Timeout"
           style="width:80px"
           maxlength="6"
+          :disabled="mode==='lp'"
         ></el-input>ms
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
-        <el-button @click="run" size="small" type="success">Start</el-button>
+        <el-button @click="run" size="small" type="success" :disabled="!connected||running">Start</el-button>
       </el-col>
     </el-row>
     <el-input readonly type="textarea" :rows="5" placeholder="LOG" v-model="logText"></el-input>
@@ -82,6 +83,8 @@ export default {
         return this.$store.state.canConnect;
       } else if (this.mode === "doip") {
         return this.$store.state.doipConnect;
+      } else if (this.mode === "lp") {
+        return true;
       } else {
         return false;
       }
@@ -91,6 +94,8 @@ export default {
         return this.$store.state.canTable;
       } else if (this.mode === "doip") {
         return this.$store.state.doipTable;
+      } else if (this.mode === "lp") {
+        return this.$store.state.lpTable;
       } else {
         return [];
       }
@@ -103,6 +108,8 @@ export default {
         return this.$store.state.doipAddrTable;
       } else if (this.mode === "can") {
         return this.$store.state.canAddrTable;
+      } else if (this.mode === "lp") {
+        return this.$store.state.lpAddrTable;
       } else {
         return [];
       }
@@ -126,16 +133,16 @@ export default {
         type: "success"
       });
     },
-    readRun(){
+    readRun() {
       var table = JSON.parse(JSON.stringify(this.udsTable));
       if (this.addrTable[this.addrIndex]) {
         this.showAddr = false;
-      }else{
+      } else {
         this.$notify.error({
           title: "Error",
-          message: 'Please choose correct address.'
+          message: "Please choose correct address."
         });
-        return
+        return;
       }
       this.$store.commit("runChange", true);
       this.logText = "";
@@ -147,9 +154,8 @@ export default {
       });
     },
     run() {
-      this.showAddr=true;
+      this.showAddr = true;
       // console.log(this.udsTable)
-      
     }
   }
 };

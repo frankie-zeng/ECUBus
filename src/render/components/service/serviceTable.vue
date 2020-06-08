@@ -143,6 +143,8 @@ export default {
           self.$store.commit("canTableUpdate", [newIndex, oldIndex]);
         } else if (self.mode === "doip") {
           self.$store.commit("doipTableUpdate", [newIndex, oldIndex]);
+        } else if (self.mode === "lp") {
+          self.$store.commit("lpTableUpdate", [newIndex, oldIndex]);
         } else {
           return;
         }
@@ -187,6 +189,8 @@ export default {
         this.$store.commit("doipTableDelete", index);
       } else if (this.mode === "can") {
         this.$store.commit("canTableDelete", index);
+      } else if (this.mode === "lp") {
+        this.$store.commit("lpTableDelete", index);
       } else {
         return;
       }
@@ -197,8 +201,13 @@ export default {
           index: this.editIndex,
           data: JSON.parse(JSON.stringify(val))
         });
-      } else {
+      } else if (this.mode === "can") {
         this.$store.commit("canItemChange", {
+          index: this.editIndex,
+          data: JSON.parse(JSON.stringify(val))
+        });
+      } else if (this.mode === "lp") {
+        this.$store.commit("lpItemChange", {
           index: this.editIndex,
           data: JSON.parse(JSON.stringify(val))
         });
@@ -226,7 +235,7 @@ export default {
         for (let i in this.group) {
           if (i == val.service.name) {
             this.refresh = false;
-            this.cd1=true
+            this.cd1 = true;
             this.service.type = "group";
             this.service.cfg = this.group[i];
             this.service.val = JSON.parse(JSON.stringify(val));
@@ -245,6 +254,8 @@ export default {
         return this.$store.state.doipTable;
       } else if (this.mode === "can") {
         return this.$store.state.canTable;
+      } else if (this.mode === "lp") {
+        return this.$store.state.lpTable;
       } else {
         return [];
       }

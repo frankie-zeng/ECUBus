@@ -14,6 +14,7 @@ import { mapState } from 'vuex'
 
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
+const LPUDS = require('./uds/lpuds.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 // Keep a global reference of the window object, if you don't, the window will
@@ -21,8 +22,35 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win
 let canuds
 let ipuds
-var menuTemplate = [{
-  label: app.getVersion(),
+let lpuds
+var menuTemplate = [
+  {
+    label: "Github",
+    submenu:[
+      {
+        label:'https://github.com/frankie-zeng/ECUBus',
+        click: async () => {
+          const { shell } = require('electron')
+          await shell.openExternal('https://github.com/frankie-zeng/ECUBus')
+        }
+      }
+    ]
+  },
+  {
+  label: "Version",
+  submenu:[
+    {
+      label:app.getVersion()
+    },
+    {
+      label:'Check Update',
+      click: async () => {
+        const { shell } = require('electron')
+        await shell.openExternal('https://github.com/frankie-zeng/ECUBus/releases')
+      }
+    }
+  ] 
+  
 }];
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
@@ -42,6 +70,7 @@ function createWindow () {
   })
   
   ipuds = new IPUDS(win)
+  lpuds = new LPUDS(win)
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)

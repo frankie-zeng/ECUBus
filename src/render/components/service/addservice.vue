@@ -110,6 +110,8 @@ export default {
         this.$store.commit("doipTableAdd", item);
       } else if (this.mode === "can") {
         this.$store.commit("canTableAdd", item);
+      } else if (this.mode === "lp"){
+        this.$store.commit("lpTableAdd", item);
       }
       this.$emit("additem");
     },

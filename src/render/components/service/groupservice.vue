@@ -28,9 +28,11 @@ export default {
         table: function(){
             var table
             if (this.mode === "doip") {
-                table=this.$store.state.doipTable;
+                table=this.$store.state.doipTable
             } else if (this.mode === "can") {
-                table=this.$store.state.canTable;
+                table=this.$store.state.canTable
+            } else if (this.mode === "lp"){
+                table=this.$store.state.lpTable
             } else {
                 table=[];
             }
