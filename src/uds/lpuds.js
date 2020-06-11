@@ -33,17 +33,18 @@ class LPUDS {
                         if (this.checkFunc(this.writeData, arg)) {
                             this.step()
                         } else {
-                            this.emit('udsError',
-                                sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime)
-                            )
-                            this.emit('tableError',this.tableIndex)
+                            this.emit('udsError',{
+                                msg:sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime),
+                                index:this.tableIndex
+                            })
+                            
                         }
                     }
                 } catch (error) {
-                    this.emit('udsError',
-                        sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime)
-                    )
-                    this.emit('tableError',this.tableIndex)
+                    this.emit('udsError',{
+                        msg:sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime),
+                        index:this.tableIndex
+                    })
                 }
             }
         })

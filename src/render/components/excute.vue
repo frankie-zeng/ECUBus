@@ -61,17 +61,14 @@ export default {
       this.logText += val;
     });
     ipcRenderer.on("udsError", (event, val) => {
-      this.failed(val);
-    });
-    ipcRenderer.on("tableError", (event, val) => {
-      this.$store.commit("setTableError",val)
+      this.failed(val.msg);
+      this.$store.commit("setTableError",val.index)
     });
   },
   destroyed() {
     ipcRenderer.removeAllListeners("udsEnd");
     ipcRenderer.removeAllListeners("udsData");
     ipcRenderer.removeAllListeners("udsError");
-    ipcRenderer.removeAllListeners("tableError");
   },
   props: {
     mode: {
