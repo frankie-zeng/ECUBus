@@ -12,7 +12,7 @@ class LPUDS {
         this.win = win
         this.timeout = 2000
         this.sDelay = 100
-        this.wait=false
+        this.wait = false
         ipcMain.on('lpudsExcute', (event, arg) => {
             this.sDelay = arg.sDelay
             this.timeout = arg.timeout
@@ -20,25 +20,40 @@ class LPUDS {
             this.subTable = []
             this.addr = arg.addr
             this.startTime = new Date().getTime()
+            this.tableIndex = 0;
             this.step()
         })
-        ipcMain.on('lpReceive',(event,arg)=>{
-            if(this.wait){
-                this.wait=false;
+        ipcMain.on('lpReceive', (event, arg) => {
+            if (this.wait) {
+                this.wait = false;
                 try {
-                    if (this.checkFunc(this.writeData, arg)) {
-                            this.step()
+                    if ((arg[0] == 0x7F) && (arg[2] == 0X78)) {
+                        this.wait = true;
                     } else {
-                        this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+                        if (this.checkFunc(this.writeData, arg)) {
+                            this.step()
+                        } else {
+                            this.emit('udsError',
+                                sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime)
+                            )
+                            this.emit('tableError',this.tableIndex)
+                        }
                     }
                 } catch (error) {
-                    this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
+                    this.emit('udsError',
+                        sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime)
+                    )
+                    this.emit('tableError',this.tableIndex)
                 }
             }
         })
     }
     /*user call*/
-    delay(timeout) {
+    progress(show, percent) {
+        this.emit('progress', {
+            show: show,
+            percent: percent
+        })
     }
     log(msg) {
         this.emit('udsData', JSON.stringify(msg) + '\r\n')
@@ -70,7 +85,7 @@ class LPUDS {
             }
         }
     }
-    insertItem(service, payload, func = (writeData,readData)=>{return true}) {
+    insertItem(service, payload, func = (writeData, readData) => { return true }) {
         this.subTable.unshift({
             func: func,
             payload: payload,
@@ -88,6 +103,7 @@ class LPUDS {
         }
         if (this.subTable.length == 0) {
             this.subTable = decodeTable(this.udsTable.shift())
+            this.tableIndex++;
         }
         var item = this.subTable.shift()
         if (typeof item.func === 'string') {
@@ -114,15 +130,15 @@ class LPUDS {
             if (this.writeData[i].type == 'subfunction') {
                 if (this.writeData[i].suppress) {
                     suppress = true
-                    setTimeout(()=>{
+                    setTimeout(() => {
                         this.step()
-                    },this.sDelay)
+                    }, this.sDelay)
                 }
                 break
             }
         }
-        this.emit('lpSend',data)
-        this.wait=true
+        this.emit('lpSend', data)
+        this.wait = true
         return 1
     }
 }

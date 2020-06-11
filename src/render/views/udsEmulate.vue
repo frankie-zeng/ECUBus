@@ -30,8 +30,8 @@
      
       <el-row>
         <el-col :span="16">
-           <serviceTable mode="lp" />
-          <Excute mode="lp" />
+           <serviceTable mode="lp"/>
+          <Excute mode="lp"/>
         </el-col>
         <el-col :span="8" class="lpwin">
           <h2 style="margin:10px">Interaction:</h2>

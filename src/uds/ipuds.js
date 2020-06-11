@@ -119,14 +119,20 @@ class IPUDS {
                                 clearTimeout(item.timer)
                                 this.emit('udsData', sprintf("[data]:uds response:%s.\r\n", ret.data.payload.join(',')))
                                 try {
-                                    if (this.checkFunc(this.writeData, ret.data.payload)) {
-                                        if (item.timer.hasRef()) {
-                                            this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
-                                        } else {
-                                            this.step()
-                                        }
+                                    if ((ret.data.payload[0] == 0x7F) && (ret.data.payload[2] == 0X78)) {
+                                        this.receive = true;
+                                        this.delay()
                                     } else {
-                                        this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+                                        if (this.checkFunc(this.writeData, ret.data.payload)) {
+                                            if (item.timer.hasRef()) {
+                                                this.receive = true;
+                                                this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
+                                            } else {
+                                                this.step()
+                                            }
+                                        } else {
+                                            this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+                                        }
                                     }
                                 } catch (error) {
                                     this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
@@ -197,7 +203,12 @@ class IPUDS {
     log(msg) {
         this.emit('udsData', JSON.stringify(msg) + '\r\n')
     }
-
+    progress(show, percent) {
+        this.emit('progress', {
+            show: show,
+            percent: percent
+        })
+    }
     openFile(filename, flag = 'r') {
         this.fd = fs.openSync(filename, flag)
     }

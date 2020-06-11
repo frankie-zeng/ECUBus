@@ -177,12 +177,13 @@ class CANUDS {
             // this.emit('udsData', sprintf("[data]:msg:%s.\r\n", msg.DATA.join(',')))
             try {
               if ((msg.DATA[0] == 0x7F) && (msg.DATA[2] == 0X78)) {
-                this.receive=true;
+                this.receive = true;
                 this.delay()
                 break
               }
               if (this.checkFunc(this.writeData, msg.DATA)) {
                 if (this.udsTimer.hasRef()) {
+                  this.receive = true;
                   this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
                 } else {
                   this.step()
@@ -203,7 +204,12 @@ class CANUDS {
   registerCallback(fn) {
     this.cantp.RegCb(fn)
   }
-
+  progress(show, percent) {
+    this.emit('progress', {
+      show: show,
+      percent: percent
+    })
+  }
   step() {
     if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
       this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))

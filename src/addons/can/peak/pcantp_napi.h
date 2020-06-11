@@ -1,6 +1,6 @@
 #ifndef CANTP_H
 #define CANTP_H
-
+#define NAPI_VERSION 5
 #include <napi.h>
 #include <windows.h>
 #include "PCAN-ISO-TP.h"
@@ -19,20 +19,6 @@ typedef TPCANTPStatus (__stdcall *fpReset)(TPCANTPHandle);
 typedef TPCANTPStatus (__stdcall *fpGetStatus)(TPCANTPHandle);
 typedef TPCANTPStatus (__stdcall *fpRemoveMapping)(TPCANTPHandle,DWORD);
  
-class PiWorker : public Napi::AsyncWorker {
- public:
-  PiWorker(Napi::Function& callback)
-      : Napi::AsyncWorker(callback){
-            SuppressDestruct();
-      }
-  ~PiWorker() {}
-
-  void Execute() {}
-  void OnOK() {
-    Napi::HandleScope scope(Env());
-    Callback().Call({Env().Undefined()});
-  }
-};
 
 class CANTP : public Napi::ObjectWrap<CANTP>{
  public:
@@ -57,10 +43,11 @@ class CANTP : public Napi::ObjectWrap<CANTP>{
   Napi::Value CANTP::Read(const Napi::CallbackInfo& info);
   Napi::Value CANTP::RegisterCallback(const Napi::CallbackInfo& info);
   Napi::Value CANTP::Unload(const Napi::CallbackInfo& info);
+
+  Napi::ThreadSafeFunction  tsFn;
   HANDLE rEvent;
   HANDLE rThread;
   HINSTANCE hDLL;
-  PiWorker* readWorker;
 };
 
 

@@ -63,11 +63,15 @@ export default {
     ipcRenderer.on("udsError", (event, val) => {
       this.failed(val);
     });
+    ipcRenderer.on("tableError", (event, val) => {
+      this.$store.commit("setTableError",val)
+    });
   },
   destroyed() {
     ipcRenderer.removeAllListeners("udsEnd");
     ipcRenderer.removeAllListeners("udsData");
     ipcRenderer.removeAllListeners("udsError");
+    ipcRenderer.removeAllListeners("tableError");
   },
   props: {
     mode: {
@@ -145,7 +149,9 @@ export default {
         return;
       }
       this.$store.commit("runChange", true);
+      this.$store.commit("setTableError",-1);
       this.logText = "";
+      
       ipcRenderer.send(this.mode + "udsExcute", {
         addr: this.addrTable[this.addrIndex],
         udsTable: table,

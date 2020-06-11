@@ -15,6 +15,7 @@ export default new Vuex.Store({
       SA:0,
       TA:1
     }],
+    tableErrorIndex:-1,
     /* service */ 
     canTable: [],
     doipTable: [],
@@ -23,6 +24,9 @@ export default new Vuex.Store({
 
   },
   mutations: {
+    setTableError(state,index){
+      state.tableErrorIndex=index
+    },
     runChange(state, run) {
       state.running = run
     },

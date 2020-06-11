@@ -6,7 +6,6 @@
 
 
 
-
 Napi::FunctionReference CANTP::constructor;
 
 Napi::Object CANTP::Init(Napi::Env env, Napi::Object exports) {
@@ -28,7 +27,8 @@ Napi::Object CANTP::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("TpWrite",&CANTP::Write),
                    InstanceMethod("RegCb",&CANTP::RegisterCallback),
                    InstanceMethod("TpRead",&CANTP::Read),
-                   InstanceMethod("Unload",&CANTP::Unload),});
+                   InstanceMethod("Unload",&CANTP::Unload),
+                   });
 
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -57,16 +57,14 @@ DWORD WINAPI CANTP::CallReadThreadFunc(LPVOID lpParam)
     DWORD result;
     while(1){
         result = WaitForSingleObject(the->rEvent, INFINITE);
-
 		if (result == WAIT_OBJECT_0){
-           the->readWorker->Queue();
+            the->tsFn.BlockingCall();
         }
     }
     return 0; 
 }
 Napi::Value CANTP::RegisterCallback(const Napi::CallbackInfo& info){
-    Napi::Function callback = info[0].As<Napi::Function>();
-    this->readWorker = new PiWorker(callback);
+    this->tsFn=Napi::ThreadSafeFunction::New(info.Env(),info[0].As<Napi::Function>(),"callback",0,1);
     return Napi::Number::New(info.Env(),0);
 }
 Napi::Value CANTP::Unload(const Napi::CallbackInfo& info){
@@ -198,25 +196,24 @@ Napi::Value CANTP::AddMapping(const Napi::CallbackInfo& info){
 Napi::Value CANTP::Write(const Napi::CallbackInfo& info){
     TPCANTPHandle handle=info[0].As<Napi::Number>().Uint32Value();
     Napi::Object nMsg=info[1].As<Napi::Object>();
-    TPCANTPMsg tpMsg;
-    tpMsg.SA=nMsg.Get("SA").ToNumber().Uint32Value();
-    tpMsg.TA=nMsg.Get("TA").ToNumber().Uint32Value();
-    tpMsg.TA_TYPE=nMsg.Get("TA_TYPE").ToNumber().Uint32Value();
-    tpMsg.RA=nMsg.Get("RA").ToNumber().Uint32Value();
-    tpMsg.IDTYPE=nMsg.Get("IDTYPE").ToNumber().Uint32Value();
-    tpMsg.MSGTYPE=nMsg.Get("MSGTYPE").ToNumber().Uint32Value();
-    tpMsg.FORMAT=nMsg.Get("FORMAT").ToNumber().Uint32Value();
-    tpMsg.LEN=nMsg.Get("LEN").ToNumber().Uint32Value();
-    tpMsg.RESULT=nMsg.Get("RESULT").ToNumber().Uint32Value();
+    TPCANTPMsg msg;
+    msg.SA=nMsg.Get("SA").ToNumber().Uint32Value();
+    msg.TA=nMsg.Get("TA").ToNumber().Uint32Value();
+    msg.TA_TYPE=nMsg.Get("TA_TYPE").ToNumber().Uint32Value();
+    msg.RA=nMsg.Get("RA").ToNumber().Uint32Value();
+    msg.IDTYPE=nMsg.Get("IDTYPE").ToNumber().Uint32Value();
+    msg.MSGTYPE=nMsg.Get("MSGTYPE").ToNumber().Uint32Value();
+    msg.FORMAT=nMsg.Get("FORMAT").ToNumber().Uint32Value();
+    msg.LEN=nMsg.Get("LEN").ToNumber().Uint32Value();
+    msg.RESULT=nMsg.Get("RESULT").ToNumber().Uint32Value();
     Napi::Array nData=Napi::Array(info.Env(),nMsg.Get("DATA"));
     for(unsigned int i=0;i<nData.Length();i++){
         Napi::Value v = nData[i];
-        tpMsg.DATA[i] = v.ToNumber().Uint32Value();
-        //printf("DATA:%d\r\n,",tpMsg.DATA[i]);
+        msg.DATA[i] = v.ToNumber().Uint32Value();
     }
 
     fpWrite realCall=(fpWrite)GetProcAddress(this->hDLL,"CANTP_Write");
-    TPCANTPStatus res=realCall((TPCANTPHandle)handle,&tpMsg);
+    TPCANTPStatus res=realCall((TPCANTPHandle)handle,&msg);
     //printf("SA:%d,",nMsg.Get("SA").ToNumber().Uint32Value());
     return Napi::Number::New(info.Env(),res);
 }

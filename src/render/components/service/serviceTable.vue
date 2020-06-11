@@ -84,8 +84,13 @@
           <el-button type="text" icon="el-icon-document" @click="showCode(scope.row)"></el-button>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="Action" width="90" align="center">
+      <el-table-column fixed="right" label="Action" width="130" align="center">
         <template slot-scope="scope">
+          <!-- <h1 v-if="scope.$index==tableErrorIndex">error</h1> -->
+          <div v-if="scope.$index==tableErrorIndex-1" class="table_error">
+            <div class="error_back"/>
+            <i class="el-icon-error" @click="closeError"></i>
+          </div>
           <el-button
             type="danger"
             size="mini"
@@ -154,6 +159,9 @@ export default {
   },
   props: ["mode"],
   methods: {
+    closeError(){
+      this.$store.commit("setTableError",-1);
+    },
     loadGroup() {
       this.itemIndex = "";
       var data = ipcRenderer.sendSync("readGroup");
@@ -250,6 +258,9 @@ export default {
     }
   },
   computed: {
+    tableErrorIndex: function() {
+      return this.$store.state.tableErrorIndex;
+    },
     doipTable: function() {
       if (this.mode === "doip") {
         return this.$store.state.doipTable;
@@ -268,12 +279,39 @@ export default {
 };
 </script>
 <style>
+.table_error{
+  position: absolute;
+  padding: 0px;
+  margin: 0px;
+  top:0px;
+  right:0px;
+}
+.table_error i{
+  z-index: 2;
+  position: absolute;
+  top:0px;
+  right: 0px;
+  font-size: 20px;
+  color: #E6A23C;
+}
+.error_back{
+    height:0;
+    width:0;
+    overflow: hidden; /* 这里设置overflow, font-size, line-height */
+    font-size: 0;     /*是因为, 虽然宽高度为0, 但在IE6下会具有默认的 */
+    line-height: 0;  /* 字体大小和行高, 导致盒子呈现被撑开的长矩形 */
+    border-color:transparent  transparent  red transparent ;
+    border-style:solid;
+    border-width:25px;
+    position: absolute;
+    top:-25px;
+    right:-25px;
+    transform: rotate(45deg);
+    z-index: 1;
+}
 .name {
   font-size: 14px;
   font-weight: bolder;
   margin: 5px;
-}
-.el-table .doip {
-  background: #f56c6c;
 }
 </style>
