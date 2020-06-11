@@ -32,6 +32,7 @@
       max-height="600px"
       style="width: 100%;text-align: center;"
       empty-text="No Service"
+      :row-class-name="tableRowClassName"
     >
       <el-table-column prop="service" label="Service Info" width="300">
         <template slot-scope="scope">
@@ -88,7 +89,6 @@
         <template slot-scope="scope">
           <!-- <h1 v-if="scope.$index==tableErrorIndex">error</h1> -->
           <div v-if="scope.$index==tableErrorIndex-1" class="table_error">
-            <div class="error_back"/>
             <i class="el-icon-error" @click="closeError"></i>
           </div>
           <el-button
@@ -159,6 +159,14 @@ export default {
   },
   props: ["mode"],
   methods: {
+    // eslint-disable-next-line no-unused-vars
+    tableRowClassName({row, rowIndex}){
+      if(rowIndex==this.tableErrorIndex-1){
+        return 'error'
+      }else{
+        return ''
+      }
+    },
     closeError(){
       this.$store.commit("setTableError",-1);
     },
@@ -286,28 +294,16 @@ export default {
   top:0px;
   right:0px;
 }
+.el-table .error {
+  background: red;
+}
 .table_error i{
   z-index: 2;
   position: absolute;
   top:0px;
   right: 0px;
-  font-size: 20px;
+  font-size: 25px;
   color: #E6A23C;
-}
-.error_back{
-    height:0;
-    width:0;
-    overflow: hidden; /* 这里设置overflow, font-size, line-height */
-    font-size: 0;     /*是因为, 虽然宽高度为0, 但在IE6下会具有默认的 */
-    line-height: 0;  /* 字体大小和行高, 导致盒子呈现被撑开的长矩形 */
-    border-color:transparent  transparent  red transparent ;
-    border-style:solid;
-    border-width:25px;
-    position: absolute;
-    top:-25px;
-    right:-25px;
-    transform: rotate(45deg);
-    z-index: 1;
 }
 .name {
   font-size: 14px;
