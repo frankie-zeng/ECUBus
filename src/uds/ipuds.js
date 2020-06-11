@@ -131,11 +131,15 @@ class IPUDS {
                                                 this.step()
                                             }
                                         } else {
-                                            this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+                                            this.emit('udsError', {
+                                                msg:sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime),
+                                                index:this.tableIndex})
                                         }
                                     }
                                 } catch (error) {
-                                    this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
+                                    this.emit('udsError', {
+                                        msg:sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime),
+                                        index:this.tableIndex})
                                 }
 
                             } else if (ret.type === 0x8002) {
@@ -148,18 +152,24 @@ class IPUDS {
                                 } else {
                                     this.receive = true
                                     item.timer = setTimeout(() => {
-                                        this.emit('udsError', sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                                        this.emit('udsError', {
+                                            msg:sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime),
+                                            index:this.tableIndex})
                                     }, this.timeout)
                                 }
                             } else if (ret.type === 0x8003) {
                                 clearTimeout(item.timer)
-                                this.emit('udsError', sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime))
+                                this.emit('udsError', {
+                                    msg:sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime),
+                                    index:this.tableIndex})
                             }
                         } else if (ret.err < 0) {
                             delete this.cMap[key]
                             item.fd.destroy()
                             clearTimeout(item.timer)
-                            this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime))
+                            this.emit('udsError', {
+                                msg:sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime),
+                                index:this.tableIndex})
                         }
                     }
                 })
@@ -172,6 +182,7 @@ class IPUDS {
             this.subTable = []
             this.addr = arg.addr
             this.startTime = new Date().getTime()
+            this.tableIndex = 0
             this.step()
             // while(this.step()!=0){
             //     this.checkFunc(this.writeData, [0x78, 0x4, 0x2, 0, 128,0,0,2,0,10,0,10])
@@ -197,7 +208,9 @@ class IPUDS {
     delay(timeout) {
         var t = typeof timeout !== 'undefined' ? timeout : this.timeout
         this.cMap[this.key].timer = setTimeout(() => {
-            this.emit('udsError', sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime))
+            this.emit('udsError', {
+                msg:sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime),
+                index:this.tableIndex})
         }, t)
     }
     log(msg) {
@@ -254,6 +267,7 @@ class IPUDS {
         }
         if (this.subTable.length == 0) {
             this.subTable = decodeTable(this.udsTable.shift())
+            this.tableIndex++
         }
         var item = this.subTable.shift()
         if (typeof item.func === 'string') {
@@ -295,11 +309,15 @@ class IPUDS {
                 this.receive = true
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
-                    this.emit('udsError', sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                    this.emit('udsError', {
+                        msg:sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime),
+                        index:this.tableIndex})
                 }, this.timeout);
             })
         } else {
-            this.emit('udsError', sprintf('[error]:this connection lost,used time:%d\r\n'), new Date().getTime() - this.startTime)
+            this.emit('udsError', {
+                msg:sprintf('[error]:this connection lost,used time:%d\r\n', new Date().getTime() - this.startTime),
+                index:this.tableIndex})
         }
 
         return 1

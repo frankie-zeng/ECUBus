@@ -83,6 +83,7 @@ class CANUDS {
       this.sDelay = arg.sDelay
       this.addr = arg.addr
       this.startTime = new Date().getTime()
+      this.tableIndex = 0
       this.step()
     })
   }
@@ -92,7 +93,9 @@ class CANUDS {
   delay(timeout) {
     var t = typeof timeout !== 'undefined' ? timeout : this.timeout
     this.udsTimer = setTimeout(() => {
-      this.emit('udsError', sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime))
+      this.emit('udsError', {
+        msg:sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime),
+        index:this.tableIndex})
     }, t)
   }
   emit(channel, msg) {
@@ -152,12 +155,16 @@ class CANUDS {
               }, this.sDelay)
             } else {
               this.udsTimer = setTimeout(() => {
-                this.emit('udsError', sprintf('[error]:No response,used time:%d\r\n', new Date().getTime() - this.startTime))
+                this.emit('udsError', {
+                  msg:sprintf('[error]:No response,used time:%d\r\n', new Date().getTime() - this.startTime),
+                  index:this.tableIndex})
               }, this.timeout)
             }
           } else {
-            this.emit('udsError', sprintf('[error]:Write from 0x%x to 0x%x with RA 0x%x,result:%s,used time:%d\r\n', msg.SA.toString(16), msg.TA.toString(16), msg.RA.toString(16),
-              ErrorText[msg.RESULT], new Date().getTime() - this.startTime))
+            this.emit('udsError', {
+              msg:sprintf('[error]:Write from 0x%x to 0x%x with RA 0x%x,result:%s,used time:%d\r\n', msg.SA.toString(16), msg.TA.toString(16), msg.RA.toString(16),
+              ErrorText[msg.RESULT], new Date().getTime() - this.startTime),
+              index:this.tableIndex})
           }
           break
 
@@ -189,16 +196,22 @@ class CANUDS {
                   this.step()
                 }
               } else {
-                this.emit('udsError', sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime))
+                this.emit('udsError', {
+                  msg:sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime),
+                  index:this.tableIndex})
               }
             } catch (error) {
-              this.emit('udsError', sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime))
+              this.emit('udsError', {
+                msg:sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime),
+                index:this.tableIndex})
             }
           }
           break
       }
     } else {
-      this.emit('udsError', sprintf("[error]:%s,used time:%d\r\n", this.cantp.GetErrorText(ret.err), new Date().getTime() - this.startTime))
+      this.emit('udsError', {
+        msg:sprintf("[error]:%s,used time:%d\r\n", this.cantp.GetErrorText(ret.err), new Date().getTime() - this.startTime),
+        index:this.tableIndex})
     }
   }
   registerCallback(fn) {
@@ -216,6 +229,7 @@ class CANUDS {
       return 0
     }
     if (this.subTable.length == 0) {
+      this.tableIndex++
       this.subTable = decodeTable(this.udsTable.shift())
     }
     var item = this.subTable.shift()
@@ -256,7 +270,11 @@ class CANUDS {
     msg.LEN = data.length
     var err = this.cantp.TpWrite(this.channel, msg)
     if (err !== 0) {
-      this.emit('udsError', sprintf('[error]:%s,used time:%d\r\n'), this.cantp.GetErrorText(err), new Date().getTime() - this.startTime)
+      this.emit('udsError', 
+      {
+        msg:sprintf('[error]:%s,used time:%d\r\n', this.cantp.GetErrorText(err), new Date().getTime() - this.startTime),
+        index:this.tableIndex
+      })
     } else {
       this.receive = !suppress
     }
