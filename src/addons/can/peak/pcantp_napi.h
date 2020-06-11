@@ -1,6 +1,6 @@
 #ifndef CANTP_H
 #define CANTP_H
-#define NAPI_VERSION 5
+#define NAPI_VERSION 4
 #include <napi.h>
 #include <windows.h>
 #include "PCAN-ISO-TP.h"
