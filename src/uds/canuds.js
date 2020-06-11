@@ -126,7 +126,7 @@ class CANUDS {
     }
   }
   // eslint-disable-next-line no-unused-vars
-  insertItem(service, payload, func = (writeData,readData)=>{return true}) {
+  insertItem(service, payload, func = (writeData, readData) => { return true }) {
     this.subTable.unshift({
       func: func,
       payload: payload,
@@ -172,9 +172,15 @@ class CANUDS {
         case PCANTP.PCANTP_MESSAGE_DIAGNOSTIC:
         case PCANTP.PCANTP_MESSAGE_REMOTE_DIAGNOSTIC:
           if (this.receive) {
+            this.receive = false;
             clearTimeout(this.udsTimer)
-            this.emit('udsData', sprintf("[data]:msg:%s.\r\n", msg.DATA.join(',')))
+            // this.emit('udsData', sprintf("[data]:msg:%s.\r\n", msg.DATA.join(',')))
             try {
+              if ((msg.DATA[0] == 0x7F) && (msg.DATA[2] == 0X78)) {
+                this.receive=true;
+                this.delay()
+                break
+              }
               if (this.checkFunc(this.writeData, msg.DATA)) {
                 if (this.udsTimer.hasRef()) {
                   this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))

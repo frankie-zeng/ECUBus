@@ -427,7 +427,7 @@ export default {
         });
         return;
       }
-      if (item.txId === item.rxId) {
+      if ((item.txId === item.rxId) && (this.mapMust)) {
         this.$notify.error({
           title: "Error",
           message: "TX_ID Equal RX_ID"
