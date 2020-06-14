@@ -56,8 +56,7 @@ var menuTemplate = [
         autoUpdater.checkForUpdates();
       }
     }
-  ] 
-  
+  ]
 }];
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
@@ -87,7 +86,7 @@ function createWindow () {
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
-
+  autoUpdater.checkForUpdates();
   win.on('closed', () => {
     win = null
     if(canuds!==null){

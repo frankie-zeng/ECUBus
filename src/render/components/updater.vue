@@ -52,10 +52,10 @@ export default {
         });
         ipcRenderer.on("update-not-available", (event, val) => {
             this.upgrade=false
-            this.$notify.info({
-                title: 'Upgrade',
-                message: "This Is Newest Version!"
-            });
+            // this.$notify.info({
+            //     title: 'Upgrade',
+            //     message: "This Is Newest Version!"
+            // });
         });
         ipcRenderer.on("update-error", (event, val) => {
             this.upgrade=false
