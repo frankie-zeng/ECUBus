@@ -45,20 +45,30 @@
     <div style="margin-top:30px">
       <el-form :model="active" ref="activeForm" :rules="activeRule" label-width="100px" size="mini">
         <el-form-item label="Timeout" prop="timeout">
-          <el-input v-model.number="active.timeout" />
+          <el-input v-model.number="active.timeout" style="width:80%"/>
         </el-form-item>
         <el-form-item label="SA:" prop="sa">
-          <el-input placeholder="Source Address" v-model="active.sa" />
+          <el-input placeholder="Source Address" v-model="active.sa" style="width:80%"/>
         </el-form-item>
         <el-form-item label="Active Type:" prop="activeType">
-          <el-select v-model="active.activeType" style="width:100%" allow-create filterable>
+          <el-select v-model="active.activeType" style="width:80%" allow-create filterable>
             <el-option label="Default" value="00"></el-option>
             <el-option label="WWH-OBD" value="01"></el-option>
             <el-option label="Central security" value="e0"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="OEM Special:" prop="option">
-          <el-input placeholder v-model="active.option" maxlength="8" show-word-limit />
+          <el-input placeholder v-model="active.option" maxlength="8" show-word-limit style="width:80%"/>
+        </el-form-item>
+        <el-form-item
+          v-for="(item, index) in active.tas"
+          :label="'ECU TA('+index+'):'"
+          :key="index"
+          :rules="{
+            type:'number', message: '', trigger: 'blur'
+          }"
+        >
+          <el-input v-model.number="item.addr" style="width:80%"></el-input><el-button type="primary" icon="el-icon-circle-plus-outline" style="margin-left:10px" @click="addTa"></el-button><el-button icon="el-icon-remove-outline" type="danger" v-if="index!=0" @click="removeTa(item)"></el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -69,7 +79,7 @@
       <el-table-column prop="code" label="Code" align="center">
         <template slot-scope="scope">0x{{scope.row.code.toString(16)}}</template>
       </el-table-column>
-      <el-table-column label="Action" align="center" fixed="right">
+      <el-table-column label="Action" align="center">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -121,10 +131,27 @@ export default {
                 SA: testerAddr,
                 TA: entityAddr,
                 key: val.key,
-                code: val.data.code
+                code: val.data.code,
               })
             )
           );
+          var ta
+          for(var j in this.active.tas){
+            ta=parseInt(this.active.tas[j].addr,10)
+            if(isNaN(ta)==false){
+               this.$store.commit(
+                "doipAddrAdd",
+                {
+                name: this.deviceList[i].vin+'-'+ta,
+                SA: testerAddr,
+                TA: ta,
+                key: val.key,
+                code: val.data.code,
+                }
+            
+              )
+            }
+          }
           this.$store.commit("doipChange", true);
         } else {
           this.$notify.error({
@@ -145,7 +172,10 @@ export default {
       active: {
         activeType: "00",
         timeout: 2000,
-        option: ""
+        option: "",
+        tas:[{
+          addr:''
+        }]
       },
       deviceList: [],
       req: {
@@ -200,6 +230,17 @@ export default {
     }
   },
   methods: {
+    addTa(){
+      this.active.tas.push({
+        addr:''
+      })
+    },
+    removeTa(val){
+      var index = this.active.tas.indexOf(val)
+        if (index !== -1) {
+          this.active.tas.splice(index, 1)
+        }
+    },
     findDevice() {
       this.$refs.devForm.validate(valid => {
         if (valid) {
@@ -216,8 +257,19 @@ export default {
       });
     },
     disconnectDevice(val, index) {
-      ipcRenderer.send("doipTcpDisconnectWithKey", val.key);
+      
+        
+      var found=false
       this.$store.commit("doipAddrDelete", index);
+      for(var i in this.addrTable){
+        if(this.addrTable[i].key==val.key){
+          found=true
+          break;
+        }
+      }
+      if(!found){
+        ipcRenderer.send("doipTcpDisconnectWithKey", val.key);
+      }
       if (this.addrTable.length == 0) {
         this.$store.commit("doipChange", false);
       } else {
