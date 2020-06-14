@@ -44,7 +44,7 @@ jobs:
         draft: false
         prerelease: false
     - name: Upload Release Asset
-      id: upload-release-asset 
+      id: upload-release-asset1 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -53,3 +53,12 @@ jobs:
         asset_path: ./dist_electron/ECUBus.exe
         asset_name: ECUBus.exe
         asset_content_type: application/vnd.microsoft.portable-executable
+    - name: Upload latest yml
+      id: upload-release-asset2 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./dist_electron/win-unpacked/latest.yml
+        asset_name: latest.yml

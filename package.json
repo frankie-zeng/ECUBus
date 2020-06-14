@@ -2,7 +2,7 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
