@@ -2,7 +2,7 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -18,6 +18,8 @@
     "bindings": "^1.5.0",
     "clipboard": "^2.0.4",
     "core-js": "^3.6.4",
+    "electron-log": "^4.2.1",
+    "electron-updater": "^4.3.1",
     "element-ui": "^2.4.5",
     "node-addon-api": "^2.0.0",
     "node-addon-loader": "0.0.6",

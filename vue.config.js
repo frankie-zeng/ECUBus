@@ -30,6 +30,9 @@ module.exports = {
                 'x64'
               ]
             }
+          ],
+          "publish": [
+            "github"
           ]
         },
         'nsis': {

@@ -11,12 +11,18 @@ import {
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
 
-
+const log = require('electron-log');
+const { autoUpdater } = require("electron-updater")
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const LPUDS = require('./uds/lpuds.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
+
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = 'info';
+
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win
@@ -126,6 +132,7 @@ app.on('ready', async () => {
     }
 
   }
+  autoUpdater.checkForUpdates();
   createWindow()
 })
 
