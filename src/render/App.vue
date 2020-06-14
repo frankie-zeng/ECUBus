@@ -5,11 +5,15 @@
         <router-view></router-view>
       </el-main>
     </el-container>
-    <el-footer><Progress/></el-footer>
+    <el-footer>
+      <Progress/>
+      <Updater/>
+    </el-footer>
   </div>
 </template>
 <script>
 import Progress from './components/progress.vue'
+import Updater from './components/updater.vue'
 export default {
   data(){
     return{
@@ -17,7 +21,8 @@ export default {
     }
   },
   components:{
-    Progress
+    Progress,
+    Updater
   }
 }
 </script>

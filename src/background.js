@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 'use strict'
 
-import { app, protocol, BrowserWindow, dialog, Menu} from 'electron'
+import { app, protocol, BrowserWindow, dialog, Menu, ipcMain} from 'electron'
 // import CANUDS from './uds/canuds.js'
 
 import {
@@ -10,6 +10,8 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
+import { CancellationToken } from "electron-updater"
+
 
 const log = require('electron-log');
 const { autoUpdater } = require("electron-updater")
@@ -21,7 +23,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
-
+autoUpdater.autoDownload = false;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -51,8 +53,7 @@ var menuTemplate = [
     {
       label:'Check Update',
       click: async () => {
-        const { shell } = require('electron')
-        await shell.openExternal('https://github.com/frankie-zeng/ECUBus/releases')
+        autoUpdater.checkForUpdates();
       }
     }
   ] 
@@ -132,7 +133,6 @@ app.on('ready', async () => {
     }
 
   }
-  autoUpdater.checkForUpdates();
   createWindow()
 })
 
@@ -151,3 +151,34 @@ if (isDevelopment) {
   }
 }
 require('./events')
+
+//updater
+var cancellationToken
+autoUpdater.on('update-available', (info) => {
+  win.webContents.send('update-available', info);
+})
+autoUpdater.on('update-not-available', (info) => {
+  win.webContents.send('update-not-available',info);
+})
+autoUpdater.on('error', (err) => {
+  win.webContents.send('update-error',err);
+})
+autoUpdater.on('download-progress', (progressObj) => {
+  win.webContents.send('update-download-progress',progressObj);
+})
+autoUpdater.on('update-downloaded', (info) => {
+  win.webContents.send('update-downloaded',info);
+});
+ipcMain.on('installUpdate',()=>{
+  autoUpdater.quitAndInstall(true,true);
+})
+ipcMain.on('checkUpdate',()=>{
+  autoUpdater.checkForUpdates();
+})
+ipcMain.on('cancelUpdate',()=>{
+  cancellationToken.cancel()
+})
+ipcMain.on('startUpdate',()=>{
+  cancellationToken = new CancellationToken()
+  autoUpdater.downloadUpdate(cancellationToken)
+})

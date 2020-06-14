@@ -63,3 +63,13 @@ jobs:
         asset_path: ./dist_electron/latest.yml
         asset_name: latest.yml
         asset_content_type: application/x-yaml
+    - name: Upload blockmap
+      id: upload-release-asset3 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./dist_electron/ECUBus.exe.blockmap
+        asset_name: ECUBus.exe.blockmap
+        asset_content_type: application/x-blockmap
