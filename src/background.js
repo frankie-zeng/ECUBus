@@ -169,7 +169,7 @@ autoUpdater.on('update-downloaded', (info) => {
   win.webContents.send('update-downloaded',info);
 });
 ipcMain.on('installUpdate',()=>{
-  autoUpdater.quitAndInstall(true,true);
+  autoUpdater.quitAndInstall(false,false);
 })
 ipcMain.on('checkUpdate',()=>{
   autoUpdater.checkForUpdates();

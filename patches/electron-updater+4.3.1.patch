@@ -1,0 +1,13 @@
+diff --git a/node_modules/electron-updater/out/NsisUpdater.js b/node_modules/electron-updater/out/NsisUpdater.js
+index 68bbe31..ee67cfc 100644
+--- a/node_modules/electron-updater/out/NsisUpdater.js
++++ b/node_modules/electron-updater/out/NsisUpdater.js
+@@ -269,7 +269,7 @@ class NsisUpdater extends _BaseUpdater().BaseUpdater {
+         }
+ 
+         try {
+-          return JSON.parse((0, _zlib().inflateSync)(data).toString());
++          return JSON.parse((0, _zlib().gunzipSync)(data).toString());
+         } catch (e) {
+           throw new Error(`Cannot parse blockmap "${url.href}", error: ${e}, raw data: ${data}`);
+         }
