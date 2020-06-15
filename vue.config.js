@@ -9,6 +9,7 @@ module.exports = {
     electronBuilder: {
       nodeIntegration: true,
       builderOptions: {
+        "appId": "ECUBus",
         "copyright":"Copyright © 2020 ${author}",
         "productName":"ECUBus",
         "nodeGypRebuild":true,
@@ -36,17 +37,19 @@ module.exports = {
           ]
         },
         'nsis': {
-          'oneClick': false,
+          'oneClick': true,
           'allowElevation': true,
           'perMachine': true,
-          'allowToChangeInstallationDirectory': true,
+          'allowToChangeInstallationDirectory': false,
           'installerIcon': './public/logo.ico',
           'uninstallerIcon': './public/logo.ico',
           'installerHeaderIcon': './public/logo.ico',
           'createDesktopShortcut': true,
           'createStartMenuShortcut': true,
           'license': 'LICENSE.txt',
-          'artifactName': 'ECUBus.exe'
+          'artifactName': 'ECUBus.exe',
+          'guid':'c00f7959-9630-4566-b0cb-9c6a154ec9b2',
+          'include':'uninstall.nsh'
         },
         // options placed here will be merged with default configuration and passed to electron-builder
       },
