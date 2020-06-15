@@ -2,11 +2,11 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.1.21",
+  "version": "0.1.22",
   "private": false,
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/frankie-zeng/ECUBus.git"
+    "type": "git",
+    "url": "https://github.com/frankie-zeng/ECUBus.git"
   },
   "scripts": {
     "serve": "vue-cli-service serve",

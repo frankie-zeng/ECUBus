@@ -38,6 +38,7 @@ module.exports = {
         'nsis': {
           'oneClick': false,
           'allowElevation': true,
+          'perMachine': true,
           'allowToChangeInstallationDirectory': true,
           'installerIcon': './public/logo.ico',
           'uninstallerIcon': './public/logo.ico',
