@@ -2,9 +2,8 @@
 /* eslint-disable no-empty */
 const path = require('path')
 const sprintf = require('sprintf-js').sprintf
-const { decodeTable, payload2data } = require('./decode.js')
-const fs = require('fs')
 const { ipcMain } = require('electron')
+const UDS = require('./uds.js')
 const ErrorText = {
   0: 'OK!',
   1: 'Timeout occured between 2 frames transmission',
@@ -20,9 +19,9 @@ const PCANTP = require('./../../build/Release/PCANTP.node')
 // const  PCANTP = require(path.join(__static, 'PCANTP.node'))
 const isDevelopment = process.env.NODE_ENV !== 'production'
 const dllPath = isDevelopment ? path.join(__static, 'peak') : path.join(process.resourcesPath, 'peak')
-class CANUDS {
+class CANUDS extends UDS{
   constructor(win) {
-    this.win = win
+    super(win)
     this.cantp = new PCANTP.CANTP(dllPath)
     this.canfd = false
     this.channel = PCANTP.PCANTP_USBBUS1
@@ -77,19 +76,15 @@ class CANUDS {
       event.returnValue = ret
     })
     ipcMain.on('canudsExcute', (event, arg) => {
-      this.udsTable = arg.udsTable
-      this.subTable = []
+      this.UDSstart(arg.udsTable)
       this.timeout = arg.timeout
       this.sDelay = arg.sDelay
       this.addr = arg.addr
       this.startTime = new Date().getTime()
-      this.tableIndex = 0
       this.step()
     })
   }
-  log(msg) {
-    this.emit('udsData', msg)
-  }
+  
   delay(timeout) {
     var t = typeof timeout !== 'undefined' ? timeout : this.timeout
     this.udsTimer = setTimeout(() => {
@@ -97,44 +92,6 @@ class CANUDS {
         msg:sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime),
         index:this.tableIndex})
     }, t)
-  }
-  emit(channel, msg) {
-    this.win.webContents.send(channel, msg)
-  }
-  openFile(filename, flag = 'r') {
-    this.fd = fs.openSync(filename, flag)
-  }
-  readFile(size) {
-    var buf = Buffer.alloc(size)
-    var len = fs.readSync(this.fd, buf, 0, size)
-    return [...buf.slice(0, len)]
-  }
-  writeFile(data) {
-    fs.writeSync(this.fd, Buffer.from(data))
-  }
-  closeFile() {
-    fs.closeSync(this.fd)
-  }
-  changeNextFrame(name, value = []) {
-    if ((this.subTable.length == 0) && (this.udsTable.length > 0)) {
-      this.subTable = decodeTable(this.udsTable.shift())
-    }
-    if (this.subTable.length > 0) {
-      for (var i in this.subTable[0].payload) {
-        if (this.subTable[0].payload[i].name == name) {
-          this.subTable[0].payload[i][name] = value
-          break
-        }
-      }
-    }
-  }
-  // eslint-disable-next-line no-unused-vars
-  insertItem(service, payload, func = (writeData, readData) => { return true }) {
-    this.subTable.unshift({
-      func: func,
-      payload: payload,
-      service: service
-    })
   }
   Unload() {
     this.cantp.Unload()
@@ -183,7 +140,7 @@ class CANUDS {
             clearTimeout(this.udsTimer)
             // this.emit('udsData', sprintf("[data]:msg:%s.\r\n", msg.DATA.join(',')))
             try {
-              if ((msg.DATA[0] == 0x7F) && (msg.DATA[2] == 0X78)) {
+              if ((msg.DATA[0] == 0x7F) && (msg.DATA[2] == 0x78)) {
                 this.receive = true;
                 this.delay()
                 break
@@ -217,57 +174,23 @@ class CANUDS {
   registerCallback(fn) {
     this.cantp.RegCb(fn)
   }
-  progress(show, percent) {
-    this.emit('progress', {
-      show: show,
-      percent: percent
-    })
-  }
   step() {
-    if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
-      this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
-      return 0
+    var item=this.getNextService()
+    if (item===null) {
+        this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
+        return 0
     }
-    if (this.subTable.length == 0) {
-      this.tableIndex++
-      this.subTable = decodeTable(this.udsTable.shift())
-    }
-    var item = this.subTable.shift()
-    if (typeof item.func === 'string') {
-      try {
-        // eslint-disable-next-line no-eval
-        this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
-      } catch (error) {
-        // eslint-disable-next-line no-eval
-        this.checkFunc = eval('(writeData,readData)=>{return true}')
-      }
-    } else {
-      this.checkFunc = item.func
-    }
+    this.checkFunc = item.checkFunc
     this.writeData = item.payload
-    var suppress = false
-    var data = [item.service]
-
-
-    data = data.concat(payload2data(item.payload))
-    /* check surpress*/
-    for (var i in this.writeData) {
-      if (this.writeData[i].type == 'subfunction') {
-        if (this.writeData[i].suppress) {
-          suppress = true
-        }
-        break
-      }
-    }
     var msg = this.addr
-    this.suppress = suppress
+    this.suppress = item.suppress
     if (this.canfd) {
       msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_FD
       msg.IDTYPE |= PCANTP.PCANTP_ID_CAN_BRS
     }
 
-    msg.DATA = data
-    msg.LEN = data.length
+    msg.DATA = item.data
+    msg.LEN = item.data.length
     var err = this.cantp.TpWrite(this.channel, msg)
     if (err !== 0) {
       this.emit('udsError', 

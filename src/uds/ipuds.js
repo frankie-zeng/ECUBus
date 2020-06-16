@@ -1,19 +1,16 @@
 /* eslint-disable no-empty */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
-const os = require('os')
 const dgram = require('dgram')
 const net = require('net')
 const { ipcMain } = require('electron')
 const sprintf = require('sprintf-js').sprintf
 const PORT = 13400
 const VER = 0x02
-const fs = require('fs')
-const { decodeTable, payload2data } = require('./decode.js')
-
-class IPUDS {
+const UDS = require('./uds.js')
+class IPUDS extends UDS{
     constructor(win) {
-        this.win = win
+        super(win)
         this.header = Buffer.from([VER, VER ^ 0xff, 0, 0, 0, 0, 0, 0])
         this.timeout = 2000
         this.sDelay = 100
@@ -178,16 +175,10 @@ class IPUDS {
         ipcMain.on('doipudsExcute', (event, arg) => {
             this.sDelay = arg.sDelay
             this.timeout = arg.timeout
-            this.udsTable = arg.udsTable
-            this.subTable = []
+            this.UDSstart(arg.udsTable)
             this.addr = arg.addr
             this.startTime = new Date().getTime()
-            this.tableIndex = 0
             this.step()
-            // while(this.step()!=0){
-            //     this.checkFunc(this.writeData, [0x78, 0x4, 0x2, 0, 128,0,0,2,0,10,0,10])
-            // }
-
         })
         ipcMain.on('doipDeviceFind', (event, arg) => {
 
@@ -204,7 +195,6 @@ class IPUDS {
 
 
     }
-    /*user call*/
     delay(timeout) {
         var t = typeof timeout !== 'undefined' ? timeout : this.timeout
         this.cMap[this.key].timer = setTimeout(() => {
@@ -213,98 +203,21 @@ class IPUDS {
                 index:this.tableIndex})
         }, t)
     }
-    log(msg) {
-        this.emit('udsData', JSON.stringify(msg) + '\r\n')
-    }
-    progress(show, percent) {
-        this.emit('progress', {
-            show: show,
-            percent: percent
-        })
-    }
-    openFile(filename, flag = 'r') {
-        this.fd = fs.openSync(filename, flag)
-    }
-    readFile(size) {
-        var buf = Buffer.alloc(size)
-        var len = fs.readSync(this.fd, buf, 0, size)
-        return [...buf.slice(0, len)]
-    }
-    writeFile(data) {
-        fs.writeSync(this.fd, Buffer.from(data))
-    }
-    closeFile() {
-        fs.closeSync(this.fd)
-    }
-    changeNextFrame(name, value = []) {
-        if ((this.subTable.length == 0) && (this.udsTable.length > 0)) {
-            this.subTable = decodeTable(this.udsTable.shift())
-        }
-        if (this.subTable.length > 0) {
-            for (var i in this.subTable[0].payload) {
-                if (this.subTable[0].payload[i].name == name) {
-                    this.subTable[0].payload[i][name] = value
-                    break
-                }
-            }
-        }
-    }
-    insertItem(service, payload, func = (writeData, readData) => { return true }) {
-        this.subTable.unshift({
-            func: func,
-            payload: payload,
-            service: service
-        })
-    }
-    /*end user call*/
-    emit(channel, msg) {
-        this.win.webContents.send(channel, msg)
-    }
     step() {
-        if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
+        var item=this.getNextService()
+        if (item===null) {
             this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
             return 0
         }
-        if (this.subTable.length == 0) {
-            this.subTable = decodeTable(this.udsTable.shift())
-            this.tableIndex++
-        }
-        var item = this.subTable.shift()
-        if (typeof item.func === 'string') {
-            try {
-                // eslint-disable-next-line no-eval
-                this.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
-            } catch (error) {
-                // eslint-disable-next-line no-eval
-                this.checkFunc = eval('(writeData,readData)=>{return true}')
-            }
-        } else {
-            this.checkFunc = item.func
-        }
+        this.checkFunc = item.checkFunc
         this.writeData = item.payload
-        var suppress = false
-        var data = [item.service]
-
-
-        data = data.concat(payload2data(item.payload))
-        // console.log(data)
-        // return 1
-        /* check surpress*/
-        for (var i in this.writeData) {
-            if (this.writeData[i].type == 'subfunction') {
-                if (this.writeData[i].suppress) {
-                    suppress = true
-                }
-                break
-            }
-        }
 
         var key = this.addr.key
-        var msg = this.writeDiaMsg(this.addr.SA, this.addr.TA, data)
+        var msg = this.writeDiaMsg(this.addr.SA, this.addr.TA, item.data)
 
         this.key = key
         if (key in this.cMap) {
-            this.cMap[key].suppress = suppress
+            this.cMap[key].suppress = item.suppress
             this.cMap[key].fd.write(msg, () => {
                 this.receive = true
                 this.cMap[key].timer = setTimeout(() => {
