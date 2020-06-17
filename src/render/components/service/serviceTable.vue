@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-dialog title="Edit Service" :visible.sync="cd1" width="80%">
+    <el-dialog title="Edit Service" :visible.sync="cd1" width="80%" :close-on-press-escape="false">
       <AddService
         editService
         :mode="mode"

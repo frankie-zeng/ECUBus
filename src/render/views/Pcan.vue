@@ -5,7 +5,7 @@
         <PConnect />
       </div>
     </el-dialog>
-    <el-dialog title="Add UDS Service" :visible.sync="uds" width="80%">
+    <el-dialog title="Add UDS Service" :visible.sync="uds" width="80%" :close-on-press-escape="false">
       <div class="connect">
         <ADDService @additem="uds=false" mode="can" />
       </div>

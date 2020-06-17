@@ -5,7 +5,7 @@
         <DOIPConnect />
       </div>
     </el-dialog>
-    <el-dialog title="Add UDS Serivce" :visible.sync="uds" width="80%">
+    <el-dialog title="Add UDS Serivce" :visible.sync="uds" width="80%" :close-on-press-escape="false">
       <div class="connect">
         <ADDService @additem="uds=false" mode="doip" />
       </div>

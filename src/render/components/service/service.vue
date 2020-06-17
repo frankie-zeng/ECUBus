@@ -108,8 +108,14 @@
         </template>
 
         <el-row>
+          <el-button
+            type="text"
+            icon="el-icon-full-screen"
+            class="btn1"
+            @click="fullScreen"
+          ></el-button>
           <div class="fn">function(writeData,readData){</div>
-          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" v-if="showCode"/>
+          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" v-if="showCode" :options="cmOptions"/>
           <div class="fn">}</div>
         </el-row>
         <div id="JSLINT_" v-if="jsError!=''">
@@ -139,7 +145,6 @@
 const { ipcRenderer } = require("electron");
 import jslint from "./../../JSLint/jslint.js";
 import report from "./../../JSLint/report.js";
-
 //import "codemirror/mode/javascript/javascript.js";
 export default {
   data() {
@@ -147,6 +152,16 @@ export default {
       jsFn: "return true;",
       showCode:true,
       activeNames: ["1"],
+      cmOptions:{
+        extraKeys: {
+          "F11": function(cm) {
+            cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+          },
+          "Esc": function(cm) {
+            if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+          }
+        }
+      },
       inputData: {
         suppress: false,
         subFunction: "",
@@ -228,6 +243,7 @@ export default {
   mounted() {
     if (!this.group) {
       this.codemirror.setSize("100%", 200);
+      // this.codemirror.setOption('fullScreen',true)
     }
   },
   created() {
@@ -296,6 +312,11 @@ export default {
     }
   },
   methods: {
+    fullScreen(){
+      if(!this.codemirror.getOption('fullScreen')){
+        this.codemirror.setOption('fullScreen',true)
+      }
+    },
     colChange(val){
       if(val=="1"){
         this.showCode=false;
@@ -407,6 +428,17 @@ export default {
 </script>
 
 <style>
+.btn1 {
+  position: absolute;
+  z-index: 2;
+  right: 0px;
+}
+.CodeMirror-fullscreen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  height: auto;
+  z-index: 9;
+}
 .fn {
   margin: 5px;
   font-size: 16px;
