@@ -41,10 +41,16 @@ class CANUDS extends UDS{
       var err = this.cantp.InitializeFd(arg[0], arg[1])
       this.canfd = true
       this.channel = arg[0]
+      var buf=new Uint8Array(1);
+      buf[0]=arg[2]
+      if(err==0){
+        err=this.cantp.SetValue(arg[0],PCANTP.PCANTP_PARAM_CAN_TX_DL,buf.buffer)
+      }
       event.returnValue = {
         err: err,
         msg: this.cantp.GetErrorText(err)
       }
+
     })
     ipcMain.on('canDisconnect', (event, arg) => {
       var err = this.cantp.Uninitialize(arg)
@@ -199,7 +205,7 @@ class CANUDS extends UDS{
         index:this.tableIndex
       })
     } else {
-      this.receive = !suppress
+      this.receive = !this.suppress
     }
   }
 }

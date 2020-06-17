@@ -41,15 +41,18 @@
     </div>
     <div v-else>
       <el-row style="margin:0px">
-        <el-col :span="11">
+        <el-col :span="8">
           <div class="title">Nominal Bit rate:</div>
         </el-col>
-        <el-col :span="11" :offset="1">
+        <el-col :span="8" :offset="1">
           <div class="title">Data Bit rate:</div>
+        </el-col>
+        <el-col :span="6" :offset="1">
+          <div class="title">TLC:</div>
         </el-col>
       </el-row>
       <el-row>
-        <el-col :span="11">
+        <el-col :span="8">
           <el-select v-model="nomSpeed" placeholder="Speed" :disabled="connected">
             <el-option
               v-for="item in canNomSpeed"
@@ -59,10 +62,20 @@
             ></el-option>
           </el-select>
         </el-col>
-        <el-col :span="11" :offset="1">
+        <el-col :span="8" :offset="1">
           <el-select v-model="dataSpeed" placeholder="Speed" :disabled="connected">
             <el-option
               v-for="item in canDataSpeed"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="6" :offset="1">
+          <el-select v-model="tlc" placeholder="TLC" :disabled="connected">
+            <el-option
+              v-for="item in fdTLC"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -270,8 +283,9 @@ export default {
         MSGTYPE: 1,
         FORMAT: 1,
         IDTYPE: 1,
-        TA_TYPE: 1
+        TA_TYPE: 1,
       },
+      tlc:8,
       formatList: [
         {
           label: "Normal addressing",
@@ -307,6 +321,40 @@ export default {
         }
       ],
       speed: 0x001c,
+      fdTLC:[
+        {
+          label:'8',
+          value:8,
+        },
+        {
+          label:'12',
+          value:9
+        },
+        {
+          label:'16',
+          value:10
+        },
+        {
+          label:'20',
+          value:11
+        },
+        {
+          label:'24',
+          value:12
+        },
+        {
+          label:'32',
+          value:13
+        },
+        {
+          label:'48',
+          value:14
+        },
+        {
+          label:'64',
+          value:15
+        },
+      ],
       canSpeed: [
         {
           label: "250 KBit/s",
@@ -461,7 +509,8 @@ export default {
       if (this.canfd) {
         err = ipcRenderer.sendSync("canConnectFd", [
           this.device,
-          this.nomSpeed + this.dataSpeed
+          this.nomSpeed + this.dataSpeed,
+          this.tlc
         ]);
       } else {
         err = ipcRenderer.sendSync("canConnect", [this.device, this.speed]);

@@ -54,8 +54,8 @@ class UDS {
     }
     UDSstart(udsTable){
         this.udsTable=udsTable
+        this.allLen=udsTable.length
         this.subTable=[]
-        this.tableIndex=0
     }
     getNextService(){
         if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
@@ -63,8 +63,9 @@ class UDS {
         }
         if (this.subTable.length == 0) {
             this.subTable = decodeTable(this.udsTable.shift())
-            this.tableIndex++;
         }
+        this.tableIndex=this.allLen-this.udsTable.length
+        console.log(this.tableIndex)
         var item=this.subTable.shift()
         var obj={}
         if (typeof item.func === 'string') {
