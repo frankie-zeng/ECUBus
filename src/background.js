@@ -89,11 +89,6 @@ function createWindow () {
   autoUpdater.checkForUpdates();
   win.on('closed', () => {
     win = null
-    if(canuds!==null){
-      canuds.Unload()
-      canuds = null
-    }
-
   })
 }
 
@@ -101,6 +96,10 @@ function createWindow () {
 app.on('window-all-closed', () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
+  // if(canuds!==null){
+  //   canuds.Unload()
+  //   canuds = null
+  // }
   if (process.platform !== 'darwin') {
     app.quit()
   }

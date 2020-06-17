@@ -335,15 +335,15 @@ export default {
             "f_clock=80000000,nom_brp=10,nom_tseg1=5,nom_tseg2=2,nom_sjw=1,"
         }
       ],
-      dataSpeed: "data_brp=4,data_tseg1=7,data_tseg2=4,data_sjw=1",
+      dataSpeed: "data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1",
       canDataSpeed: [
         {
           label: "2 MBit/s",
-          value: "data_brp=4,data_tseg1=7,data_tseg2=4,data_sjw=1"
+          value: "data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1"
         },
         {
           label: "4 MBit/s",
-          value: "data_brp=2,data_tseg1=7,data_tseg2=4,data_sjw=1"
+          value: "data_brp=2,data_tseg1=7,data_tseg2=2,data_sjw=1"
         }
       ]
     };

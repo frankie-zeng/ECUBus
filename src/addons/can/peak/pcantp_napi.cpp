@@ -69,6 +69,7 @@ Napi::Value CANTP::RegisterCallback(const Napi::CallbackInfo& info){
 }
 Napi::Value CANTP::Unload(const Napi::CallbackInfo& info){
     FreeLibrary(this->hDLL);
+    TerminateThread(this->rThread, -1000);
     return Napi::Number::New(info.Env(),0);
 }
 
@@ -392,8 +393,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
 
     DECLARE_NAPI_STRING(PCANTP_BAUD_NOM_500K,"f_clock=80000000,nom_brp=10,nom_tseg1=12,nom_tseg2=3,nom_sjw=1,");    
     DECLARE_NAPI_STRING(PCANTP_BAUD_NOM_1M,"f_clock=80000000,nom_brp=10,nom_tseg1=5,nom_tseg2=2,nom_sjw=1,");
-    DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_2M,"data_brp=4,data_tseg1=7,data_tseg2=4,data_sjw=1");      
-    DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_4M,"data_brp=2,data_tseg1=7,data_tseg2=4,data_sjw=1");               
+    DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_2M,"data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1");      
+    DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_4M,"data_brp=2,data_tseg1=7,data_tseg2=2,data_sjw=1");               
     /*function*/
 
     exports=CANTP::Init(env,exports);
