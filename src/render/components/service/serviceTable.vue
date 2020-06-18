@@ -33,7 +33,9 @@
       style="width: 100%;text-align: center;"
       empty-text="No Service"
       :row-class-name="tableRowClassName"
+      @selection-change="handleSelectionChange"
     >
+      <el-table-column type="selection" width="35"></el-table-column>
       <el-table-column prop="service" label="Service Info" width="300">
         <template slot-scope="scope">
           <div
@@ -85,7 +87,10 @@
           <el-button type="text" icon="el-icon-document" @click="showCode(scope.row)"></el-button>
         </template>
       </el-table-column>
-      <el-table-column fixed="right" label="Action" width="130" align="center">
+      <el-table-column fixed="right" label="Action" width="150" align="center">
+        <template slot="header">
+          <el-button size="mini" :disabled="selectTable.length==0" @click="deleteMulti" icon="el-icon-delete" type="text">Selected</el-button>
+        </template>
         <template slot-scope="scope">
           <!-- <h1 v-if="scope.$index==tableErrorIndex">error</h1> -->
           <div v-if="scope.$index==tableErrorIndex-1" class="table_error">
@@ -137,7 +142,8 @@ export default {
       codeNum: 1,
       codeOption: {
         readOnly: true
-      }
+      },
+      selectTable: []
     };
   },
   mounted() {
@@ -159,16 +165,19 @@ export default {
   },
   props: ["mode"],
   methods: {
+    handleSelectionChange(val) {
+      this.selectTable = val;
+    },
     // eslint-disable-next-line no-unused-vars
-    tableRowClassName({row, rowIndex}){
-      if(rowIndex==this.tableErrorIndex-1){
-        return 'error'
-      }else{
-        return ''
+    tableRowClassName({ row, rowIndex }) {
+      if (rowIndex == this.tableErrorIndex - 1) {
+        return "error";
+      } else {
+        return "";
       }
     },
-    closeError(){
-      this.$store.commit("setTableError",-1);
+    closeError() {
+      this.$store.commit("setTableError", -1);
     },
     loadGroup() {
       this.itemIndex = "";
@@ -200,6 +209,14 @@ export default {
       }
 
       this.cd = true;
+    },
+    deleteMulti(){
+      for(var i in this.selectTable){
+        let index=this.doipTable.indexOf(this.selectTable[i])
+        if(index!==-1){
+          this.deleteService(index)
+        }
+      }
     },
     deleteService(index) {
       if (this.mode === "doip") {
@@ -287,23 +304,23 @@ export default {
 };
 </script>
 <style>
-.table_error{
+.table_error {
   position: absolute;
   padding: 0px;
   margin: 0px;
-  top:0px;
-  right:0px;
+  top: 0px;
+  right: 0px;
 }
 .el-table .error {
   background: red;
 }
-.table_error i{
+.table_error i {
   z-index: 2;
   position: absolute;
-  top:0px;
+  top: 0px;
   right: 0px;
   font-size: 25px;
-  color: #E6A23C;
+  color: #e6a23c;
 }
 .name {
   font-size: 14px;

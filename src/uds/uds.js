@@ -65,7 +65,6 @@ class UDS {
             this.subTable = decodeTable(this.udsTable.shift())
         }
         this.tableIndex=this.allLen-this.udsTable.length
-        console.log(this.tableIndex)
         var item=this.subTable.shift()
         var obj={}
         if (typeof item.func === 'string') {

@@ -8,6 +8,7 @@ const sprintf = require('sprintf-js').sprintf
 const PORT = 13400
 const VER = 0x02
 const UDS = require('./uds.js')
+const log = require('electron-log')
 class IPUDS extends UDS{
     constructor(win) {
         super(win)
@@ -18,7 +19,6 @@ class IPUDS extends UDS{
         this.typeList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0x4001, 0x4002, 0x4003, 0x4004, 0x8001, 0x8002, 0x8003]
         this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8001, 0x8002, 0x8003]
         this.udpFd = dgram.createSocket('udp4')
-        this.receive = false
         this.udpFd.on('message', (msg, rinfo) => {
             var ret = this.parseData(msg)
             if (ret.err === 0) {
@@ -57,8 +57,8 @@ class IPUDS extends UDS{
                 item.fd = net.createConnection(PORT, target.ip, () => {
                     item.active = false
                     var msg = this.writeRouteActive(parseInt(active.sa), parseInt(active.activeType), active.option)
+                    item.receive = true
                     item.fd.write(msg, () => {
-                        this.receive = true
                         item.timer = setTimeout(() => {
                             item.fd.destroy()
                             delete this.cMap[key]
@@ -73,29 +73,40 @@ class IPUDS extends UDS{
                 })
                 item.fd.on('error', (msg) => {
                     clearTimeout(item.timer)
-                    delete this.cMap[key]
                     this.emit('doipTcpStatus', {
                         key: key,
                         err: -2,
                         msg: 'Connecting Error'
                     }
                     )
+                    if(item.receive){
+                        this.emit('udsError', {
+                            msg:sprintf("[error]:this socket error,used time:%d\r\n", new Date().getTime() - this.startTime),
+                            index:this.tableIndex})
+                    }
+                    delete this.cMap[key]
                 })
                 item.fd.on('end', (msg) => {
                     clearTimeout(item.timer)
-                    delete this.cMap[key]
+                    
                     this.emit('doipTcpStatus', {
                         key: key,
                         err: -2,
                         msg: 'Server Close'
                     }
                     )
+                    if(item.receive){
+                        this.emit('udsError', {
+                            msg:sprintf("[error]:this socket error,used time:%d\r\n", new Date().getTime() - this.startTime),
+                            index:this.tableIndex})
+                    }
+                    delete this.cMap[key]
                 })
                 item.fd.on('data', (msg) => {
-                    if (this.receive) {
-                        var ret = this.parseData(msg)
-                        this.receive = false
-                        if (ret.err === 0) {
+                    var ret = this.parseData(msg)
+                    if (ret.err === 0) {
+                        if((item.receive)||(ret.type===7)){
+                            item.receive = false
                             if (ret.type === 6) {
                                 if (item.active === false) {
                                     clearTimeout(item.timer)
@@ -117,12 +128,12 @@ class IPUDS extends UDS{
                                 this.emit('udsData', sprintf("[data]:uds response:%s.\r\n", ret.data.payload.join(',')))
                                 try {
                                     if ((ret.data.payload[0] == 0x7F) && (ret.data.payload[2] == 0X78)) {
-                                        this.receive = true;
+                                        item.receive = true;
                                         this.delay()
                                     } else {
                                         if (this.checkFunc(this.writeData, ret.data.payload)) {
                                             if (item.timer.hasRef()) {
-                                                this.receive = true;
+                                                item.receive = true;
                                                 this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
                                             } else {
                                                 this.step()
@@ -147,7 +158,7 @@ class IPUDS extends UDS{
                                         this.step()
                                     }, this.sDelay)
                                 } else {
-                                    this.receive = true
+                                    item.receive = true
                                     item.timer = setTimeout(() => {
                                         this.emit('udsError', {
                                             msg:sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime),
@@ -160,15 +171,14 @@ class IPUDS extends UDS{
                                     msg:sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime),
                                     index:this.tableIndex})
                             }
-                        } else if (ret.err < 0) {
-                            delete this.cMap[key]
-                            item.fd.destroy()
-                            clearTimeout(item.timer)
-                            this.emit('udsError', {
-                                msg:sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime),
-                                index:this.tableIndex})
                         }
+                    } else if (ret.err < 0) {
+                        clearTimeout(item.timer)
+                        this.emit('udsError', {
+                            msg:sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime),
+                            index:this.tableIndex})
                     }
+                   
                 })
             }
         })
@@ -218,8 +228,8 @@ class IPUDS extends UDS{
         this.key = key
         if (key in this.cMap) {
             this.cMap[key].suppress = item.suppress
+            this.cMap[key].receive = true
             this.cMap[key].fd.write(msg, () => {
-                this.receive = true
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
                     this.emit('udsError', {
@@ -312,6 +322,7 @@ class IPUDS extends UDS{
                 ret.data.mds = payload.readUInt32BE(3)
             }
         }
+        log.info(JSON.stringify(ret))
         return ret
     }
 
