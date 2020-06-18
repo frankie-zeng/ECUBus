@@ -944,7 +944,7 @@ module.exports={
           type: 'input',
           rule:[
             { pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min:4,max: 4, message: 'Length Need 2 Bytes', trigger: 'change' }
+            { min:2,max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
           ]
         },
         {
