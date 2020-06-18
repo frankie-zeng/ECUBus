@@ -1,0 +1,1 @@
+require('./ssr.js')

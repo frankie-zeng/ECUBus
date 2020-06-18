@@ -11,7 +11,7 @@ import {
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
 import { CancellationToken } from "electron-updater"
-
+require('./ssr')
 
 const log = require('electron-log');
 const { autoUpdater } = require("electron-updater")
