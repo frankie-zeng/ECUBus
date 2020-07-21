@@ -6,7 +6,7 @@
       </el-col>
     </el-row>
     <el-row>
-      <el-col :span="11">
+      <el-col :span="8">
         <el-select v-model="device" placeholder="Deivce" :disabled="connected">
           <el-option
             v-for="item in deviceList"
@@ -16,7 +16,10 @@
           ></el-option>
         </el-select>
       </el-col>
-      <el-col :span="11" :offset="1">
+      <el-col :span="8" :offset="1">
+        <el-checkbox v-model="padding" border :disabled="connected">PADDING</el-checkbox>
+      </el-col>
+      <el-col :span="6" :offset="1">
         <el-checkbox v-model="canfd" border :disabled="connected">CAN-FD</el-checkbox>
       </el-col>
     </el-row>
@@ -191,14 +194,14 @@
     <el-table size="mini" :data="addrTable" style="width: 100%" empty-text="No Data">
       <el-table-column type="index" width="50" align="center"></el-table-column>
       <el-table-column prop="name" label="Name" width="100" align="center"></el-table-column>
-      <el-table-column prop="txId" label="Send ID" width="150" align="center">
+      <el-table-column prop="txId" label="Send ID" width="250" align="center">
         <template slot-scope="scope">
-          <el-tag size="medium" type="info">0X{{scope.row.txId}}</el-tag>
+          <el-tag size="medium" type="info">{{scope.row.txId}}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="rxId" label="Receive ID" width="150" align="center">
+      <el-table-column prop="rxId" label="Receive ID" width="250" align="center">
         <template slot-scope="scope">
-          <el-tag size="medium" type="info">0X{{scope.row.rxId}}</el-tag>
+          <el-tag size="medium" type="info">{{scope.row.rxId}}</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="maped" label="Maped" width="70" align="center">
@@ -253,7 +256,7 @@
           <el-tag v-else size="medium" type="success">Remote</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Action" align="center">
+      <el-table-column label="Action" align="center" fixed="right">
         <template slot-scope="scope">
           <el-button
             size="mini"
@@ -286,6 +289,7 @@ export default {
         TA_TYPE: 1,
       },
       tlc:8,
+      padding:false,
       formatList: [
         {
           label: "Normal addressing",
@@ -407,18 +411,18 @@ export default {
       let ta = parseInt(this.tpConfig.TA, 16) << 8;
       let sa = parseInt(this.tpConfig.SA, 16);
       if (this.tpConfig.FORMAT === 2) {
-        return (0x18db0000 + ta + sa).toString(16);
+        return (0x18da0000 + ta + sa).toString(16)+'(MF)'+(0x18db0000 + ta + sa).toString(16)+'(SF)';
       } else {
-        return (0x18ce0000 + ta + sa).toString(16);
+        return (0x18ce0000 + ta + sa).toString(16)+'(MF)'+(0x18cd0000 + ta + sa).toString(16)+'(SF)';
       }
     },
     rxId: function() {
       let ta = parseInt(this.tpConfig.SA, 16) << 8;
       let sa = parseInt(this.tpConfig.TA, 16);
-      if (this.tpConfig.FORMAT === 2) {
-        return (0x18db0000 + ta + sa).toString(16);
+       if (this.tpConfig.FORMAT === 2) {
+        return (0x18da0000 + ta + sa).toString(16)+'(MF)'+(0x18db0000 + ta + sa).toString(16)+'(SF)';
       } else {
-        return (0x18ce0000 + ta + sa).toString(16);
+        return (0x18ce0000 + ta + sa).toString(16)+'(MF)'+(0x18cd0000 + ta + sa).toString(16)+'(SF)';
       }
     },
     bit29Must: function() {
@@ -510,10 +514,11 @@ export default {
         err = ipcRenderer.sendSync("canConnectFd", [
           this.device,
           this.nomSpeed + this.dataSpeed,
+          this.padding,
           this.tlc
         ]);
       } else {
-        err = ipcRenderer.sendSync("canConnect", [this.device, this.speed]);
+        err = ipcRenderer.sendSync("canConnect", [this.device, this.speed, this.padding]);
       }
       if (err.err === 0) {
         // this.connected = true

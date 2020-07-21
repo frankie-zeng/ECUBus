@@ -42,6 +42,7 @@ function setNormal(cm) {
 Vue.use(VueCodemirror, {
   options: { 
     tabSize: 4,
+    indentUnit: 4,
     mode: "javascript",
     lineNumbers: true,
     theme: 'abcdef'

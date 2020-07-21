@@ -60,7 +60,11 @@
             </el-select>
           </el-col>
           <el-col :span="7" :offset="1" style="text-align:right">
-            <el-checkbox v-model="inputData['suppress']" label="Suppress" border></el-checkbox>
+            <el-checkbox
+              v-model="inputData['suppress']"
+              label="Suppress"
+              border
+            ></el-checkbox>
           </el-col>
         </div>
         <el-input
@@ -86,6 +90,7 @@
         </div>
       </el-form-item>
     </el-form>
+    <span style="color:red;margin-right:5px">{{error}}</span>
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
         <template slot="title">
@@ -108,14 +113,15 @@
         </template>
 
         <el-row>
-          <el-button
-            type="text"
-            icon="el-icon-full-screen"
-            class="btn1"
-            @click="fullScreen"
-          ></el-button>
+          <el-button type="text" icon="el-icon-full-screen" class="btn1" @click="fullScreen"></el-button>
           <div class="fn">function(writeData,readData){</div>
-          <codemirror v-model="jsFn" @blur="jsCheck" ref="cmEditor" v-if="showCode" :options="cmOptions"/>
+          <codemirror
+            v-model="jsFn"
+            @blur="jsCheck"
+            ref="cmEditor"
+            v-if="showCode"
+            :options="cmOptions"
+          />
           <div class="fn">}</div>
         </el-row>
         <div id="JSLINT_" v-if="jsError!=''">
@@ -128,15 +134,21 @@
         </div>
       </el-collapse-item>
     </el-collapse>
+    
     <div style="text-align:right;margin-top:10px" v-if="!group">
-      <span style="color:red;margin-right:5px">{{error}}</span>
+      
       <el-button
         type="primary"
         @click="addService('additem')"
         v-if="!change"
         size="small"
       >Add Service</el-button>
-      <el-button type="warning" @click="addService('edititem')" size="small" v-else>Change Service</el-button>
+      <el-button
+        type="warning"
+        @click="addService('edititem')"
+        size="small"
+        v-else
+      >Change Service</el-button>
     </div>
   </div>
 </template>
@@ -150,14 +162,14 @@ export default {
   data() {
     return {
       jsFn: "return true;",
-      showCode:true,
+      showCode: true,
       activeNames: ["1"],
-      cmOptions:{
+      cmOptions: {
         extraKeys: {
-          "F11": function(cm) {
+          F11: function(cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"));
           },
-          "Esc": function(cm) {
+          Esc: function(cm) {
             if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
           }
         }
@@ -312,19 +324,19 @@ export default {
     }
   },
   methods: {
-    fullScreen(){
-      if(!this.codemirror.getOption('fullScreen')){
-        this.codemirror.setOption('fullScreen',true)
+    fullScreen() {
+      if (!this.codemirror.getOption("fullScreen")) {
+        this.codemirror.setOption("fullScreen", true);
       }
     },
-    colChange(val){
-      if(val=="1"){
-        this.showCode=false;
+    colChange(val) {
+      if (val == "1") {
+        this.showCode = false;
         this.$nextTick(() => {
           this.showCode = true;
         });
-      }else{
-        this.showCode=false;
+      } else {
+        this.showCode = false;
       }
     },
     jsCheck() {
@@ -348,10 +360,11 @@ export default {
       this.jsError = report.error(result);
     },
     uploadFIle(name) {
-      this.inputData[name] = {
+      var val = {
         name: ipcRenderer.sendSync("saveFilePath"),
         size: 0
       };
+      this.inputData[name] = val;
     },
     downloadFIle(name) {
       var val = ipcRenderer.sendSync("downloadFilePath");
@@ -360,66 +373,72 @@ export default {
         size: val.size
       };
     },
-    addService(event) {
+    generateData() {
       var data = {};
+      data.type = this.type;
+      data.func = this.jsFn;
+      data.service = {
+        name: this.config.name,
+        value: this.config.value
+      };
+      data.payload = [];
+      for (var i in this.config.input) {
+        var item = {};
+        item.type = this.config.input[i].type;
+        item.name = this.config.input[i].name;
+        if (
+          this.config.input[i].type === "downloadFile" ||
+          this.config.input[i].type === "uploadFile"
+        ) {
+          if (
+            !this.inputData[this.config.input[i].name] &&
+            this.config.input[i].require
+          ) {
+            this.error = "Please chhose a file";
+            return;
+          }
+          if (parseInt(this.inputData.memorySize, 16) <= 0) {
+            this.error = "MemorySize should more than 0";
+            return;
+          }
+          if (this.config.input[i].type === "downloadFile") {
+            if (this.inputData[this.config.input[i].name]) {
+              if (
+                parseInt(this.inputData.memorySize, 16) >
+                this.inputData[this.config.input[i].name].size
+              ) {
+                this.error = "MemorySize should less than file size";
+                return;
+              }
+            }
+          }
+          this.error = "";
+          item[this.config.input[i].name] = this.inputData[
+            this.config.input[i].name
+          ];
+        } else if (this.config.input[i].type === "subfunction") {
+          item.subFunction = parseInt(this.inputData.subFunction);
+          if (this.inputData.suppress) {
+            item.suppress = true;
+          } else {
+            item.suppress = false;
+          }
+        } else {
+          item[this.config.input[i].name] = this.inputData[
+            this.config.input[i].name
+          ];
+        }
+        data.payload.push(item);
+      }
+      return data;
+    },
+    addService(event) {
       this.$refs.ruleForm.validate(valid => {
         if (valid) {
-          data.type = this.type;
-          data.func = this.jsFn;
-          data.service = {
-            name: this.config.name,
-            value: this.config.value
-          };
-          data.payload = [];
-          for (var i in this.config.input) {
-            var item = {};
-            item.type = this.config.input[i].type;
-            item.name = this.config.input[i].name;
-            if (
-              this.config.input[i].type === "downloadFile" ||
-              this.config.input[i].type === "uploadFile"
-            ) {
-              if (
-                !this.inputData[this.config.input[i].name] &&
-                this.config.input[i].require
-              ) {
-                this.error = "Please chhose a file";
-                return;
-              }
-              if (parseInt(this.inputData.memorySize, 16) <= 0) {
-                this.error = "MemorySize should more than 0";
-                return;
-              }
-              if (this.config.input[i].type === "downloadFile") {
-                if (this.inputData[this.config.input[i].name]) {
-                  if (
-                    parseInt(this.inputData.memorySize, 16) >
-                    this.inputData[this.config.input[i].name].size
-                  ) {
-                    this.error = "MemorySize should less than file size";
-                    return;
-                  }
-                }
-              }
-              this.error = "";
-              item[this.config.input[i].name] = this.inputData[
-                this.config.input[i].name
-              ];
-            } else if (this.config.input[i].type === "subfunction") {
-              item.subFunction = parseInt(this.inputData.subFunction);
-              if (this.inputData.suppress) {
-                item.suppress = true;
-              } else {
-                item.suppress = false;
-              }
-            } else {
-              item[this.config.input[i].name] = this.inputData[
-                this.config.input[i].name
-              ];
-            }
-            data.payload.push(item);
+          var val=this.generateData()
+          if(this.error==''){
+            this.$emit(event, val);
           }
-          this.$emit(event, data);
         }
       });
     }
@@ -435,7 +454,10 @@ export default {
 }
 .CodeMirror-fullscreen {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   height: auto;
   z-index: 9;
 }

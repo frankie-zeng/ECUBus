@@ -1,6 +1,12 @@
 <template>
   <div>
-    <el-dialog title="Edit Service" :visible.sync="cd1" width="80%" :close-on-press-escape="false">
+    <el-dialog
+      title="Edit Service"
+      :visible.sync="cd1"
+      width="80%"
+      :close-on-press-escape="false"
+      :before-close="editClose"
+    >
       <AddService
         editService
         :mode="mode"
@@ -35,7 +41,7 @@
       :row-class-name="tableRowClassName"
       @selection-change="handleSelectionChange"
     >
-      <el-table-column type="selection" width="35"></el-table-column>
+      <el-table-column type="selection" width="55" align="center"></el-table-column>
       <el-table-column prop="service" label="Service Info" width="300">
         <template slot-scope="scope">
           <div
@@ -89,7 +95,13 @@
       </el-table-column>
       <el-table-column fixed="right" label="Action" width="150" align="center">
         <template slot="header">
-          <el-button size="mini" :disabled="selectTable.length==0" @click="deleteMulti" icon="el-icon-delete" type="text">Selected</el-button>
+          <el-button
+            size="mini"
+            :disabled="selectTable.length==0"
+            @click="deleteMulti"
+            icon="el-icon-delete"
+            type="text"
+          >Selected</el-button>
         </template>
         <template slot-scope="scope">
           <!-- <h1 v-if="scope.$index==tableErrorIndex">error</h1> -->
@@ -165,6 +177,22 @@ export default {
   },
   props: ["mode"],
   methods: {
+    editClose(done) {
+      var dirty = this.$refs.addService.isDirty();
+      if (dirty) {
+        this.$confirm("Some changes unsaved, discard?", "Unsaved", {
+          confirmButtonText: "Yes",
+          cancelButtonText: "No",
+          type: "warning"
+        })
+          .then(() => {
+            done();
+          })
+          .catch(() => {});
+      } else {
+        done();
+      }
+    },
     handleSelectionChange(val) {
       this.selectTable = val;
     },
@@ -210,11 +238,11 @@ export default {
 
       this.cd = true;
     },
-    deleteMulti(){
-      for(var i in this.selectTable){
-        let index=this.doipTable.indexOf(this.selectTable[i])
-        if(index!==-1){
-          this.deleteService(index)
+    deleteMulti() {
+      for (var i in this.selectTable) {
+        let index = this.doipTable.indexOf(this.selectTable[i]);
+        if (index !== -1) {
+          this.deleteService(index);
         }
       }
     },
@@ -230,20 +258,21 @@ export default {
       }
     },
     editItem(val) {
+      var item=JSON.parse(JSON.stringify(val))
       if (this.mode === "doip") {
         this.$store.commit("doipItemChange", {
           index: this.editIndex,
-          data: JSON.parse(JSON.stringify(val))
+          data: item
         });
       } else if (this.mode === "can") {
         this.$store.commit("canItemChange", {
           index: this.editIndex,
-          data: JSON.parse(JSON.stringify(val))
+          data: item
         });
       } else if (this.mode === "lp") {
         this.$store.commit("lpItemChange", {
           index: this.editIndex,
-          data: JSON.parse(JSON.stringify(val))
+          data: item
         });
       }
       this.cd1 = false;

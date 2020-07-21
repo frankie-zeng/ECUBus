@@ -90,7 +90,6 @@ export default {
            type:'group',
            subtable:this.group
          });
-
       }
      
     },
@@ -129,48 +128,68 @@ export default {
       this.cnt=0;
       
     },
-    addService() {
-      var data = {};
-      this.$refs.groupForm.validate(valid => {
-        if (valid) {
-          data.type = "group";
-
-          data.service = {
-            name: this.config.name
-          };
-          for (var i in this.config.input) {
-            var name = this.config.input[i].name;
-            var key = i + "-" + name;
-            var slot = this.config.changeslot[i].split(",");
-            var tableIndex = slot[0];
-            var payloadIndex = slot[1];
-            if (
-              this.config.input[i].type === "downloadFile" ||
-              this.config.input[i].type === "uploadFile"
-            ) {
-              if (!this.inputData[key]) {
-                this.error = "Please chhose a file";
-                return;
+    generateData(){
+      var group=JSON.parse(JSON.stringify(this.config.table))
+      for(var z in this.$refs.service){
+        let val=this.$refs.service[z].generateData()
+        group[z].func=val.func
+        for(var i in val.payload){
+          for(var j in group[z].payload){
+            let name=group[z].payload[j].name
+            if(val.payload[i].name==name){
+              group[z].payload[j][name]=val.payload[i][name]
+              if(group[z].payload[j].type=='subfunction'){
+                group[z].payload[j].suppress=val.payload[i].suppress
               }
-              this.error = "";
-              this.config.table[tableIndex].payload[payloadIndex][
-                name
-              ] = this.inputData[key];
-            } else if (this.config.input[i].type === "subfunction") {
-              this.config.table[tableIndex].payload[payloadIndex][
-                name
-              ] = parseInt(this.inputData[key]);
-            } else {
-              this.config.table[tableIndex].payload[payloadIndex][
-                name
-              ] = this.inputData[key];
+              break;
             }
           }
-          data.subtable = this.config.table;
-          this.$emit("additem", data);
         }
-      });
+      }
+      return group
     }
+    // addService() {
+    //   var data = {};
+    //   this.$refs.groupForm.validate(valid => {
+    //     if (valid) {
+    //       data.type = "group";
+
+    //       data.service = {
+    //         name: this.config.name
+    //       };
+    //       for (var i in this.config.input) {
+    //         var name = this.config.input[i].name;
+    //         var key = i + "-" + name;
+    //         var slot = this.config.changeslot[i].split(",");
+    //         var tableIndex = slot[0];
+    //         var payloadIndex = slot[1];
+    //         if (
+    //           this.config.input[i].type === "downloadFile" ||
+    //           this.config.input[i].type === "uploadFile"
+    //         ) {
+    //           if (!this.inputData[key]) {
+    //             this.error = "Please chhose a file";
+    //             return;
+    //           }
+    //           this.error = "";
+    //           this.config.table[tableIndex].payload[payloadIndex][
+    //             name
+    //           ] = this.inputData[key];
+    //         } else if (this.config.input[i].type === "subfunction") {
+    //           this.config.table[tableIndex].payload[payloadIndex][
+    //             name
+    //           ] = parseInt(this.inputData[key]);
+    //         } else {
+    //           this.config.table[tableIndex].payload[payloadIndex][
+    //             name
+    //           ] = this.inputData[key];
+    //         }
+    //       }
+    //       data.subtable = this.config.table;
+    //       this.$emit("additem", data);
+    //     }
+    //   });
+    // }
   }
 };
 </script>

@@ -49,10 +49,23 @@
     </div>
     <div v-else>
       <div v-if="service.type=='uds'">
-         <Service :config="service.cfg" :input="service.val" change @edititem="editItem" v-if="refresh"/>
+        <Service
+          :config="service.cfg"
+          :input="service.val"
+          change
+          @edititem="editItem"
+          ref="editService"
+          v-if="refresh"
+        />
       </div>
       <div v-else>
-        <Group :config="service.cfg" :input="service.val" @edititem="editItem" change/>
+        <Group
+          :config="service.cfg"
+          :input="service.val"
+          @edititem="editItem"
+          ref="editGroup"
+          change
+        />
       </div>
     </div>
   </div>
@@ -75,10 +88,10 @@ export default {
       group: {},
       type: "uds",
       itemIndex: 0,
-      refresh: true,
+      refresh: true
     };
   },
-  
+
   props: {
     mode: {
       type: String,
@@ -96,9 +109,9 @@ export default {
       type: Object,
       default: function() {
         return {
-          type:'uds',
-          cfg:'',
-          val:''
+          type: "uds",
+          cfg: "",
+          val: ""
         };
       }
     }
@@ -110,13 +123,50 @@ export default {
         this.$store.commit("doipTableAdd", item);
       } else if (this.mode === "can") {
         this.$store.commit("canTableAdd", item);
-      } else if (this.mode === "lp"){
+      } else if (this.mode === "lp") {
         this.$store.commit("lpTableAdd", item);
       }
       this.$emit("additem");
     },
     editItem(val) {
-       this.$emit("edititem",val);
+      this.$emit("edititem", val);
+    },
+    isDirty() {
+      var dirty = false;
+      if (this.editService) {
+        if (this.service.type == "uds") {
+          let tmp = this.$refs.editService.generateData();
+          if (tmp["func"] != this.service.val["func"]) {
+            dirty = true;
+          } else {
+            if (
+              JSON.stringify(tmp["payload"]) !=
+              JSON.stringify(this.service.val["payload"])
+            ) {
+              dirty = true;
+            }
+          }
+        } else {
+          let tmp = this.$refs.editGroup.generateData();
+          let subtable = this.service.val.subtable;
+          for (var i in subtable) {
+            if (tmp[i].func != subtable[i].func) {
+              dirty = true;
+            } else {
+              if (
+                JSON.stringify(tmp[i].payload) !=
+                JSON.stringify(subtable[i].payload)
+              ) {
+                dirty = true;
+              }
+            }
+            if(dirty){
+              break
+            }
+          }
+        }
+      }
+      return dirty;
     },
     typeChange(val) {
       if (val === "group") {
