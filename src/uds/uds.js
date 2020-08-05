@@ -5,6 +5,7 @@ const { payload2data,decodeTable } = require('./decode.js')
 class UDS {
     constructor(win) {
       this.win = win
+      this.map={}
     }
     emit(channel, msg) {
         this.win.webContents.send(channel, msg)
@@ -14,6 +15,15 @@ class UDS {
             show: show,
             percent: percent
         })
+    }
+    set(key,value){
+        this.map[key]=value
+    }
+    get(key){
+        if(key in this.map)
+            return this.map[key]
+        else
+            return null
     }
     log(msg) {
         this.emit('udsData', JSON.stringify(msg) + '\r\n')

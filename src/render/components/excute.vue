@@ -38,7 +38,7 @@
         <el-button @click="run" size="small" type="success" :disabled="!connected||running">Start</el-button>
       </el-col>
     </el-row>
-    <el-input readonly type="textarea" :rows="5" placeholder="LOG" v-model="logText"></el-input>
+    <el-input readonly type="textarea" :rows="5" placeholder="LOG" v-model="logText" id="log"></el-input>
   </div>
 </template>
 <script>
@@ -50,7 +50,7 @@ export default {
       sDelay: "100",
       logText: "",
       showAddr: false,
-      addrIndex: ""
+      addrIndex: "",
     };
   },
   mounted() {
@@ -59,10 +59,14 @@ export default {
     });
     ipcRenderer.on("udsData", (event, val) => {
       this.logText += val;
+      this.$nextTick(() => {
+        let container =  document.getElementById('log');
+        container.scrollTop = container.scrollHeight;
+      });
     });
     ipcRenderer.on("udsError", (event, val) => {
       this.failed(val.msg);
-      this.$store.commit("setTableError",val.index)
+      this.$store.commit("setTableError", val.index);
     });
   },
   destroyed() {
@@ -73,13 +77,13 @@ export default {
   props: {
     mode: {
       type: String,
-      default: function() {
+      default: function () {
         return "can";
-      }
-    }
+      },
+    },
   },
   computed: {
-    connected: function() {
+    connected: function () {
       if (this.mode === "can") {
         return this.$store.state.canConnect;
       } else if (this.mode === "doip") {
@@ -90,7 +94,7 @@ export default {
         return false;
       }
     },
-    udsTable: function() {
+    udsTable: function () {
       if (this.mode === "can") {
         return this.$store.state.canTable;
       } else if (this.mode === "doip") {
@@ -101,10 +105,10 @@ export default {
         return [];
       }
     },
-    running: function() {
+    running: function () {
       return this.$store.state.running;
     },
-    addrTable: function() {
+    addrTable: function () {
       if (this.mode === "doip") {
         return this.$store.state.doipAddrTable;
       } else if (this.mode === "can") {
@@ -114,7 +118,7 @@ export default {
       } else {
         return [];
       }
-    }
+    },
   },
   methods: {
     failed(msg) {
@@ -122,7 +126,7 @@ export default {
       this.$store.commit("runChange", false);
       this.$notify.error({
         title: "Error",
-        message: msg
+        message: msg,
       });
     },
     success(msg) {
@@ -131,7 +135,7 @@ export default {
       this.$notify({
         title: "Success",
         message: msg,
-        type: "success"
+        type: "success",
       });
     },
     readRun() {
@@ -141,25 +145,25 @@ export default {
       } else {
         this.$notify.error({
           title: "Error",
-          message: "Please choose correct address."
+          message: "Please choose correct address.",
         });
         return;
       }
       this.$store.commit("runChange", true);
-      this.$store.commit("setTableError",-1);
+      this.$store.commit("setTableError", -1);
       this.logText = "";
-      
+
       ipcRenderer.send(this.mode + "udsExcute", {
         addr: this.addrTable[this.addrIndex],
         udsTable: table,
         timeout: parseInt(this.udsTimeout, 10),
-        sDelay: parseInt(this.sDelay, 10)
+        sDelay: parseInt(this.sDelay, 10),
       });
     },
     run() {
       this.showAddr = true;
       // console.log(this.udsTable)
-    }
-  }
+    },
+  },
 };
 </script>

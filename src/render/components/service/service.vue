@@ -248,6 +248,16 @@ export default {
           func: "this.changeNextFrame(name,value)",
           params: "name:should be payload name,value:the change value",
           desc: "Change the next service data in the schedule table"
+        },
+        {
+          func: "this.set(key,value)",
+          params: "key:string,value:any type",
+          desc: "Store value in all life cycle"
+        },
+        {
+          func: "this.get(key)",
+          params: "key:string",
+          desc: "Return last store value in this.set"
         }
       ]
     };
