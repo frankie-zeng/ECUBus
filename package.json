@@ -2,7 +2,7 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "private": false,
   "repository": {
     "type": "git",
@@ -19,6 +19,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "ansi_up": "^4.0.4",
     "bindings": "^1.5.0",
     "clipboard": "^2.0.4",
     "core-js": "^3.6.4",

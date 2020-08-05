@@ -9,7 +9,7 @@ const PORT = 13400
 const VER = 0x02
 const UDS = require('./uds.js')
 const log = require('electron-log')
-class IPUDS extends UDS{
+class IPUDS extends UDS {
     constructor(win) {
         super(win)
         this.header = Buffer.from([VER, VER ^ 0xff, 0, 0, 0, 0, 0, 0])
@@ -43,7 +43,6 @@ class IPUDS extends UDS{
             var target = arg[0]
             var active = arg[1]
             var key = active.sa + target.logicalAddr
-            this.startTime = new Date().getTime()
             if (key in this.cMap) {
                 this.emit('doipTcpStatus', {
                     err: -1,
@@ -79,33 +78,35 @@ class IPUDS extends UDS{
                         msg: 'Connecting Error'
                     }
                     )
-                    if(item.receive){
+                    if (item.receive) {
                         this.emit('udsError', {
-                            msg:sprintf("[error]:this socket error,used time:%d\r\n", new Date().getTime() - this.startTime),
-                            index:this.tableIndex})
+                            msg: "This socket error",
+                            index: this.tableIndex
+                        })
                     }
                     delete this.cMap[key]
                 })
                 item.fd.on('end', (msg) => {
                     clearTimeout(item.timer)
-                    
+
                     this.emit('doipTcpStatus', {
                         key: key,
                         err: -2,
                         msg: 'Server Close'
                     }
                     )
-                    if(item.receive){
+                    if (item.receive) {
                         this.emit('udsError', {
-                            msg:sprintf("[error]:this socket error,used time:%d\r\n", new Date().getTime() - this.startTime),
-                            index:this.tableIndex})
+                            msg: "This socket error",
+                            index: this.tableIndex
+                        })
                     }
                     delete this.cMap[key]
                 })
                 item.fd.on('data', (msg) => {
                     var ret = this.parseData(msg)
                     if (ret.err === 0) {
-                        if((item.receive)||(ret.type===7)){
+                        if ((item.receive) || (ret.type === 7)) {
                             item.receive = false
                             if (ret.type === 6) {
                                 if (item.active === false) {
@@ -119,13 +120,13 @@ class IPUDS extends UDS{
                                     }
                                     )
                                 } else {
-                                    this.emit('udsData', sprintf("[error]:the router has actived,used time:%d\r\n", new Date().getTime() - this.startTime))
+                                    this.info("The router has actived")
                                 }
                             } else if (ret.type === 7) {
                                 item.fd.write(this.writeAliveRes(parseInt(active.sa)))
                             } else if (ret.type === 0x8001) {
                                 clearTimeout(item.timer)
-                                this.emit('udsData', sprintf("[data]:uds response:%s.\r\n", ret.data.payload.join(',')))
+                                this.debug(sprintf("uds response:%s.", ret.data.payload.join(',')))
                                 try {
                                     if ((ret.data.payload[0] == 0x7F) && (ret.data.payload[2] == 0X78)) {
                                         item.receive = true;
@@ -134,25 +135,27 @@ class IPUDS extends UDS{
                                         if (this.checkFunc(this.writeData, ret.data.payload)) {
                                             if (item.timer.hasRef()) {
                                                 item.receive = true;
-                                                this.emit('udsData', sprintf("[data]:User insert a new delay\r\n"))
+                                                this.info(":User insert a new delay")
                                             } else {
                                                 this.step()
                                             }
                                         } else {
                                             this.emit('udsError', {
-                                                msg:sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime),
-                                                index:this.tableIndex})
+                                                msg: "User defined function return false",
+                                                index: this.tableIndex
+                                            })
                                         }
                                     }
                                 } catch (error) {
                                     this.emit('udsError', {
-                                        msg:sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime),
-                                        index:this.tableIndex})
+                                        msg: sprintf("User defined function syntax error,%s", error.message),
+                                        index: this.tableIndex
+                                    })
                                 }
 
                             } else if (ret.type === 0x8002) {
                                 clearTimeout(item.timer)
-                                this.emit('udsData', sprintf("[data]:ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
+                                this.debug(sprintf("ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
                                 if (item.suppress) {
                                     setTimeout(() => {
                                         this.step()
@@ -161,24 +164,27 @@ class IPUDS extends UDS{
                                     item.receive = true
                                     item.timer = setTimeout(() => {
                                         this.emit('udsError', {
-                                            msg:sprintf('[error]:No uds response,used time:%d\r\n', new Date().getTime() - this.startTime),
-                                            index:this.tableIndex})
+                                            msg: 'No uds response',
+                                            index: this.tableIndex
+                                        })
                                     }, this.timeout)
                                 }
                             } else if (ret.type === 0x8003) {
                                 clearTimeout(item.timer)
                                 this.emit('udsError', {
-                                    msg:sprintf("[error]:nack:0x%X,msg:0x%s,used time:%d\r\n", ret.data.code, ret.data.payload, new Date().getTime() - this.startTime),
-                                    index:this.tableIndex})
+                                    msg: sprintf("nack:0x%X,msg:0x%s", ret.data.code, ret.data.payload),
+                                    index: this.tableIndex
+                                })
                             }
                         }
                     } else if (ret.err < 0) {
                         clearTimeout(item.timer)
                         this.emit('udsError', {
-                            msg:sprintf("[error]:%s,used time:%d\r\n", ret.msg, new Date().getTime() - this.startTime),
-                            index:this.tableIndex})
+                            msg: sprintf("%s", ret.msg),
+                            index: this.tableIndex
+                        })
                     }
-                   
+
                 })
             }
         })
@@ -187,7 +193,6 @@ class IPUDS extends UDS{
             this.timeout = arg.timeout
             this.UDSstart(arg.udsTable)
             this.addr = arg.addr
-            this.startTime = new Date().getTime()
             this.step()
         })
         ipcMain.on('doipDeviceFind', (event, arg) => {
@@ -209,14 +214,23 @@ class IPUDS extends UDS{
         var t = typeof timeout !== 'undefined' ? timeout : this.timeout
         this.cMap[this.key].timer = setTimeout(() => {
             this.emit('udsError', {
-                msg:sprintf('[error]:No Response,used time:%dms\r\n', new Date().getTime() - this.startTime),
-                index:this.tableIndex})
+                msg: 'No Response',
+                index: this.tableIndex
+            })
         }, t)
     }
     step() {
-        var item=this.getNextService()
-        if (item===null) {
-            this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
+        try {
+            var item = this.getNextService()
+        } catch (e) {
+            this.emit('udsError', {
+                msg: "User defined function syntax error",
+                index: this.tableIndex
+            })
+            return -1
+        }
+        if (item === null) {
+            this.emit('udsEnd', "Excute successful")
             return 0
         }
         this.checkFunc = item.checkFunc
@@ -233,14 +247,16 @@ class IPUDS extends UDS{
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
                     this.emit('udsError', {
-                        msg:sprintf('[error]:No ack response,used time:%d\r\n', new Date().getTime() - this.startTime),
-                        index:this.tableIndex})
+                        msg: 'No ack response',
+                        index: this.tableIndex
+                    })
                 }, this.timeout);
             })
         } else {
             this.emit('udsError', {
-                msg:sprintf('[error]:this connection lost,used time:%d\r\n', new Date().getTime() - this.startTime),
-                index:this.tableIndex})
+                msg: 'This connection lost',
+                index: this.tableIndex
+            })
         }
 
         return 1

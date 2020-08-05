@@ -4,7 +4,7 @@
 const { ipcMain } = require('electron')
 const sprintf = require('sprintf-js').sprintf
 const UDS = require('./uds.js')
-class LPUDS extends UDS{
+class LPUDS extends UDS {
     constructor(win) {
         super(win)
         this.timeout = 2000
@@ -15,7 +15,6 @@ class LPUDS extends UDS{
             this.timeout = arg.timeout
             this.UDSstart(arg.udsTable)
             this.addr = arg.addr
-            this.startTime = new Date().getTime()
             this.step()
         })
         ipcMain.on('lpReceive', (event, arg) => {
@@ -28,17 +27,17 @@ class LPUDS extends UDS{
                         if (this.checkFunc(this.writeData, arg)) {
                             this.step()
                         } else {
-                            this.emit('udsError',{
-                                msg:sprintf("[error]:User defined function return false,used time:%d\r\n", new Date().getTime() - this.startTime),
-                                index:this.tableIndex
+                            this.emit('udsError', {
+                                msg: "User defined function return false",
+                                index: this.tableIndex
                             })
-                            
+
                         }
                     }
                 } catch (error) {
-                    this.emit('udsError',{
-                        msg:sprintf("[error]:User defined function syntax error,%s,used time:%d\r\n", error.message, new Date().getTime() - this.startTime),
-                        index:this.tableIndex
+                    this.emit('udsError', {
+                        msg:  sprintf("User defined function syntax error,%s", error.message),
+                        index: this.tableIndex
                     })
                 }
             }
@@ -46,15 +45,23 @@ class LPUDS extends UDS{
     }
     /*user call*/
     step() {
-        var item=this.getNextService()
-        if (item===null) {
-            this.emit('udsEnd', sprintf("[done]:Excute successful,used time:%dms\r\n", new Date().getTime() - this.startTime))
+        try {
+            var item = this.getNextService()
+        } catch (e) {
+            this.emit('udsError', {
+                msg: "User defined function syntax error",
+                index: this.tableIndex
+            })
+            return -1
+        }
+        if (item === null) {
+            this.emit('udsEnd', "Excute successful")
             return 0
         }
         this.checkFunc = item.checkFunc
         this.writeData = item.payload
         var data = item.data
-        if(item.suppress){
+        if (item.suppress) {
             setTimeout(() => {
                 this.step()
             }, this.sDelay)

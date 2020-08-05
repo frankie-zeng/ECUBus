@@ -60,11 +60,7 @@
             </el-select>
           </el-col>
           <el-col :span="7" :offset="1" style="text-align:right">
-            <el-checkbox
-              v-model="inputData['suppress']"
-              label="Suppress"
-              border
-            ></el-checkbox>
+            <el-checkbox v-model="inputData['suppress']" label="Suppress" border></el-checkbox>
           </el-col>
         </div>
         <el-input
@@ -134,21 +130,15 @@
         </div>
       </el-collapse-item>
     </el-collapse>
-    
+
     <div style="text-align:right;margin-top:10px" v-if="!group">
-      
       <el-button
         type="primary"
         @click="addService('additem')"
         v-if="!change"
         size="small"
       >Add Service</el-button>
-      <el-button
-        type="warning"
-        @click="addService('edititem')"
-        size="small"
-        v-else
-      >Change Service</el-button>
+      <el-button type="warning" @click="addService('edititem')" size="small" v-else>Change Service</el-button>
     </div>
   </div>
 </template>
@@ -166,13 +156,13 @@ export default {
       activeNames: ["1"],
       cmOptions: {
         extraKeys: {
-          F11: function(cm) {
+          F11: function (cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"));
           },
-          Esc: function(cm) {
+          Esc: function (cm) {
             if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
-          }
-        }
+          },
+        },
       },
       inputData: {
         suppress: false,
@@ -207,59 +197,74 @@ export default {
         filePathAndName: "",
         fileSizeParameterLength: "",
         fileSizeUnCompressed: "",
-        fileSizeCompressed: ""
+        fileSizeCompressed: "",
       },
       error: "",
       jsError: "",
       tipsData: [
         {
-          func: "this.log(msg)",
-          params: "msg can be any type",
-          desc: "Ouput log information"
+          func: "this.log(msg,type='debug')",
+          params: "type:'error, warn, info, verbose, debug, silly'",
+          desc: "Ouput log information",
+        },
+        {
+          func: "this.error(msg)",
+          params: "msg:any type",
+          desc: "Equal this.log(msg,'error')",
+        },
+        {
+          func: "this.debug(msg)",
+          params: "msg:any type",
+          desc: "Equal this.log(msg,'debug')",
+        },
+        {
+          func: "this.info(msg)",
+          params: "msg:any type",
+          desc: "Equal this.log(msg,'info')",
         },
         {
           func: "this.delay(ms)",
           params: "ms,type int",
-          desc: "Insert a new delay and wait another new reponse"
+          desc: "Insert a new delay and wait another new reponse",
         },
         {
           func: "this.openFile(filename,flag)",
           params: "filename is a absolute file name path,flag:default is 'r'",
           desc:
-            "Open a file,this function must be call before using readFile,WriteFile and CloseFile"
+            "Open a file,this function must be call before using readFile,WriteFile and CloseFile",
         },
         {
           func: "this.readFile(size)",
           params: "size,type int",
           desc:
-            "Read data from a file,return type is a array, the length of array maybe less than size"
+            "Read data from a file,return type is a array, the length of array maybe less than size",
         },
         {
           func: "this.writeFile(data)",
           params: "data,type array of buffer",
-          desc: "Write data to a file"
+          desc: "Write data to a file",
         },
         {
           func: "this.closeFile()",
           params: "null",
-          desc: "Close a file"
+          desc: "Close a file",
         },
         {
           func: "this.changeNextFrame(name,value)",
           params: "name:should be payload name,value:the change value",
-          desc: "Change the next service data in the schedule table"
+          desc: "Change the next service data in the schedule table",
         },
         {
           func: "this.set(key,value)",
           params: "key:string,value:any type",
-          desc: "Store value in all life cycle"
+          desc: "Store value in all life cycle",
         },
         {
           func: "this.get(key)",
           params: "key:string",
-          desc: "Return last store value in this.set"
-        }
-      ]
+          desc: "Return last store value in this.set",
+        },
+      ],
     };
   },
   mounted() {
@@ -288,7 +293,7 @@ export default {
     }
   },
   computed: {
-    rules: function() {
+    rules: function () {
       var a = {};
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
@@ -299,39 +304,39 @@ export default {
     },
     codemirror() {
       return this.$refs.cmEditor.codemirror;
-    }
+    },
   },
   props: {
     group: {
       type: Boolean,
-      default: function() {
+      default: function () {
         return false;
-      }
+      },
     },
     config: {
       type: Object,
-      default: function() {
+      default: function () {
         return {};
-      }
+      },
     },
     type: {
       type: String,
-      default: function() {
+      default: function () {
         return "uds";
-      }
+      },
     },
     change: {
       type: Boolean,
-      default: function() {
+      default: function () {
         return false;
-      }
+      },
     },
     input: {
       type: Object,
-      default: function() {
+      default: function () {
         return undefined;
-      }
-    }
+      },
+    },
   },
   methods: {
     fullScreen() {
@@ -357,7 +362,7 @@ export default {
         for: true,
         single: true,
         this: true,
-        node: true
+        node: true,
       };
       /* workaroud unused arg */
       var result = jslint(
@@ -372,7 +377,7 @@ export default {
     uploadFIle(name) {
       var val = {
         name: ipcRenderer.sendSync("saveFilePath"),
-        size: 0
+        size: 0,
       };
       this.inputData[name] = val;
     },
@@ -380,7 +385,7 @@ export default {
       var val = ipcRenderer.sendSync("downloadFilePath");
       this.inputData[name] = {
         name: val.path,
-        size: val.size
+        size: val.size,
       };
     },
     generateData() {
@@ -389,7 +394,7 @@ export default {
       data.func = this.jsFn;
       data.service = {
         name: this.config.name,
-        value: this.config.value
+        value: this.config.value,
       };
       data.payload = [];
       for (var i in this.config.input) {
@@ -443,16 +448,16 @@ export default {
       return data;
     },
     addService(event) {
-      this.$refs.ruleForm.validate(valid => {
+      this.$refs.ruleForm.validate((valid) => {
         if (valid) {
-          var val=this.generateData()
-          if(this.error==''){
+          var val = this.generateData();
+          if (this.error == "") {
             this.$emit(event, val);
           }
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
 

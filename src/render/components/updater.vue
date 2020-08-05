@@ -18,7 +18,7 @@
 <script>
 /* eslint-disable no-unused-vars */
 const { ipcRenderer } = require("electron");
-const { log } = require("electron-log");
+const log  = require("electron-log");
 export default {
     data(){
         return{

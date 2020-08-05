@@ -1,13 +1,19 @@
 /* eslint-disable no-unused-vars */
 'use strict';
 const fs = require('fs')
-const { payload2data,decodeTable } = require('./decode.js')
+const { payload2data, decodeTable } = require('./decode.js')
+const elelog = require('electron-log');
 class UDS {
     constructor(win) {
-      this.win = win
-      this.map={}
+        this.win = win
+        this.map = {}
     }
     emit(channel, msg) {
+        if(channel=='udsError'){
+            this.error(msg)
+        }else if(channel=='udsEnd'){
+            this.info(msg)
+        }
         this.win.webContents.send(channel, msg)
     }
     progress(show, percent) {
@@ -16,17 +22,27 @@ class UDS {
             percent: percent
         })
     }
-    set(key,value){
-        this.map[key]=value
+    set(key, value) {
+        this.map[key] = value
     }
-    get(key){
-        if(key in this.map)
+    get(key) {
+        if (key in this.map)
             return this.map[key]
         else
             return null
     }
-    log(msg) {
-        this.emit('udsData', JSON.stringify(msg) + '\r\n')
+    error(msg){
+        elelog.error(msg)
+    }
+    info(msg){
+        elelog.info(msg)
+    }
+    debug(msg) {
+        elelog.debug(msg)
+    }
+    log(msg, type = 'debug') {
+        elelog[type](msg)
+        //this.emit('udsData', JSON.stringify(msg) + '\r\n')
     }
     openFile(filename, flag = 'r') {
         this.fd = fs.openSync(filename, flag)
@@ -62,34 +78,34 @@ class UDS {
             service: service
         })
     }
-    UDSstart(udsTable){
-        this.udsTable=udsTable
-        this.allLen=udsTable.length
-        this.subTable=[]
+    UDSstart(udsTable) {
+        this.udsTable = udsTable
+        this.allLen = udsTable.length
+        this.subTable = []
     }
-    getNextService(){
+    getNextService() {
         if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
             return null
         }
         if (this.subTable.length == 0) {
             this.subTable = decodeTable(this.udsTable.shift())
         }
-        this.tableIndex=this.allLen-this.udsTable.length
-        var item=this.subTable.shift()
-        var obj={}
+        this.tableIndex = this.allLen - this.udsTable.length
+        var item = this.subTable.shift()
+        var obj = {}
         if (typeof item.func === 'string') {
             try {
-              // eslint-disable-next-line no-eval
-              obj.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
+                // eslint-disable-next-line no-eval
+                obj.checkFunc = eval('(writeData,readData)=>{' + item.func + '}')
             } catch (error) {
-              // eslint-disable-next-line no-eval
-              obj.checkFunc = eval('(writeData,readData)=>{return true}')
+                // eslint-disable-next-line no-eval
+                throw 'User function syntax error'
             }
         } else {
             obj.checkFunc = item.func
         }
-        obj.payload=item.payload
-        obj.suppress=false
+        obj.payload = item.payload
+        obj.suppress = false
         for (var i in obj.payload) {
             if (obj.payload[i].type == 'subfunction') {
                 if (obj.payload[i].suppress) {
@@ -98,7 +114,7 @@ class UDS {
                 break
             }
         }
-        var data=[item.service]
+        var data = [item.service]
         obj.data = data.concat(payload2data(obj.payload))
         return obj
     }

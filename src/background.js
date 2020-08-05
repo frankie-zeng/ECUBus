@@ -14,6 +14,9 @@ import { CancellationToken } from "electron-updater"
 
 
 const log = require('electron-log');
+// enable ipc 
+log.transports.ipc.level='info'
+
 const { autoUpdater } = require("electron-updater")
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
@@ -21,8 +24,8 @@ const LPUDS = require('./uds/lpuds.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
-autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
+// autoUpdater.logger = log;
+// autoUpdater.logger.transports.file.level = 'info';
 autoUpdater.autoDownload = false;
 
 // Keep a global reference of the window object, if you don't, the window will

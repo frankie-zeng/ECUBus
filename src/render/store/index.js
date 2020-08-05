@@ -7,6 +7,7 @@ export default new Vuex.Store({
   state: {
     canConnect: false,
     doipConnect: false,
+    logLevel:'info',
     /*addr*/
     canAddrTable: [],
     doipAddrTable: [],
@@ -24,6 +25,9 @@ export default new Vuex.Store({
 
   },
   mutations: {
+    logLevel(state,level){
+      state.logLevel=level
+    },
     setTableError(state,index){
       state.tableErrorIndex=index
     },
