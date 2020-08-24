@@ -152,8 +152,7 @@ module.exports={
           name: 'communicationType',
           type: 'input',
           rule: [
-            { pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         }
       ]
@@ -337,8 +336,7 @@ module.exports={
           name: 'eventWindowTime',
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -408,8 +406,7 @@ module.exports={
           name: 'addressAndLengthFormatIdentifier',
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -438,8 +435,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         }
       ]
@@ -454,8 +450,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -500,8 +495,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         }
       ]
@@ -516,8 +510,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 4, max: 4, message: 'Length Need 2 Bytes', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -540,8 +533,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -580,8 +572,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 6, max: 6, message: 'Length Need 3 Bytes', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2}){3}$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         }
       ]
@@ -697,8 +688,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 4, max: 4, message: 'Length Need 2 Bytes', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -751,8 +741,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 4, max: 4, message: 'Length Need 2 Bytes', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2}){2}$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -783,8 +772,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -792,8 +780,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -828,8 +815,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -837,8 +823,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min: 2, max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -920,7 +905,7 @@ module.exports={
           type: 'input',
           rule: [
             // eslint-disable-next-line no-useless-escape
-            { required: true, pattern: "^(([0-9a-fA-F]{2}){2}|len\\(filePathAndName\\))$", message: 'Please Input HEX Format,or len(filePathAndName)', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2}){2}$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -935,16 +920,14 @@ module.exports={
           name: 'dataFormatIdentifier',
           type: 'input',
           rule:[
-            { pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
           name: 'fileSizeParameterLength',
           type: 'input',
           rule:[
-            { pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
-            { min:2,max: 2, message: 'Length Need 1 Byte', trigger: 'change' }
+            { pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {
@@ -958,7 +941,7 @@ module.exports={
           name: 'fileSizeCompressed',
           type: 'input',
           rule:[
-            { pattern: "^(([0-9a-fA-F]{2})+|equal\\(fileSizeUnCompressed\\))$", message: 'Please Input HEX Format,or equal(fileSizeUnCompressed)', trigger: 'change' },
+            { pattern: "^([0-9a-fA-F]{2})+$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         }
       ]

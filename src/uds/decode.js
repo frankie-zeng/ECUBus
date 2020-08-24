@@ -28,10 +28,33 @@ function decodeTable(item) {
     return data
 }
 
+// eslint-disable-next-line no-unused-vars
+function len(val,size){
+    size=parseInt(size)
+    var buf=Buffer.alloc(size)
+    var length=parseInt(val)
+    for(var i =0;i<size;i++){
+        buf.writeUInt8(length&0xff,size-i-1)
+        length=length>>8
+    }
+    return buf
+}
+// eslint-disable-next-line no-unused-vars
+function equal(val) {
+    return Buffer.from(val,'hex')
+}
+
+
 function payload2data(payload) {
     var rawdata = []
+    var $ = {}
+    var i
+    for(i in payload){
+        $[payload[i].name]=payload[i][payload[i].name]
+    }
+    console.log($)
     var buf
-    for (var i in payload) {
+    for (i in payload) {
         if (payload[i].type === 'subfunction') {
             rawdata.push((parseInt(payload[i].subFunction) | (payload[i].suppress ? 0x80 : 0)))
         } else if (payload[i].type === "downloadFile" || payload[i].type === "uploadFile") {
@@ -41,35 +64,16 @@ function payload2data(payload) {
                 payload[i][payload[i].name] &&
                 payload[i][payload[i].name] != ""
             ) {
-                let reg = /^([0-9a-fA-F]{2})+$/
-                if ((reg.test(payload[i][payload[i].name]) == false) && (Array.isArray(payload[i][payload[i].name]) == false)) {
-                    let reg = /(\w+)\((\w+)\)/
-                    let res = payload[i][payload[i].name].match(reg)
-                    let way = res[1]
-                    let param = res[2]
-                    let value
-                    for (var j in payload) {
-                        if (payload[j].name == param) {
-                            value = payload[j][payload[j].name]
-                        }
+                let reg = /^(.*?)\((.*?)\)$/
+                if ((reg.test(payload[i][payload[i].name]) == true) && (Array.isArray(payload[i][payload[i].name]) == false)) {
+                    let final=payload[i][payload[i].name]
+                    try{
+                        buf=eval(final)
+                        payload[i][payload[i].name] = buf.toString('hex')
+                        $[payload[i].name]= buf.toString('hex')
+                    }catch(error){
+                        buf=Buffer.alloc(0)
                     }
-                    if (way == 'len') {
-                        if (param == 'filePathAndName') {
-                            let strLen = value.length
-                            buf = Buffer.alloc(2)
-                            buf.writeUInt16BE(strLen)
-                            payload[i][payload[i].name] = buf.toString('hex')
-                        }
-                    } else if (way == 'equal') {
-                        if (param == 'fileSizeUnCompressed') {
-                            buf = Buffer.from(
-                                value,
-                                "hex"
-                            );
-                            payload[i][payload[i].name] = value
-                        }
-                    }
-
                 } else {
                     buf = Buffer.from(
                         payload[i][payload[i].name],

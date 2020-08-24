@@ -298,6 +298,15 @@ export default {
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
           a[this.config.input[i].name] = this.config.input[i].rule;
+          for(let j in a[this.config.input[i].name]){
+            if(a[this.config.input[i].name][j].pattern){
+              let raw=new RegExp(a[this.config.input[i].name][j].pattern)
+              let other=/^(.*?)\((.*?)\)$/
+              //a[this.config.input[i].name][j].pattern='('+rule+')|(^\\${.*?}$)|(^.*?\\(\\${.*?}\\)$)'
+              a[this.config.input[i].name][j].pattern=new RegExp(raw.source+"|"+other.source)
+              break
+            }
+          }
         }
       }
       return a;
