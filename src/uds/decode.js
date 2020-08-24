@@ -29,19 +29,19 @@ function decodeTable(item) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function len(val,size){
-    size=parseInt(size)
-    var buf=Buffer.alloc(size)
-    var length=parseInt(val)
-    for(var i =0;i<size;i++){
-        buf.writeUInt8(length&0xff,size-i-1)
-        length=length>>8
+function len(val, size) {
+    size = parseInt(size)
+    var buf = Buffer.alloc(size)
+    var length = parseInt(val)
+    for (var i = 0; i < size; i++) {
+        buf.writeUInt8(length & 0xff, size - i - 1)
+        length = length >> 8
     }
     return buf
 }
 // eslint-disable-next-line no-unused-vars
 function equal(val) {
-    return Buffer.from(val,'hex')
+    return Buffer.from(val, 'hex')
 }
 
 
@@ -49,8 +49,8 @@ function payload2data(payload) {
     var rawdata = []
     var $ = {}
     var i
-    for(i in payload){
-        $[payload[i].name]=payload[i][payload[i].name]
+    for (i in payload) {
+        $[payload[i].name] = payload[i][payload[i].name]
     }
     console.log($)
     var buf
@@ -66,13 +66,13 @@ function payload2data(payload) {
             ) {
                 let reg = /^(.*?)\((.*?)\)$/
                 if ((reg.test(payload[i][payload[i].name]) == true) && (Array.isArray(payload[i][payload[i].name]) == false)) {
-                    let final=payload[i][payload[i].name]
-                    try{
-                        buf=eval(final)
+                    let final = payload[i][payload[i].name]
+                    try {
+                        buf = eval(final)
                         payload[i][payload[i].name] = buf.toString('hex')
-                        $[payload[i].name]= buf.toString('hex')
-                    }catch(error){
-                        buf=Buffer.alloc(0)
+                        $[payload[i].name] = buf.toString('hex')
+                    } catch (error) {
+                        buf = Buffer.alloc(0)
                     }
                 } else {
                     buf = Buffer.from(
@@ -95,7 +95,7 @@ function payload2data(payload) {
             }
         } else if ((payload[i].type === 'number') || (payload[i].type === 'select')) {
             if (
-                typeof(payload[i][payload[i].name]) != 'undefined'
+                typeof (payload[i][payload[i].name]) != 'undefined'
             ) {
 
                 rawdata.push(payload[i][payload[i].name]);
