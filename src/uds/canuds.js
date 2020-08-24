@@ -40,7 +40,7 @@ class CANUDS extends UDS {
       else
         buf[0] = PCANTP.PCANTP_CAN_DATA_PADDING_NONE
       if (err == 0) {
-        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAM_CAN_DATA_PADDING, buf.buffer)
+        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAMETER_CAN_DATA_PADDING, buf.buffer)
       }
       event.returnValue = {
         err: err,
@@ -60,12 +60,12 @@ class CANUDS extends UDS {
       else
         buf[0] = PCANTP.PCANTP_CAN_DATA_PADDING_NONE
       if (err == 0) {
-        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAM_CAN_DATA_PADDING, buf.buffer)
+        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAMETER_CAN_DATA_PADDING, buf.buffer)
       }
       /* set tlc*/
       buf[0] = tlc
       if (err == 0) {
-        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAM_CAN_TX_DL, buf.buffer)
+        err = this.cantp.SetValue(arg[0], PCANTP.PCANTP_PARAMETER_CAN_TX_DL, buf.buffer)
       }
       event.returnValue = {
         err: err,
@@ -128,6 +128,7 @@ class CANUDS extends UDS {
     var msg = {}
     err = this.cantp.TpRead(this.channel, msg)
     if (err === 0) {
+      console.log(msg)
       switch (msg.MSGTYPE) {
         case PCANTP.PCANTP_MESSAGE_REQUEST_CONFIRMATION:
           if (msg.RESULT === 0) {
