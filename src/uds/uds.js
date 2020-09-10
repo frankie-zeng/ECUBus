@@ -32,16 +32,16 @@ class UDS {
             return null
     }
     error(msg){
-        elelog.error(msg)
+        elelog.error(JSON.stringify(msg))
     }
     info(msg){
-        elelog.info(msg)
+        elelog.info(JSON.stringify(msg))
     }
     debug(msg) {
-        elelog.debug(msg)
+        elelog.debug(JSON.stringify(msg))
     }
     log(msg, type = 'debug') {
-        elelog[type](msg)
+        elelog[type](JSON.stringify(msg))
         //this.emit('udsData', JSON.stringify(msg) + '\r\n')
     }
     openFile(filename, flag = 'r') {

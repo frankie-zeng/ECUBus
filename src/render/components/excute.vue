@@ -66,17 +66,23 @@
         <el-button @click="run" size="small" type="success" :disabled="!connected||running">Start</el-button>
       </el-col>
     </el-row>
-    <div id="terminal">
+    <div id="terminal" class="logWindow">
     </div>
   </div>
 </template>
 <script>
 /* eslint-disable no-unused-vars */
 const { Terminal } = require('xterm');
+const { FitAddon } = require('xterm-addon-fit');
 const { ipcRenderer } = require("electron");
 const log = require("electron-log");
 const util = require("util");
-
+const fitAddon = new FitAddon();
+function resizeTerminal(){
+ if((window.innerWidth%1===0)&&(window.innerHeight%1===0)){
+    fitAddon.fit();
+  }
+}
 export default {
   data() {
     return {
@@ -92,9 +98,16 @@ export default {
     };
   },
   mounted() {
-    this.terminal=new Terminal();
+    this.terminal=new Terminal({
+      theme: {
+        background: '#ffffff'
+      }
+    });
+    this.terminal.loadAddon(fitAddon);
     this.terminal.setOption('disableStdin', true)
     this.terminal.open(document.getElementById('terminal'));
+    fitAddon.fit();
+    window.addEventListener("resize", resizeTerminal);
     this.logLevel = this.$store.state.logLevel;
     ipcRenderer.on("udsEnd", (event, val) => {
       this.success(val);
@@ -105,7 +118,7 @@ export default {
       }
     });
     ipcRenderer.on(log.transports.ipc.eventId, (event, message) => {
-      const text = util.format.apply(util, message.data);
+      const text = util.format.apply(util, message.data)
       let msg;
       let usedTime = Date.parse(message.date) - this.startTime;
       if (usedTime < 0) {
@@ -128,6 +141,7 @@ export default {
     });
   },
   destroyed() {
+    window.removeEventListener("resize",resizeTerminal);
     ipcRenderer.removeAllListeners("udsEnd");
     ipcRenderer.removeAllListeners(log.transports.ipc.eventId);
     ipcRenderer.removeAllListeners("udsError");
@@ -233,6 +247,13 @@ export default {
 </script>
 <style>
 @import '../../../node_modules/xterm/css/xterm.css';
+.logWindow{
+  height: 300px;
+  border-radius: 5px;
+  border-style: solid;
+  border-width: 2px;
+  border-color: gray;
+}
 /* .terminal {
   height: 150px;
   padding: 10px;
