@@ -100,12 +100,17 @@ export default {
   mounted() {
     this.terminal=new Terminal({
       theme: {
-        background: '#ffffff'
-      }
+        background: '#ffffff',
+        selection: 'gray'
+      },
+      fontWeight : "bold"
     });
     this.terminal.loadAddon(fitAddon);
     this.terminal.setOption('disableStdin', true)
     this.terminal.open(document.getElementById('terminal'));
+    this.terminal.attachCustomKeyEventHandler((e)=>{
+      return false;
+    })
     fitAddon.fit();
     window.addEventListener("resize", resizeTerminal);
     this.logLevel = this.$store.state.logLevel;
@@ -131,7 +136,7 @@ export default {
       } else if (message.level == "warn") {
         msg = `\x1B[1;;33m[${usedTime}ms] ${text}\x1B[0m\r\n`;
       } else {
-        msg = `[${usedTime}ms] ${text}\r\n`;
+        msg = `\x1B[1;;30m[${usedTime}ms] ${text}\x1B[0m\r\n`;
       }
        this.terminal.write(msg)
     });
