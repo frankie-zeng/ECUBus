@@ -19,6 +19,7 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@lapo/asn1js": "^1.2.1",
     "bindings": "^1.5.0",
     "clipboard": "^2.0.4",
     "core-js": "^3.6.4",
@@ -28,6 +29,7 @@
     "node-addon-api": "^2.0.0",
     "node-addon-loader": "0.0.6",
     "node-aes-cmac": "^0.1.1",
+    "node-forge": "^0.10.0",
     "patch-package": "^6.2.0",
     "sortablejs": "^1.10.2",
     "sprintf-js": "^1.1.2",

@@ -62,6 +62,13 @@
             <el-button @click="goSECURITY" type="text">GO</el-button>
           </el-card>
         </el-col>
+        <el-col :span="6" :offset="1">
+          <el-card shadow="always">
+            <div class="name">Certificate Tool</div>
+            <div class="tip">S32K3-HSE</div>
+            <el-button @click="goPage('/certificate')" type="text">GO</el-button>
+          </el-card>
+        </el-col>
       </el-row>
     </div>
   </div>
@@ -88,6 +95,9 @@ export default {
     },
     goSECURITY() {
       this.$router.push("/security");
+    },
+    goPage(url) {
+      this.$router.push(url);
     },
     goDOIP() {
       this.$router.push("/doip");
