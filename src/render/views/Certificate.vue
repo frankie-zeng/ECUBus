@@ -2,35 +2,30 @@
   <div>
     <el-page-header @back="goBack" content="Certificate Tool" class="header" title></el-page-header>
     <el-row>
-         <el-col :span="8">
+      
+      <el-col :span="10" >
+        <div class="certTree" :style="{height:winHeight}">
           <el-tree
-            :data="keyImport"
+            :data="data"
             :props="defaultProps"
-            @node-click="keyImportClick"
+            @node-click="handleNodeClick"
             default-expand-all
             :expand-on-click-node="false"
-          ></el-tree>
-      </el-col>
-      <el-col :span="10">
-        <el-tree
-          :data="data"
-          :props="defaultProps"
-          @node-click="handleNodeClick"
-          default-expand-all
-          :expand-on-click-node="false"
-        >
-          <span class="custom-tree-node" slot-scope="{ node,data}">
-            <span>
-              <el-tag size="mini">{{ node.label }}</el-tag>
-              <span class="node-content">{{data.content}}</span>
-              <strong>{{data.info}}</strong>
+
+          >
+            <span class="custom-tree-node" slot-scope="{ node,data}">
+              <span>
+                <el-tag size="mini">{{ node.label }}</el-tag>
+                <span class="node-content">{{data.content}}</span>
+                <strong>{{data.info}}</strong>
+              </span>
             </span>
-          </span>
-        </el-tree>
+          </el-tree>
+        </div>
       </el-col>
       <el-col :span="6">
-          <div style="width:100%;height:10px"/>
-        <div class="cert">
+        <div style="width:100%;height:10px" />
+        <div>
           <div class="upload">
             <el-upload
               drag
@@ -51,24 +46,41 @@
               <el-tag effect="dark">Offset:</el-tag>
               <span style="margin-left:10px">{{offset}}</span>
             </div>
-            <div  style="margin:10px">
+            <div style="margin:10px">
               <el-tag effect="dark" type="success">Length:</el-tag>
               <span style="margin-left:10px">{{header}}+{{length}}</span>
             </div>
-            
+
             <el-input
-                type="textarea"
-                placeholder="DER"
-                :autosize="{ minRows: 2, maxRows: 20}"
-                v-model="der"
-                readonly>
-            </el-input>
-            
+              type="textarea"
+              placeholder="DER"
+              :autosize="{ minRows: 2, maxRows: 20}"
+              v-model="der"
+              readonly
+            ></el-input>
           </div>
-          
         </div>
       </el-col>
-     
+      <el-col :span="8">
+        <div >
+          <el-tree
+            :data="keyImport"
+            :props="defaultProps"
+            @node-click="keyImportClick"
+            default-expand-all
+            :expand-on-click-node="false"
+          >
+            <span class="custom-tree-node" slot-scope="{ node,data}">
+              <span>
+              {{ node.label }}
+              </span>
+              <span v-if="data.type=='input'">
+                <el-input v-model="data.value" placeholder size="mini" class="keyinput"></el-input>
+              </span>
+            </span>
+          </el-tree>
+        </div>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -92,85 +104,115 @@ export default {
       header: 0,
       length: 0,
       fileList: [],
+      winHeight:'',
       keyImport: [
         {
           label: "targetKeyHandle",
+          value: "",
         },
         {
           label: "pKeyInfo",
+          value: "",
         },
         {
           label: "pKey",
           children: [
             {
+              type:'input',
+              value: "",
               label: "pKey[0]",
             },
             {
+              type:'input',
+              value: "",
               label: "pKey[1]",
             },
             {
+              type:'input',
+              value: "",
               label: "pKey[2]",
             },
           ],
         },
         {
           label: "keyLen",
+          value: "",
           children: [
             {
+              value: "",
               label: "keyLen[0]",
+              type:'input',
             },
             {
+              value: "",
               label: "keyLen[1]",
+              type:'input',
             },
             {
+              value: "",
               label: "keyLen[2]",
+              type:'input',
             },
           ],
         },
         {
           label: "cipher",
+          value: "",
           children: [
             {
+              value: "",
               label: "cipherKeyHandle",
             },
             {
+              value: "",
               label: "cipherScheme",
             },
           ],
         },
         {
           label: "keyContainer",
+          value: "",
           children: [
             {
+              value: "",
               label: "keyContainerLen",
             },
             {
+              value: "",
               label: "pKeyContainer",
             },
             {
+              value: "",
               label: "authKeyHandle",
             },
             {
+              value: "",
               label: "authScheme",
             },
             {
+              value: "",
               label: "authLen",
               children: [
                 {
+                  value: "",
                   label: "authLen[0]",
                 },
                 {
+                  value: "",
                   label: "authLen[1]",
                 },
               ],
             },
             {
               label: "pAuth",
+              value: "",
               children: [
                 {
+                  value: "",
                   label: "pAuth[0]",
                 },
                 {
+                  value: "",
                   label: "pAuth[1]",
                 },
               ],
@@ -180,8 +222,17 @@ export default {
       ],
     };
   },
-  mounted() {},
+  mounted() {
+    window.addEventListener("resize", this.resizeTerminal);
+    this.winHeight=window.innerHeight-200+'px'
+  },
+  destroyed() {
+    window.removeEventListener("resize",this.resizeTerminal);
+  },
   methods: {
+    resizeTerminal(){
+      this.winHeight=window.innerHeight-200+'px'
+    },
     goBack() {
       this.$router.push("/");
     },
@@ -204,12 +255,12 @@ export default {
       var der = ipcRenderer.sendSync("readCertDer", file.raw.path);
       var asn1 = ASN1.decode(Hex.decode(der));
       this.data = this.toTree(asn1);
-      var bytes=[]
-        for (var c = 0; c < der.length; c += 2){
-            bytes.push(parseInt(der.substr(c, 2), 16));
-        }
-        
-      this.der = `uint8_t derKey[${bytes.length}]=\r{${bytes.toString()}};`
+      var bytes = [];
+      for (var c = 0; c < der.length; c += 2) {
+        bytes.push(parseInt(der.substr(c, 2), 16));
+      }
+
+      this.der = `uint8_t derKey[${bytes.length}]=\r{${bytes.toString()}};`;
     },
     toTree(obj) {
       var isOID =
@@ -263,12 +314,16 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 14px;
   padding-right: 8px;
 }
 .node-content {
   margin-left: 1em;
   color: #909399;
+}
+.certTree{
+  overflow: auto;
+  margin-right: 20px;
 }
 .upload {
   text-align: center;
@@ -276,6 +331,17 @@ export default {
 .cert {
   position: fixed;
   z-index: 20;
-  top:10px
+  top: 10px;
+}
+.keyPos{
+  position: fixed;
+  z-index: 20;
+  top: 30px
+}
+.el-tree-node__content{
+  height: 28px!important;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }
 </style>
