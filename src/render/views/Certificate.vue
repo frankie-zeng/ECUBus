@@ -2,8 +2,7 @@
   <div>
     <el-page-header @back="goBack" content="Certificate Tool" class="header" title></el-page-header>
     <el-row>
-      
-      <el-col :span="10" >
+      <el-col :span="14">
         <div class="certTree" :style="{height:winHeight}">
           <el-tree
             :data="data"
@@ -11,7 +10,6 @@
             @node-click="handleNodeClick"
             default-expand-all
             :expand-on-click-node="false"
-
           >
             <span class="custom-tree-node" slot-scope="{ node,data}">
               <span>
@@ -23,9 +21,17 @@
           </el-tree>
         </div>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="10">
         <div style="width:100%;height:10px" />
         <div>
+          <div style="margin:10px">
+            <el-tag effect="dark">Offset:</el-tag>
+            <span style="margin-left:10px">{{offset}}</span>
+          </div>
+          <div style="margin:10px">
+            <el-tag effect="dark" type="success">Length:</el-tag>
+            <span style="margin-left:10px">{{header}}+{{length}}</span>
+          </div>
           <div class="upload">
             <el-upload
               drag
@@ -41,44 +47,57 @@
               <div class="el-upload__text">Upload Certificate</div>
             </el-upload>
           </div>
+          <!-- <codemirror
+            v-model="code"
+            ref="cmEditor"
+            :options="cmOptions"
+          /> -->
           <div v-if="fileList.length>0">
             <div style="margin:10px">
-              <el-tag effect="dark">Offset:</el-tag>
-              <span style="margin-left:10px">{{offset}}</span>
+              <el-tag effect="dark" type="info">KeyAlgorithm:</el-tag>
+              <span style="margin-left:10px">{{keyType}}</span>
             </div>
             <div style="margin:10px">
-              <el-tag effect="dark" type="success">Length:</el-tag>
-              <span style="margin-left:10px">{{header}}+{{length}}</span>
+              <el-tag effect="dark" type="info">signAlgorithm:</el-tag>
+              <span style="margin-left:10px">{{signWay}}</span>
+            </div>
+            <div style="margin:10px">
+              <el-tag effect="dark" type="info">keyContainerLen:</el-tag>
+              <span style="margin-left:10px">{{keyContainerLen}}</span>
+            </div>
+            <div style="margin:10px">
+              <el-tag effect="dark" type="info">pKeyContainer:</el-tag>
+              <span style="margin-left:10px">{{pKeyContainer}}</span>
+            </div>
+            <div style="margin:10px" v-for="(key,index) in signOffset" :key="key.offset">
+              <el-tag effect="dark" type="info">signatureValue[{{index}}]:</el-tag>
+              <span
+                style="margin-left:10px"
+              >pAuth[{{index}}]:{{key.offset}},authLen[{{index}}]:{{key.len}}</span>
             </div>
 
-            <el-input
-              type="textarea"
-              placeholder="DER"
-              :autosize="{ minRows: 2, maxRows: 20}"
-              v-model="der"
-              readonly
-            ></el-input>
+            <div style="margin:10px" v-for="(key,index) in keyoffset" :key="index">
+              <el-tag effect="dark" type="info">keyValue[{{index}}]:</el-tag>
+              <span
+                style="margin-left:10px"
+              >pKey[{{index}}]:{{key.offset}},keyLen[{{index}}]:{{key.len}}</span>
+            </div>
+            <div>
+              <el-button
+                type="text"
+                icon="el-icon-document-copy"
+                class="copy-btn1"
+                :data-clipboard-text="der"
+              ></el-button>
+              <el-input
+                type="textarea"
+                placeholder="DER"
+                :autosize="{ minRows: 2, maxRows: 15}"
+                v-model="der"
+                readonly
+              ></el-input>
+            </div>
           </div>
-        </div>
-      </el-col>
-      <el-col :span="8">
-        <div >
-          <el-tree
-            :data="keyImport"
-            :props="defaultProps"
-            @node-click="keyImportClick"
-            default-expand-all
-            :expand-on-click-node="false"
-          >
-            <span class="custom-tree-node" slot-scope="{ node,data}">
-              <span>
-              {{ node.label }}
-              </span>
-              <span v-if="data.type=='input'">
-                <el-input v-model="data.value" placeholder size="mini" class="keyinput"></el-input>
-              </span>
-            </span>
-          </el-tree>
         </div>
       </el-col>
     </el-row>
@@ -86,8 +105,11 @@
 </template>
 <script>
 import ASN1 from "@lapo/asn1js";
-import Hex from "@lapo/asn1js/hex";
+// import Hex from "@lapo/asn1js/hex";
 import oids from "@lapo/asn1js/oids";
+import Base64 from "./../components/base64.js";
+const ClipboardJS = require("clipboard/dist/clipboard.js");
+// const { pki } = require('node-forge')
 const { ipcRenderer } = require("electron");
 var lineLength = 50;
 
@@ -104,134 +126,35 @@ export default {
       header: 0,
       length: 0,
       fileList: [],
-      winHeight:'',
-      keyImport: [
-        {
-          label: "targetKeyHandle",
-          value: "",
-        },
-        {
-          label: "pKeyInfo",
-          value: "",
-        },
-        {
-          label: "pKey",
-          children: [
-            {
-              type:'input',
-              value: "",
-              label: "pKey[0]",
-            },
-            {
-              type:'input',
-              value: "",
-              label: "pKey[1]",
-            },
-            {
-              type:'input',
-              value: "",
-              label: "pKey[2]",
-            },
-          ],
-        },
-        {
-          label: "keyLen",
-          value: "",
-          children: [
-            {
-              value: "",
-              label: "keyLen[0]",
-              type:'input',
-            },
-            {
-              value: "",
-              label: "keyLen[1]",
-              type:'input',
-            },
-            {
-              value: "",
-              label: "keyLen[2]",
-              type:'input',
-            },
-          ],
-        },
-        {
-          label: "cipher",
-          value: "",
-          children: [
-            {
-              value: "",
-              label: "cipherKeyHandle",
-            },
-            {
-              value: "",
-              label: "cipherScheme",
-            },
-          ],
-        },
-        {
-          label: "keyContainer",
-          value: "",
-          children: [
-            {
-              value: "",
-              label: "keyContainerLen",
-            },
-            {
-              value: "",
-              label: "pKeyContainer",
-            },
-            {
-              value: "",
-              label: "authKeyHandle",
-            },
-            {
-              value: "",
-              label: "authScheme",
-            },
-            {
-              value: "",
-              label: "authLen",
-              children: [
-                {
-                  value: "",
-                  label: "authLen[0]",
-                },
-                {
-                  value: "",
-                  label: "authLen[1]",
-                },
-              ],
-            },
-            {
-              label: "pAuth",
-              value: "",
-              children: [
-                {
-                  value: "",
-                  label: "pAuth[0]",
-                },
-                {
-                  value: "",
-                  label: "pAuth[1]",
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      winHeight: "",
+      keyType: "",
+      signWay: "",
+      signOffset: [],
+      keyoffset: [],
+      clipboard: {},
+      keyContainerLen: 0,
+      pKeyContainer: "",
     };
   },
   mounted() {
+    this.clipboard = new ClipboardJS(".copy-btn1");
+    this.clipboard.on("success", () => {
+      this.$notify({
+        title: "成功",
+        message: "复制成功",
+        type: "success",
+      });
+    });
     window.addEventListener("resize", this.resizeTerminal);
-    this.winHeight=window.innerHeight-200+'px'
+    this.winHeight = window.innerHeight - 200 + "px";
   },
   destroyed() {
-    window.removeEventListener("resize",this.resizeTerminal);
+    this.clipboard.destroy();
+    window.removeEventListener("resize", this.resizeTerminal);
   },
   methods: {
-    resizeTerminal(){
-      this.winHeight=window.innerHeight-200+'px'
+    resizeTerminal() {
+      this.winHeight = window.innerHeight - 200 + "px";
     },
     goBack() {
       this.$router.push("/");
@@ -241,26 +164,134 @@ export default {
       this.length = e.length;
       this.offset = e.offset;
     },
-    keyImportClick(e) {
-      console.log(e);
-    },
     fileRemove(file, fileList) {
       if (fileList.length == 0) {
         this.data = [];
       }
     },
     fileUpload(file, fileList) {
-      console.log(file);
+      var name=file.name.replace('.','_')
+      console.log(file)
+      this.keyoffset = [];
+      this.signOffset = [];
       this.fileList = fileList.slice(-1);
       var der = ipcRenderer.sendSync("readCertDer", file.raw.path);
-      var asn1 = ASN1.decode(Hex.decode(der));
-      this.data = this.toTree(asn1);
-      var bytes = [];
-      for (var c = 0; c < der.length; c += 2) {
-        bytes.push(parseInt(der.substr(c, 2), 16));
-      }
+      if (Base64.re.test(der)) {
+        var hexArray = Base64.unarmor(der);
+        var asn1 = ASN1.decode(hexArray);
+        this.data = this.toTree(asn1);
+        var bytes = [];
+        for (var c = 0; c < hexArray.length; c++) {
+          bytes.push("0x" + hexArray[c].toString(16));
+        }
+        this.der = `static const uint8_t ${name}_key[${
+          bytes.length
+        }]=\r{`;
+        for(let i=0;i<bytes.length/16;i++){
+          this.der+=`${bytes.slice(i*16,(i+1)*16).toString()},\r` 
+        }
+        this.der+='};\r'
 
-      this.der = `uint8_t derKey[${bytes.length}]=\r{${bytes.toString()}};`;
+
+        if (this.data[0].children[0].children[6].children[0].children[0]) {
+          this.keyType = this.data[0].children[0].children[6].children[0].children[0].oid.d;
+        }
+        if (this.data[0].children[1].children[0]) {
+          this.signWay = this.data[0].children[1].children[0].oid.d;
+        }
+        this.keyContainerLen = this.data[0].children[0].length + this.data[0].children[0].header
+        this.pKeyContainer = `&derKey[${
+          this.data[0].children[0].offset 
+        }]`;
+
+        if (this.keyType == "rsaEncryption") {
+          let item = this.data[0].children[0].children[6].children[1]
+            .children[0];
+          if (item.children[0]) {
+            this.keyoffset.push({
+              offset: `&derKey[${
+                item.children[0].offset + item.children[0].header + 1
+              }]`,
+              len: item.children[0].length - 1,
+            });
+          }
+          if (item.children[1]) {
+            this.keyoffset.push({
+              offset: `&derKey[${
+                item.children[1].offset + item.children[1].header
+              }]`,
+              len: item.children[1].length,
+            });
+          }
+        } else if (this.keyType == "ecPublicKey") {
+          let item = this.data[0].children[0].children[6].children[1];
+          if (item) {
+            this.keyoffset.push({
+              offset: `&derKey[${
+                item.offset + item.header + 2 //RFC5480-2.2  The first octet of the OCTET STRING indicates whether the key iscompressed or uncompressed.
+              }]`,
+              len: item.length - 2,
+            });
+          }
+        } else if(this.keyType == "curveEd25519") {
+          let item = this.data[0].children[0].children[6].children[1];
+          if (item) {
+            this.keyoffset.push({
+              offset: `&derKey[${
+                item.offset + item.header + 1 //RFC5480-2.2  The first octet of the OCTET STRING indicates whether the key iscompressed or uncompressed.
+              }]`,
+              len: item.length - 1,
+            });
+          }
+        }
+
+        if (this.signWay.indexOf("RSAEncryption") != -1) {
+          if (this.data[0].children[2]) {
+            this.signOffset.push({
+              offset: `&derKey[${
+                this.data[0].children[2].offset +
+                this.data[0].children[2].header +
+                1
+              }]`,
+              len: this.data[0].children[2].length - 1,
+            });
+          }
+        } else if (this.signWay.indexOf("ecdsaWith") != -1) {
+          /* rfc3279 2.2.3 
+            Ecdsa-Sig-Value  ::=  SEQUENCE  {
+                  r     INTEGER,
+                  s     INTEGER  }
+          */
+          let item = this.data[0].children[2].children[0];
+          if (item) {
+            this.signOffset.push({
+              offset: `&derKey[${
+                item.children[0].offset + item.children[0].header + 1
+              }]`,
+              len: item.children[0].length - 1,
+            });
+            this.signOffset.push({
+              offset: `&derKey[${
+                item.children[1].offset + item.children[1].header + 1
+              }]`,
+              len: item.children[1].length - 1,
+            });
+          }
+        } else if(this.signWay.indexOf("Ed25519") != -1) {
+          if (this.data[0].children[2]) {
+            this.signOffset.push({
+              offset: `&derKey[${
+                this.data[0].children[2].offset +
+                this.data[0].children[2].header +
+                1
+              }]`,
+              len: this.data[0].children[2].length - 1,
+            });
+          }
+        }
+
+        
+      }
     },
     toTree(obj) {
       var isOID =
@@ -284,6 +315,7 @@ export default {
         if (isOID) {
           var oid = oids[content];
           if (oid) {
+            node.oid = oid;
             if (oid.d) {
               node.info += " " + oid.d;
             }
@@ -321,7 +353,12 @@ export default {
   margin-left: 1em;
   color: #909399;
 }
-.certTree{
+.copy-btn1 {
+  position: absolute;
+  z-index: 2;
+  right: 30px;
+}
+.certTree {
   overflow: auto;
   margin-right: 20px;
 }
@@ -333,15 +370,9 @@ export default {
   z-index: 20;
   top: 10px;
 }
-.keyPos{
+.keyPos {
   position: fixed;
   z-index: 20;
-  top: 30px
-}
-.el-tree-node__content{
-  height: 28px!important;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
+  top: 30px;
 }
 </style>

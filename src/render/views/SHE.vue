@@ -131,7 +131,7 @@
           <el-button
             type="text"
             icon="el-icon-document-copy"
-            class="btn"
+            class="copy-btn"
             :data-clipboard-text="mma"
           ></el-button>
           <el-input type="textarea" autosize placeholder v-model="mma"></el-input>
@@ -147,7 +147,7 @@ const ClipboardJS = require("clipboard/dist/clipboard.js");
 const sprintf = require("sprintf-js").sprintf;
 export default {
   mounted() {
-    this.clipboard = new ClipboardJS(".btn");
+    this.clipboard = new ClipboardJS(".copy-btn");
     this.clipboard.on("success", () => {
       this.$notify({
         title: "成功",
@@ -659,9 +659,9 @@ export default {
 .header {
   margin: 30px;
 }
-.btn {
+.copy-btn {
   position: absolute;
   z-index: 2;
-  right: 60px;
+  right: 100px;
 }
 </style>

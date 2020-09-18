@@ -45,7 +45,7 @@ function genM1M2M3(keyAuthId, keyAuthValue, keyId, keyValue, flag, cid, uid) {
     if (flag.VERIFY_ONLY) {
         t |= 0x40
     }
-    bM2.writeUInt8(t, 8)
+    bM2.writeUInt8(t, 4)
     keyValue.copy(bM2, 16)
     //aes-cbc k1
     var aescbc = crypto.createCipheriv('aes-128-cbc', k1, Buffer.alloc(16, 0))

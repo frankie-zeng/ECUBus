@@ -1,7 +1,6 @@
 /* eslint-disable no-unused-vars */
 const { ipcMain, dialog } = require('electron')
 const fs = require('fs')
-const { pki, asn1 } = require('node-forge')
 
 
 ipcMain.on('readFile', (event, arg) => {
@@ -55,8 +54,5 @@ ipcMain.on('downloadFilePath', (event, arg) => {
 
 ipcMain.on('readCertDer', (event, arg) => {
   var pem=fs.readFileSync(arg)
-  var cert = pki.certificateFromPem(pem);
-  var asn1Cert = pki.certificateToAsn1(cert)
-  var der = asn1.toDer(asn1Cert)
-  event.returnValue = der.toHex()
+  event.returnValue = pem
 })

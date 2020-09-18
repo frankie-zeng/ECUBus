@@ -89,7 +89,7 @@ export default {
       cycle: 1,
       interCycle: 1,
       startTime: "",
-      udsTimeout: "2000",
+      udsTimeout: "5000",
       sDelay: "100",
       showAddr: false,
       addrIndex: "",
