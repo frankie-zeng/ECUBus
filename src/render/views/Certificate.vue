@@ -171,7 +171,6 @@ export default {
     },
     fileUpload(file, fileList) {
       var name=file.name.replace('.','_')
-      console.log(file)
       this.keyoffset = [];
       this.signOffset = [];
       this.fileList = fileList.slice(-1);
