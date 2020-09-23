@@ -111,7 +111,7 @@ class IPUDS extends UDS {
                     var rets = this.parseData(msg)
                     for (var i in rets) {
                         var ret = rets[i]
-                        if (ret.err >0) {
+                        if (ret.err > 0) {
                             if ((item.receive) || (ret.type === 7)) {
                                 item.receive = false
                                 if (ret.type === 6) {
@@ -251,7 +251,7 @@ class IPUDS extends UDS {
         if (key in this.cMap) {
             this.cMap[key].suppress = item.suppress
             this.cMap[key].receive = true
-            this.cMap[key].fd.write(msg, () => {
+            if (this.cMap[key].fd.write(msg, () => {
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
                     this.emit('udsError', {
@@ -259,7 +259,12 @@ class IPUDS extends UDS {
                         index: this.tableIndex
                     })
                 }, this.timeout);
-            })
+            }) == false) {
+                this.emit('udsError', {
+                    msg: 'TCP write error',
+                    index: this.tableIndex
+                })
+            }
         } else {
             this.emit('udsError', {
                 msg: 'This connection lost',

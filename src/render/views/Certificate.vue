@@ -41,7 +41,7 @@
               :on-change="fileUpload"
               :on-remove="fileRemove"
               :file-list="fileList"
-              accept=".pem"
+              accept=".pem,.crt"
             >
               <i class="el-icon-upload"></i>
               <div class="el-upload__text">Upload Certificate</div>
@@ -170,7 +170,7 @@ export default {
       }
     },
     fileUpload(file, fileList) {
-      var name=file.name.replace('.','_')
+      var name=file.name.replace('.','_')+'_key'
       this.keyoffset = [];
       this.signOffset = [];
       this.fileList = fileList.slice(-1);
@@ -183,7 +183,7 @@ export default {
         for (var c = 0; c < hexArray.length; c++) {
           bytes.push("0x" + hexArray[c].toString(16));
         }
-        this.der = `static const uint8_t ${name}_key[${
+        this.der = `const uint8_t ${name}[${
           bytes.length
         }]=\r{`;
         for(let i=0;i<bytes.length/16;i++){
@@ -199,7 +199,7 @@ export default {
           this.signWay = this.data[0].children[1].children[0].oid.d;
         }
         this.keyContainerLen = this.data[0].children[0].length + this.data[0].children[0].header
-        this.pKeyContainer = `&derKey[${
+        this.pKeyContainer = `&${name}[${
           this.data[0].children[0].offset 
         }]`;
 
@@ -208,7 +208,7 @@ export default {
             .children[0];
           if (item.children[0]) {
             this.keyoffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.children[0].offset + item.children[0].header + 1
               }]`,
               len: item.children[0].length - 1,
@@ -216,7 +216,7 @@ export default {
           }
           if (item.children[1]) {
             this.keyoffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.children[1].offset + item.children[1].header
               }]`,
               len: item.children[1].length,
@@ -226,7 +226,7 @@ export default {
           let item = this.data[0].children[0].children[6].children[1];
           if (item) {
             this.keyoffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.offset + item.header + 2 //RFC5480-2.2  The first octet of the OCTET STRING indicates whether the key iscompressed or uncompressed.
               }]`,
               len: item.length - 2,
@@ -236,7 +236,7 @@ export default {
           let item = this.data[0].children[0].children[6].children[1];
           if (item) {
             this.keyoffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.offset + item.header + 1 //RFC5480-2.2  The first octet of the OCTET STRING indicates whether the key iscompressed or uncompressed.
               }]`,
               len: item.length - 1,
@@ -247,7 +247,7 @@ export default {
         if (this.signWay.indexOf("RSAEncryption") != -1) {
           if (this.data[0].children[2]) {
             this.signOffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 this.data[0].children[2].offset +
                 this.data[0].children[2].header +
                 1
@@ -264,13 +264,13 @@ export default {
           let item = this.data[0].children[2].children[0];
           if (item) {
             this.signOffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.children[0].offset + item.children[0].header + 1
               }]`,
               len: item.children[0].length - 1,
             });
             this.signOffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 item.children[1].offset + item.children[1].header + 1
               }]`,
               len: item.children[1].length - 1,
@@ -279,7 +279,7 @@ export default {
         } else if(this.signWay.indexOf("Ed25519") != -1) {
           if (this.data[0].children[2]) {
             this.signOffset.push({
-              offset: `&derKey[${
+              offset: `&${name}[${
                 this.data[0].children[2].offset +
                 this.data[0].children[2].header +
                 1
