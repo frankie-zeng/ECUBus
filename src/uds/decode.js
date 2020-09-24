@@ -1,3 +1,4 @@
+const fs=require('fs')
 function subItem(item) {
     var rawdata = []
     rawdata.push(item.service.value)
@@ -58,7 +59,9 @@ function payload2data(payload) {
         if (payload[i].type === 'subfunction') {
             rawdata.push((parseInt(payload[i].subFunction) | (payload[i].suppress ? 0x80 : 0)))
         } else if (payload[i].type === "downloadFile" || payload[i].type === "uploadFile") {
-            //do nothing
+            if(payload[i].type === "downloadFile"){
+                $[payload[i].name].size=fs.statSync($[payload[i].name].name).size
+            }
         } else if (payload[i].type === "input") {
             if (
                 payload[i][payload[i].name] &&
@@ -72,6 +75,7 @@ function payload2data(payload) {
                         payload[i][payload[i].name] = buf.toString('hex')
                         $[payload[i].name] = buf.toString('hex')
                     } catch (error) {
+                        console.log(error)
                         buf = Buffer.alloc(0)
                     }
                 } else {

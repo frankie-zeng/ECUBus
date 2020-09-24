@@ -1,32 +1,32 @@
 ![Release CI](https://github.com/frankie-zeng/ECUBus/workflows/Release%20CI/badge.svg)
 ![Build CI](https://github.com/frankie-zeng/ECUBus/workflows/Build%20CI/badge.svg)
 # **ECU-BUS** 
-<img src="./src/assets/logo.png" width="30%">
+<img src="./src/render/assets/logo.png" width="50%">
 
-ECU-BUS是一款通用PC端ECU测试工具。
+ECU-BUS is a general-purpose ECU toolkit, which contains diagnostic(UDS), security, and other tools.
 
+# Key Features
+## **UDS Tester**
+### CAN/CAN-FD UDS Teseter（DoCAN 15765-2）
 
-# 核心功能
-## **UDS客户端**
-### 基于CAN/CAN-FD的UDS客户端（DoCAN 15765-2）
-
-
-### 硬件列表
+#### Support Hardware Devcie:
 - [x] PEAK
 
-### 基于Ethernet的UDS客户端（DoIP 13400-2）
+### DOIP UDS Tester（DoIP 13400-2）
 - [x] Done
 
-### 基于LIN的UDS客户端（DoLIN）
+### LIN UDS Tester（DoLIN）
 - [ ] TODO
 
-## **KEY生成工具**
-### SHE-KEY生成
+## **KEY Generate Tool**
+### SHE-KEY M-Martrix Generate
 - [x] S32K1-CSEC
 - [x] S32K3-HSE-SHE
 
-# 软件框架
-ECU-BUS 基于[Electron](https://www.electronjs.org)实现，基于JS，对于dll的调用，使用[node addon](https://nodejs.org/api/n-api.html)实现,前端构建采用[VUE](https://cn.vuejs.org/)和[Eelement-UI](https://element.eleme.cn/)
+# Software Framework
+ECU-BUS Based on [Electron](https://www.electronjs.org)，Pure JS, Use [node addon](https://nodejs.org/api/n-api.html) to call .dll library,UI use [VUE](https://cn.vuejs.org/) and [Eelement-UI](https://element.eleme.cn/)
+
+[node-gyp](https://github.com/nodejs/node-gyp) is necessary
 ## Project setup
 ```
 npm install
@@ -46,3 +46,7 @@ npm run electron:build
 ```
 npm run lint
 ```
+# Software User Guide
+## UDS
+TODO
+
