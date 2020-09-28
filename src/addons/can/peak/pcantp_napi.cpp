@@ -14,7 +14,9 @@ Napi::Object CANTP::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func =
       DefineClass(env,
                   "CANTP",
-                  {InstanceMethod("Initialize", &CANTP::Initialize),
+                  {
+#ifdef _WIN32
+                    InstanceMethod("Initialize", &CANTP::Initialize),
                    InstanceMethod("GetErrorText", &CANTP::GetErrorText),
                    InstanceMethod("Uninitialize", &CANTP::Uninitialize),
                    InstanceMethod("InitializeFd",&CANTP::InitializeFd),
@@ -28,6 +30,7 @@ Napi::Object CANTP::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("RegCb",&CANTP::RegisterCallback),
                    InstanceMethod("TpRead",&CANTP::Read),
                    InstanceMethod("Unload",&CANTP::Unload),
+#endif
                    });
 
   constructor = Napi::Persistent(func);
@@ -43,14 +46,20 @@ CANTP::CANTP(const Napi::CallbackInfo& info)
 
   
   Napi::String nPath = info[0].As<Napi::String>();
+#ifdef _WIN32
   SetDllDirectory(nPath.Utf8Value().data());
   this->hDLL=LoadLibrary("PCAN-ISO-TP.dll");
   if (this->hDLL==NULL) {
     Napi::TypeError::New(env, "Load DLL failed").ThrowAsJavaScriptException();
     return;
   }
+#else
+    Napi::TypeError::New(env, "CANTP doesn't support linux").ThrowAsJavaScriptException();
+    return;
+#endif
   
 }
+#ifdef _WIN32
 DWORD WINAPI CANTP::CallReadThreadFunc(LPVOID lpParam)
 {
     CANTP* the=(CANTP*)lpParam;
@@ -246,7 +255,7 @@ Napi::Value CANTP::Read(const Napi::CallbackInfo& info){
 
 }
 
-
+#endif
 
 #define DECLARE_NAPI_METHOD(name,func) \
     exports.Set(Napi::String::New(env, name), \
@@ -261,6 +270,7 @@ Napi::Value CANTP::Read(const Napi::CallbackInfo& info){
               Napi::String::New(env, value))
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+#ifdef _WIN32   
     /*define*/
     DECLARE_NAPI_UINT32(PCANTP_USBBUS1);
     DECLARE_NAPI_UINT32(PCANTP_USBBUS2);
@@ -396,7 +406,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
     DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_2M,"data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1");      
     DECLARE_NAPI_STRING(PCANTP_BAUD_DATA_4M,"data_brp=2,data_tseg1=7,data_tseg2=2,data_sjw=1");               
     /*function*/
-
+#endif
     exports=CANTP::Init(env,exports);
     return exports;
 }

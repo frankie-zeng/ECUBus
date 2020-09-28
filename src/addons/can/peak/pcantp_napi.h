@@ -2,6 +2,9 @@
 #define CANTP_H
 #define NAPI_VERSION 4
 #include <napi.h>
+
+
+#ifdef _WIN32
 #include <windows.h>
 #include "PCAN-ISO-TP.h"
 
@@ -49,6 +52,18 @@ class CANTP : public Napi::ObjectWrap<CANTP>{
   HANDLE rThread;
   HINSTANCE hDLL;
 };
+#else
+class CANTP : public Napi::ObjectWrap<CANTP>{
+ public:
+  static Napi::Object Init(Napi::Env env, Napi::Object exports);
+  CANTP(const Napi::CallbackInfo& info);
+
+ private:
+  static Napi::FunctionReference constructor;
+};
+
+
+#endif
 
 
 #endif

@@ -73,10 +73,17 @@ function createWindow () {
   icon: `${__static}/logo.ico` })
   const menu = Menu.buildFromTemplate(menuTemplate)
   Menu.setApplicationMenu(menu)
-  canuds = new CANUDS(win)
-  canuds.registerCallback(() => {
-    canuds.eventHandle()
-  })
+  try{
+    canuds = new CANUDS(win)
+    canuds.registerCallback(() => {
+      canuds.eventHandle()
+    })
+  }catch(error){
+    console.error(error);
+  }
+    
+  
+  
   
   ipuds = new IPUDS(win)
   lpuds = new LPUDS(win)
