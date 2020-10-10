@@ -13,7 +13,7 @@ import config from "./service.js";
 // eslint-disable-next-line no-unused-vars
 const { ipcRenderer } = require("electron");
 export default {
-    props: ["mode"],
+    props: ["mode","table"],
     data() {
         return{
             value:[],
@@ -25,19 +25,6 @@ export default {
         this.value=[]
     },
     computed: {
-        table: function(){
-            var table
-            if (this.mode === "doip") {
-                table=this.$store.state.doipTable
-            } else if (this.mode === "can") {
-                table=this.$store.state.canTable
-            } else if (this.mode === "lp"){
-                table=this.$store.state.lpTable
-            } else {
-                table=[];
-            }
-            return table
-        },
         group: function() {
             var payload=[]
             for(var i in this.table){

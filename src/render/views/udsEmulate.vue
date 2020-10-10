@@ -1,15 +1,5 @@
 <template>
   <div>
-    <el-dialog title="Add UDS Serivce" :visible.sync="uds" width="80%" :close-on-press-escape="false">
-      <div class="connect">
-        <ADDService @additem="uds=false" mode="lp" />
-      </div>
-    </el-dialog>
-    <el-dialog title="Combine Multi Service Into Group" :visible.sync="group" width="80%">
-      <div class="connect">
-        <Group mode="lp" @added="group=false" />
-      </div>
-    </el-dialog>
     <el-row style="margin:0px">
       <el-col :span="12">
         <el-page-header @back="goBack" content="UDS Loopback" class="header" title></el-page-header>
@@ -20,17 +10,11 @@
     </el-row>
     <div style="margin: 10px">
       <el-row style="text-align:right">
-        <IE mode="lp" />
+        <IE mode="lp" @imported="importCb"/>
       </el-row>
-      <el-row style="text-align:right">
-        <el-button icon="el-icon-wallet" @click="group=true" size="mini" type="primary">Save Group</el-button>
-        <el-button icon="el-icon-plus" @click="uds=true" size="mini" type="primary">Add Service</el-button>
-      </el-row>
-
-     
       <el-row>
         <el-col :span="16">
-           <serviceTable mode="lp"/>
+           <serviceTable mode="lp" ref="serviceTable"/>
           <Excute mode="lp"/>
         </el-col>
         <el-col :span="8" class="lpwin">
@@ -71,10 +55,8 @@
   </div>
 </template>
 <script>
-import ADDService from "./../components/service/addservice.vue";
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
-import Group from "./../components/service/groupservice.vue";
 import IE from "./../components/importexport/importexport.vue";
 
 const { ipcRenderer } = require("electron");
@@ -83,9 +65,7 @@ export default {
   components: {
     Excute,
     serviceTable,
-    ADDService,
     IE,
-    Group
   },
   data: function() {
     return {
@@ -109,14 +89,14 @@ export default {
     ipcRenderer.removeAllListeners("lpSend");
   },
   computed: {
-    doipTable: function() {
-      return this.$store.state.doipTable;
-    },
     running: function() {
       return this.$store.state.running;
     }
   },
   methods: {
+    importCb(){
+      this.$refs.serviceTable.update();
+    },
     array2hex(val) {
       return Array.from(val, function(byte) {
         return ("0" + (byte & 0xff).toString(16)).slice(-2);

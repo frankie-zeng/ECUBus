@@ -1,29 +1,14 @@
 
 <template>
   <div>
-    <div>
-      <el-dialog title="Address" :visible.sync="showAddr" center width="30%">
-        <el-select v-model="addrIndex" placeholder="Address" style="width:100%" size="mini">
-          <el-option v-for="(item,key) in addrTable" :key="key" :label="item.name" :value="key">
-            <span style="float: left">{{ item.name }}</span>
-            <span
-              style="float: right; color: #8492a6; font-size: 13px"
-            >SA:{{ item.SA}},TA:{{item.TA}}</span>
-          </el-option>
-        </el-select>
-        <span slot="footer">
-          <el-button icon="el-icon-caret-right" @click="readRun" size="mini" type="primary">Start</el-button>
-        </span>
-      </el-dialog>
-    </div>
-    <el-row style="margin-top:10px;">
-      <el-col :span="22" :offset="1" style="text-align:right">
+    <el-row style="margin-top: 10px">
+      <el-col :span="22" :offset="1" style="text-align: right">
         Log Level:
         <el-select
           v-model="logLevel"
           placeholder="Log Level"
           size="small"
-          style="width:100px"
+          style="width: 100px"
           @change="logLevelChange"
         >
           <el-option value="silly" />
@@ -32,54 +17,59 @@
           <el-option value="info" />
           <el-option value="warn" />
           <el-option value="error" />
-          <el-option value="false" />
-        </el-select>Suppress Delay:
+          <el-option value="false" /> </el-select
+        >Suppress Delay:
         <el-input
           v-model="sDelay"
           size="small"
           placeholder="Delay"
-          style="width:80px"
+          style="width: 80px"
           maxlength="6"
-        ></el-input>ms,
-        Timeout:
+        ></el-input
+        >ms, Timeout:
         <el-input
           v-model="udsTimeout"
           size="small"
           placeholder="Timeout"
-          style="width:80px"
+          style="width: 80px"
           maxlength="6"
-          :disabled="mode==='lp'"
-        ></el-input>ms,
-        Cycle:
+          :disabled="mode === 'lp'"
+        ></el-input
+        >ms, Cycle:
         <el-input-number
           v-model.number="cycle"
           controls-position="right"
           :min="1"
           size="small"
-          style="width:100px"
+          style="width: 100px"
         ></el-input-number>
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
       </el-col>
     </el-row>
-    <el-row style="margin-top:10px;">
-      <el-col :span="22" :offset="1" style="text-align:right">
-        <el-button @click="run" size="small" type="success" :disabled="!connected||running">Start</el-button>
+    <el-row style="margin-top: 10px">
+      <el-col :span="22" :offset="1" style="text-align: right">
+        <el-button
+          @click="run"
+          size="small"
+          type="success"
+          :disabled="!connected || running"
+          >Start</el-button
+        >
       </el-col>
     </el-row>
-    <div id="terminal" class="logWindow">
-    </div>
+    <div id="terminal" class="logWindow"></div>
   </div>
 </template>
 <script>
 /* eslint-disable no-unused-vars */
-const { Terminal } = require('xterm');
-const { FitAddon } = require('xterm-addon-fit');
+const { Terminal } = require("xterm");
+const { FitAddon } = require("xterm-addon-fit");
 const { ipcRenderer } = require("electron");
 const log = require("electron-log");
 const util = require("util");
 const fitAddon = new FitAddon();
-function resizeTerminal(){
- if((window.innerWidth%1===0)&&(window.innerHeight%1===0)){
+function resizeTerminal() {
+  if (window.innerWidth % 1 === 0 && window.innerHeight % 1 === 0) {
     fitAddon.fit();
   }
 }
@@ -91,62 +81,69 @@ export default {
       startTime: "",
       udsTimeout: "5000",
       sDelay: "100",
-      showAddr: false,
-      addrIndex: "",
       logLevel: "info",
-      terminal: ''
+      terminal: "",
+      schIndex: 0,
     };
   },
   mounted() {
-    this.terminal=new Terminal({
+    this.terminal = new Terminal({
       theme: {
-        background: '#ffffff',
-        selection: 'gray'
+        background: "#ffffff",
+        selection: "gray",
       },
-      fontWeight : "bold"
+      fontWeight: "bold",
     });
     this.terminal.loadAddon(fitAddon);
-    this.terminal.setOption('disableStdin', true)
-    this.terminal.open(document.getElementById('terminal'));
-    this.terminal.attachCustomKeyEventHandler((e)=>{
+    this.terminal.setOption("disableStdin", true);
+    this.terminal.open(document.getElementById("terminal"));
+    this.terminal.attachCustomKeyEventHandler((e) => {
       return false;
-    })
+    });
     fitAddon.fit();
     window.addEventListener("resize", resizeTerminal);
     this.logLevel = this.$store.state.logLevel;
     ipcRenderer.on("udsEnd", (event, val) => {
-      this.success(val);
-      if (this.interCycle > 1) {
-        this.interCycle--;
-        this.terminal.write(`\x1B[1;;33mStart again:${this.interCycle}\x1B[0m\r\n`);
-        this.readRun();
+      if(!this.schRun()){
+        if (this.interCycle > 1) {
+          this.interCycle--;
+          this.terminal.write(
+            `\x1B[1;;33mStart again:${this.interCycle}\x1B[0m\r\n`
+          );
+          /* restart a new sch*/
+          this.schIndex=0;
+          this.schRun();
+        }else{
+          this.success(val);
+        }
       }
+      
     });
     ipcRenderer.on(log.transports.ipc.eventId, (event, message) => {
-      const text = util.format.apply(util, message.data)
+      const text = util.format.apply(util, message.data);
       let msg;
       let usedTime = Date.parse(message.date) - this.startTime;
       if (usedTime < 0) {
         usedTime = 0;
       }
       if (message.level == "info") {
-        msg = `\x1B[1;;32m[${usedTime}ms] ${text}\x1B[0m\r\n`;
-      } else if (message.level == "error") {
-        msg = `\x1B[1;;31m[${usedTime}ms] ${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;32m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
+      } else if (message.level == "error"){
+        msg = `\x1B[1;;31m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
       } else if (message.level == "warn") {
-        msg = `\x1B[1;;33m[${usedTime}ms] ${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;33m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
       } else {
-        msg = `\x1B[1;;30m[${usedTime}ms] ${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;30m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
       }
-       this.terminal.write(msg)
+      this.terminal.write(msg);
     });
     ipcRenderer.on("udsError", (event, val) => {
       this.failed(val.msg);
-      this.$store.commit("setTableError", val.index);
+      this.$store.commit("setTableError", [this.schIndex-1,val.index]);
     });
   },
   destroyed() {
-    window.removeEventListener("resize",resizeTerminal);
+    window.removeEventListener("resize", resizeTerminal);
     ipcRenderer.removeAllListeners("udsEnd");
     ipcRenderer.removeAllListeners(log.transports.ipc.eventId);
     ipcRenderer.removeAllListeners("udsError");
@@ -218,41 +215,49 @@ export default {
         type: "success",
       });
     },
-    readRun() {
-      this.startTime = new Date().getTime();
-      var table = JSON.parse(JSON.stringify(this.udsTable));
-      if (this.addrTable[this.addrIndex]) {
-        this.showAddr = false;
-      } else {
-        this.$notify.error({
-          title: "Error",
-          message: "Please choose correct address.",
-        });
-        return;
+    run() {
+      this.schIndex = 0;
+      this.terminal.clear();
+      this.interCycle = this.cycle;
+      //check all address
+      for(var i in this.udsTable){
+        if (this.addrTable[this.udsTable[i].addr] == undefined) {
+          this.$notify.error({
+            title: "Error",
+            message: `(${this.udsTable[i].name}):Please choose correct address.`,
+          });
+          return;
+        }
       }
+      
       this.$store.commit("runChange", true);
       this.$store.commit("setTableError", -1);
+      this.startTime = new Date().getTime();
+      this.schRun()
+    },
+    schRun(){
+      if(this.schIndex<this.udsTable.length){
+         var table = this.udsTable[this.schIndex];
+        ipcRenderer.send(this.mode + "udsExcute", {
+          addr: this.addrTable[table.addr],
+          udsTable: table.services,
+          timeout: parseInt(this.udsTimeout, 10),
+          sDelay: parseInt(this.sDelay, 10),
+        });
+        this.schIndex++;
+        return true;
+      }else{
+        /* all sch has excuted*/
+        return false;
+      }
      
-
-      ipcRenderer.send(this.mode + "udsExcute", {
-        addr: this.addrTable[this.addrIndex],
-        udsTable: table,
-        timeout: parseInt(this.udsTimeout, 10),
-        sDelay: parseInt(this.sDelay, 10),
-      });
-    },
-    run() {
-      this.terminal.clear();
-      this.showAddr = true;
-      this.interCycle = this.cycle;
-      // console.log(this.udsTable)
-    },
+    }
   },
 };
 </script>
 <style>
-@import '../../../node_modules/xterm/css/xterm.css';
-.logWindow{
+@import "../../../node_modules/xterm/css/xterm.css";
+.logWindow {
   height: 300px;
   border-radius: 5px;
   border-style: solid;

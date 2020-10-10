@@ -118,15 +118,7 @@ export default {
   },
   methods: {
     addItem(val) {
-      var item = JSON.parse(JSON.stringify(val));
-      if (this.mode === "doip") {
-        this.$store.commit("doipTableAdd", item);
-      } else if (this.mode === "can") {
-        this.$store.commit("canTableAdd", item);
-      } else if (this.mode === "lp") {
-        this.$store.commit("lpTableAdd", item);
-      }
-      this.$emit("additem");
+      this.$emit("additem",val);
     },
     editItem(val) {
       this.$emit("edititem", val);

@@ -30,6 +30,15 @@ export default {
       var file = ipcRenderer.sendSync("readFile");
       if (file) {
         var table = JSON.parse(file);
+        /* compatible old verison config file*/
+        if(table.length>0){
+          if('type' in table[0]){
+            table=[{
+              name:'sch1',
+              services: table,
+            }]
+          }
+        }
         if (this.mode === "doip") {
           this.$store.commit("doipTableLoad", table);
         } else if (this.mode === "can") {
@@ -40,6 +49,7 @@ export default {
           return;
         }
       }
+      this.$emit("imported");
     },
     exportConfig() {
       var val = JSON.parse(JSON.stringify(this.udsTable));
