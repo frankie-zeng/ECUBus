@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 <template>
   <div class="subservice">
-    <div class="subheader" v-if="!group">{{config.name}}</div>
+    <div class="subheader" v-if="!group">{{ config.name }}</div>
     <el-form
       :model="inputData"
       :rules="rules"
@@ -13,16 +13,16 @@
       <el-form-item
         :label="item.name"
         :prop="item.name"
-        v-for="(item,key) in config.input"
+        v-for="(item, key) in config.input"
         :key="key"
       >
-        <el-input v-model="inputData[item.name]" v-if="item.type==='input'">
+        <el-input v-model="inputData[item.name]" v-if="item.type === 'input'">
           <template slot="prepend">0x</template>
         </el-input>
         <el-select
           v-model="inputData[item.name]"
-          v-else-if="item.type==='select'"
-          style="width:100%"
+          v-else-if="item.type === 'select'"
+          style="width: 100%"
           allow-create
           filterable
           placeholder="Choose"
@@ -34,14 +34,16 @@
             :value="child.value"
           >
             <span style="float: left">{{ child.name }}</span>
-            <span style="float: right; color: #8492a6; font-size: 13px">{{ child.value }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px">{{
+              child.value
+            }}</span>
           </el-option>
         </el-select>
-        <div v-else-if="item.type==='subfunction'">
+        <div v-else-if="item.type === 'subfunction'">
           <el-col :span="16">
             <el-select
               v-model="inputData[item.name]"
-              style="width:100%"
+              style="width: 100%"
               allow-create
               filterable
               placeholder="Sub-Function"
@@ -53,40 +55,48 @@
                 :value="child.value"
               >
                 <span style="float: left">{{ child.name }}</span>
-                <span
-                  style="float: right; color: #8492a6; font-size: 13px"
-                >{{ '0x'+child.value.toString(16) }}</span>
+                <span style="float: right; color: #8492a6; font-size: 13px">{{
+                  "0x" + child.value.toString(16)
+                }}</span>
               </el-option>
             </el-select>
           </el-col>
-          <el-col :span="7" :offset="1" style="text-align:right">
-            <el-checkbox v-model="inputData['suppress']" label="Suppress" border></el-checkbox>
+          <el-col :span="7" :offset="1" style="text-align: right">
+            <el-checkbox
+              v-model="inputData['suppress']"
+              label="Suppress"
+              border
+            ></el-checkbox>
           </el-col>
         </div>
         <el-input
           v-model="inputData[item.name]"
-          v-else-if="item.type==='text'"
+          v-else-if="item.type === 'text'"
           type="textarea"
-          :autosize="{ minRows: 3, maxRows: 6}"
+          :autosize="{ minRows: 3, maxRows: 6 }"
         ></el-input>
-        <div v-else-if="item.type==='downloadFile'">
-          <el-button @click="downloadFIle(item.name)" type="primary">Choose File</el-button>
-          <span style="font-size:12px" v-if="inputData[item.name]">
-            {{inputData[item.name].name}}
-            <strong>{{'0x'+inputData[item.name].size.toString(16)}}</strong>
+        <div v-else-if="item.type === 'downloadFile'">
+          <el-button @click="downloadFIle(item.name)" type="primary"
+            >Choose File</el-button
+          >
+          <span style="font-size: 12px" v-if="inputData[item.name]">
+            {{ inputData[item.name].name }}
+            <strong>{{ "0x" + inputData[item.name].size.toString(16) }}</strong>
           </span>
         </div>
-        <div v-else-if="item.type==='uploadFile'">
-          <el-button @click="uploadFIle(item.name)" type="primary">Choose File</el-button>
-          <span style="font-size:12px" v-if="inputData[item.name]">
-            <strong>{{inputData[item.name].name}}</strong>
+        <div v-else-if="item.type === 'uploadFile'">
+          <el-button @click="uploadFIle(item.name)" type="primary"
+            >Choose File</el-button
+          >
+          <span style="font-size: 12px" v-if="inputData[item.name]">
+            <strong>{{ inputData[item.name].name }}</strong>
           </span>
           <!-- <el-input v-model="inputData[item.name]" readonly>
           </el-input>-->
         </div>
       </el-form-item>
     </el-form>
-    <span style="color:red;margin-right:5px">{{error}}</span>
+    <span style="color: red; margin-right: 5px">{{ error }}</span>
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
         <template slot="title">
@@ -96,12 +106,24 @@
             title="Tips"
             width="600"
             trigger="hover"
-            style="margin:10px;font-size:16px;"
+            style="margin: 10px; font-size: 16px"
           >
             <el-table :data="tipsData" height="300px">
-              <el-table-column width="150" property="func" label="Function"></el-table-column>
-              <el-table-column width="100" property="params" label="Params"></el-table-column>
-              <el-table-column width="300" property="desc" label="Description"></el-table-column>
+              <el-table-column
+                width="150"
+                property="func"
+                label="Function"
+              ></el-table-column>
+              <el-table-column
+                width="100"
+                property="params"
+                label="Params"
+              ></el-table-column>
+              <el-table-column
+                width="300"
+                property="desc"
+                label="Description"
+              ></el-table-column>
             </el-table>
             <i class="el-icon-warning-outline" slot="reference"></i>
             <!-- <el-button slot="reference" icon="el-icon-warning-outline"></el-button> -->
@@ -109,7 +131,12 @@
         </template>
 
         <el-row>
-          <el-button type="text" icon="el-icon-full-screen" class="btn1" @click="fullScreen"></el-button>
+          <el-button
+            type="text"
+            icon="el-icon-full-screen"
+            class="btn1"
+            @click="fullScreen"
+          ></el-button>
           <div class="fn">function(writeData,readData){</div>
           <codemirror
             v-model="jsFn"
@@ -120,7 +147,7 @@
           />
           <div class="fn">}</div>
         </el-row>
-        <div id="JSLINT_" v-if="jsError!=''">
+        <div id="JSLINT_" v-if="jsError != ''">
           <fieldset id="JSLINT_WARNINGS" class="none">
             <legend>Warnings</legend>
             <div id="JSLINT_WARNINGS_LIST">
@@ -131,14 +158,21 @@
       </el-collapse-item>
     </el-collapse>
 
-    <div style="text-align:right;margin-top:10px" v-if="!group">
+    <div style="text-align: right; margin-top: 10px" v-if="!group">
       <el-button
         type="primary"
         @click="addService('additem')"
         v-if="!change"
         size="small"
-      >Add Service</el-button>
-      <el-button type="warning" @click="addService('edititem')" size="small" v-else>Change Service</el-button>
+        >Add Service</el-button
+      >
+      <el-button
+        type="warning"
+        @click="addService('edititem')"
+        size="small"
+        v-else
+        >Change Service</el-button
+      >
     </div>
   </div>
 </template>
@@ -199,6 +233,7 @@ export default {
         fileSizeUnCompressed: "",
         fileSizeCompressed: "",
       },
+      rules: {},
       error: "",
       jsError: "",
       tipsData: [
@@ -291,26 +326,26 @@ export default {
         this.activeNames = [];
       }
     }
-  },
-  computed: {
-    rules: function () {
-      var a = {};
+    if (typeof this.config != "undefined") {
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
-          a[this.config.input[i].name] = this.config.input[i].rule;
-          for(let j in a[this.config.input[i].name]){
-            if(a[this.config.input[i].name][j].pattern){
-              let raw=new RegExp(a[this.config.input[i].name][j].pattern)
-              let other=/^(.*?)\((.*?)\)$/
+          this.rules[this.config.input[i].name] = this.config.input[i].rule;
+          for (let j in this.config.input[i].rule) {
+            if (this.config.input[i].rule[j].pattern) {
+              let raw = new RegExp(this.config.input[i].rule[j].pattern);
+              let other = /^(.*?)\((.*?)\)$/;
               //a[this.config.input[i].name][j].pattern='('+rule+')|(^\\${.*?}$)|(^.*?\\(\\${.*?}\\)$)'
-              a[this.config.input[i].name][j].pattern=new RegExp(raw.source+"|"+other.source)
-              break
+              this.rules[this.config.input[i].name][j].pattern = new RegExp(
+                raw.source + "|" + other.source
+              );
+              break;
             }
           }
         }
       }
-      return a;
-    },
+    }
+  },
+  computed: {
     codemirror() {
       return this.$refs.cmEditor.codemirror;
     },
