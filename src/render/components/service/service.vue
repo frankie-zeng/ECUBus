@@ -327,7 +327,6 @@ export default {
       }
     }
     if (typeof this.config != "undefined") {
-      console.log(this.config)
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
           this.rules[this.config.input[i].name] = this.config.input[i].rule;
