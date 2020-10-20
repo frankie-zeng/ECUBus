@@ -106,7 +106,6 @@ export default {
                 // changeslot:this.value,
                 table:JSON.parse(JSON.stringify(this.table))
             }
-            console.log(newgroup)
             ipcRenderer.sendSync("saveGroup", [this.groupname,JSON.stringify(newgroup)])
             this.$emit("added");
             this.$notify({

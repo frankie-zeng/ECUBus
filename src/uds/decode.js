@@ -1,4 +1,4 @@
-const fs=require('fs')
+const fs = require('fs')
 function subItem(item) {
     var rawdata = []
     rawdata.push(item.service.value)
@@ -59,8 +59,9 @@ function payload2data(payload) {
         if (payload[i].type === 'subfunction') {
             rawdata.push((parseInt(payload[i].subFunction) | (payload[i].suppress ? 0x80 : 0)))
         } else if (payload[i].type === "downloadFile" || payload[i].type === "uploadFile") {
-            if(payload[i].type === "downloadFile"){
-                $[payload[i].name].size=fs.statSync($[payload[i].name].name).size
+            if (payload[i].type === "downloadFile") {
+                if ($[payload[i].name].name)
+                    $[payload[i].name].size = fs.statSync($[payload[i].name].name).size
             }
         } else if (payload[i].type === "input") {
             if (
