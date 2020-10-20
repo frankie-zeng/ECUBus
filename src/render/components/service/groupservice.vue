@@ -65,11 +65,20 @@ export default {
                 var s=this.value[i].split(',')
                 var tableIndex=parseInt(s[0])
                 var payloadIndex=parseInt(s[1])
+                // RegExp.prototype.toJSON = RegExp.prototype.toString;
+                //console.log(this.config)
                 for(var j in this.config){
                     if(this.config[j].value===this.table[tableIndex].service.value){
                         for(var z in this.config[j].input){
                             if(this.config[j].input[z].name===this.table[tableIndex].payload[payloadIndex].name){
-                                service[tableIndex].input.push(this.config[j].input[z])
+                                let tmp=JSON.parse(JSON.stringify(this.config[j].input[z]))
+                                for(var y in this.config[j].input[z].rule){
+                                    if(this.config[j].input[z].rule[y].pattern){
+                                        let reg = new RegExp(this.config[j].input[z].rule[y].pattern);
+                                        tmp.rule[y].pattern=reg.source
+                                    }
+                                }
+                                service[tableIndex].input.push(tmp)
                                 break
                             }
                         }
@@ -97,6 +106,7 @@ export default {
                 // changeslot:this.value,
                 table:JSON.parse(JSON.stringify(this.table))
             }
+            console.log(newgroup)
             ipcRenderer.sendSync("saveGroup", [this.groupname,JSON.stringify(newgroup)])
             this.$emit("added");
             this.$notify({

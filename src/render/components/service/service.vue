@@ -327,6 +327,7 @@ export default {
       }
     }
     if (typeof this.config != "undefined") {
+      console.log(this.config)
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
           this.rules[this.config.input[i].name] = this.config.input[i].rule;
@@ -335,9 +336,16 @@ export default {
               let raw = new RegExp(this.config.input[i].rule[j].pattern);
               let other = /^(.*?)\((.*?)\)$/;
               //a[this.config.input[i].name][j].pattern='('+rule+')|(^\\${.*?}$)|(^.*?\\(\\${.*?}\\)$)'
-              this.rules[this.config.input[i].name][j].pattern = new RegExp(
-                raw.source + "|" + other.source
-              );
+              if (this.group) {
+                this.rules[this.config.input[i].name][j].pattern = new RegExp(
+                  raw.source
+                );
+              } else {
+                this.rules[this.config.input[i].name][j].pattern = new RegExp(
+                  raw.source + "|" + other.source
+                );
+              }
+
               break;
             }
           }
