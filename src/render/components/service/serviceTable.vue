@@ -272,7 +272,7 @@ export default {
       schs: [
         {
           name: "sch1",
-          addr: "",
+          addr: 0,
           services: [],
         },
       ],
@@ -353,7 +353,7 @@ export default {
     addSch() {
       this.schs.push({
         name: "sch" + (this.schs.length + 1),
-        addr: "",
+        addr: 0,
         services: [],
       });
       this.$nextTick(() => {

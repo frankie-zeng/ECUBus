@@ -335,15 +335,10 @@ export default {
               let raw = new RegExp(this.config.input[i].rule[j].pattern);
               let other = /^(.*?)\((.*?)\)$/;
               //a[this.config.input[i].name][j].pattern='('+rule+')|(^\\${.*?}$)|(^.*?\\(\\${.*?}\\)$)'
-              if (this.group) {
-                this.rules[this.config.input[i].name][j].pattern = new RegExp(
-                  raw.source
-                );
-              } else {
-                this.rules[this.config.input[i].name][j].pattern = new RegExp(
-                  raw.source + "|" + other.source
-                );
-              }
+              this.rules[this.config.input[i].name][j].pattern = new RegExp(
+                raw.source + "|" + other.source
+              );
+              
 
               break;
             }
