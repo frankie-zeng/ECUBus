@@ -63,7 +63,7 @@
             </el-form-item>
           </el-form>
         </el-collapse-item>
-        <el-collapse-item title="S32K2TV HSE M1|M2|M3 Generate" name="2">
+        <el-collapse-item title="S32K2TV HSE M1|M2|M3 Generate(Legacy)" name="2">
           <el-form
             :model="k2she"
             :rules="k3rules"
@@ -128,7 +128,7 @@
             </el-form-item>
           </el-form>
         </el-collapse-item>
-        <el-collapse-item title="S32K3 HSE M1|M2|M3 Generate(No test!)" name="3">
+        <el-collapse-item title="S32K3 HSE M1|M2|M3 Generate" name="3">
           <el-form
             :model="k3she"
             :rules="k3rules"
@@ -449,7 +449,7 @@ export default {
         authKeyValue: "492c29292b031f4571a870207c47056e",
         keyId: 1,
         keyValue: "492c29292b031f4571a870207c47056e",
-        flag: ["WRITE_PROT"],
+        flag: [],
         // flag:{
         //     WRITE_PROT:false,
         //     BOOT_PROT:false,
@@ -467,7 +467,7 @@ export default {
         authKeyValue: "492c29292b031f4571a870207c47056e",
         keyId: '',
         keyValue: "492c29292b031f4571a870207c47056e",
-        flag: ["WRITE_PROT"],
+        flag: [],
         // flag:{
         //     WRITE_PROT:false,
         //     BOOT_PROT:false,
@@ -485,7 +485,7 @@ export default {
         authKeyValue: "492c29292b031f4571a870207c47056e",
         keyId: '',
         keyValue: "492c29292b031f4571a870207c47056e",
-        flag: ["WRITE_PROT"],
+        flag: [],
         // flag:{
         //     WRITE_PROT:false,
         //     BOOT_PROT:false,
@@ -613,7 +613,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM1[16]=[%s];\r\n",
+            "uint8_t %sM1[16]={%s};\r\n",
             this.k1she.name,
             a.toString("hex")
           );
@@ -624,7 +624,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM2[32]=[%s];\r\n",
+            "uint8_t %sM2[32]={%s};\r\n",
             this.k1she.name,
             a.toString("hex")
           );
@@ -635,7 +635,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM3[16]=[%s];\r\n",
+            "uint8_t %sM3[16]={%s};\r\n",
             this.k1she.name,
             a.toString("hex")
           );
@@ -646,7 +646,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM4[32]=[%s];\r\n",
+            "uint8_t %sM4[32]={%s};\r\n",
             this.k1she.name,
             a.toString("hex")
           );
@@ -657,7 +657,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM5[16]=[%s];\r\n",
+            "uint8_t %sM5[16]={%s};\r\n",
             this.k1she.name,
             a.toString("hex")
           );
@@ -683,7 +683,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM1[16]=[%s];\r\n",
+            "uint8_t %sM1[16]={%s};\r\n",
             this.k2she.name,
             a.toString("hex")
           );
@@ -694,7 +694,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM2[32]=[%s];\r\n",
+            "uint8_t %sM2[32]={%s};\r\n",
             this.k2she.name,
             a.toString("hex")
           );
@@ -705,7 +705,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM3[16]=[%s];\r\n",
+            "uint8_t %sM3[16]={%s};\r\n",
             this.k2she.name,
             a.toString("hex")
           );
@@ -716,7 +716,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM4[32]=[%s];\r\n",
+            "uint8_t %sM4[32]={%s};\r\n",
             this.k2she.name,
             a.toString("hex")
           );
@@ -727,7 +727,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM5[16]=[%s];\r\n",
+            "uint8_t %sM5[16]={%s};\r\n",
             this.k2she.name,
             a.toString("hex")
           );
@@ -753,7 +753,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM1[16]=[%s];\r\n",
+            "uint8_t %sM1[16]={%s};\r\n",
             this.k3she.name,
             a.toString("hex")
           );
@@ -764,7 +764,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM2[32]=[%s];\r\n",
+            "uint8_t %sM2[32]={%s};\r\n",
             this.k3she.name,
             a.toString("hex")
           );
@@ -775,7 +775,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM3[16]=[%s];\r\n",
+            "uint8_t %sM3[16]={%s};\r\n",
             this.k3she.name,
             a.toString("hex")
           );
@@ -786,7 +786,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM4[32]=[%s];\r\n",
+            "uint8_t %sM4[32]={%s};\r\n",
             this.k3she.name,
             a.toString("hex")
           );
@@ -797,7 +797,7 @@ export default {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
           this.mma += sprintf(
-            "uint8_t %sM5[16]=[%s];\r\n",
+            "uint8_t %sM5[16]={%s};\r\n",
             this.k3she.name,
             a.toString("hex")
           );
