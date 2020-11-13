@@ -31,6 +31,9 @@ class UDS {
         else
             return null
     }
+    verbose(msg){
+        elelog.verbose(JSON.stringify(msg))
+    }
     error(msg){
         elelog.error(JSON.stringify(msg))
     }

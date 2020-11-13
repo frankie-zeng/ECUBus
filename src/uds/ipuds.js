@@ -9,7 +9,7 @@ const sprintf = require('sprintf-js').sprintf
 const PORT = 13400
 const VER = 0x02
 const UDS = require('./uds.js')
-const log = require('electron-log')
+
 class IPUDS extends UDS {
     constructor(win) {
         super(win)
@@ -126,13 +126,13 @@ class IPUDS extends UDS {
                                         }
                                         )
                                     } else {
-                                        this.info("The router has actived")
+                                        this.verbose("The router has actived")
                                     }
                                 } else if (ret.type === 7) {
                                     item.fd.write(this.writeAliveRes(parseInt(active.sa)))
                                 } else if (ret.type === 0x8001) {
                                     clearTimeout(item.timer)
-                                    this.debug(sprintf("uds response:%s.", ret.data.payload.join(',')))
+                                    this.verbose(sprintf("uds response:%s.", ret.data.payload.join(',')))
                                     try {
                                         if ((ret.data.payload[0] == 0x7F) && (ret.data.payload[2] == 0X78)) {
                                             item.receive = true;
@@ -141,7 +141,7 @@ class IPUDS extends UDS {
                                             if (this.checkFunc(this.writeData, ret.data.payload)) {
                                                 if (item.timer.hasRef()) {
                                                     item.receive = true;
-                                                    this.info(":User insert a new delay")
+                                                    this.verbose(":User insert a new delay")
                                                 } else {
                                                     this.step()
                                                 }
@@ -161,7 +161,7 @@ class IPUDS extends UDS {
 
                                 } else if (ret.type === 0x8002) {
                                     clearTimeout(item.timer)
-                                    this.debug(sprintf("ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
+                                    this.verbose(sprintf("ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
                                     if (item.suppress) {
                                         setTimeout(() => {
                                             this.step()
@@ -277,7 +277,7 @@ class IPUDS extends UDS {
     parseData(msg) {
         var data = Buffer.concat([this.lastData, msg])
         this.lastData = Buffer.alloc(0)
-        this.debug(msg.toString('hex'))
+        this.verbose(msg.toString('hex'))
         var rets = []
         var payload
         var header
@@ -359,7 +359,7 @@ class IPUDS extends UDS {
                             ret.data.mds = payload.readUInt32BE(3)
                         }
                     }
-                    log.info(JSON.stringify(ret))
+                    this.verbose(JSON.stringify(ret))
                     ret.err = len + 8
                     data = Buffer.from(data.slice(8 + len))
                 } else {
