@@ -390,6 +390,14 @@ export default {
       dataSpeed: "data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1",
       canDataSpeed: [
         {
+          label: "500 KBit/s",
+          value: "data_brp=16,data_tseg1=7,data_tseg2=2,data_sjw=1"
+        },
+        {
+          label: "1 MBit/s",
+          value: "data_brp=8,data_tseg1=7,data_tseg2=2,data_sjw=1"
+        },
+        {
           label: "2 MBit/s",
           value: "data_brp=4,data_tseg1=7,data_tseg2=2,data_sjw=1"
         },
