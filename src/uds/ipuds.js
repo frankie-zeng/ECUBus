@@ -18,6 +18,7 @@ class IPUDS extends UDS {
         this.timeout = 2000
         this.sDelay = 100
         this.cMap = {}
+        this.waitDoipAck = false;
         this.typeList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 0x4001, 0x4002, 0x4003, 0x4004, 0x8001, 0x8002, 0x8003]
         this.clientTypeList = [0, 4, 6, 7, 0x4002, 0x4004, 0x8001, 0x8002, 0x8003]
         this.udpFd = dgram.createSocket('udp4')
@@ -131,6 +132,9 @@ class IPUDS extends UDS {
                                 } else if (ret.type === 7) {
                                     item.fd.write(this.writeAliveRes(parseInt(active.sa)))
                                 } else if (ret.type === 0x8001) {
+                                    if (this.waitDoipAck) {
+                                        this.error('Lose doip ack');
+                                    }
                                     clearTimeout(item.timer)
                                     this.verbose(sprintf("uds response:%s.", ret.data.payload.join(',')))
                                     try {
@@ -161,6 +165,7 @@ class IPUDS extends UDS {
 
                                 } else if (ret.type === 0x8002) {
                                     clearTimeout(item.timer)
+                                    this.waitDoipAck = false;
                                     this.verbose(sprintf("ack:0x%X,msg:%s.\r\n", ret.data.code, ret.data.payload.join(',')))
                                     if (item.suppress) {
                                         setTimeout(() => {
@@ -176,6 +181,7 @@ class IPUDS extends UDS {
                                         }, this.timeout)
                                     }
                                 } else if (ret.type === 0x8003) {
+                                    this.waitDoipAck = false;
                                     clearTimeout(item.timer)
                                     this.emit('udsError', {
                                         msg: sprintf("nack:0x%X,msg:0x%s", ret.data.code, ret.data.payload),
@@ -252,6 +258,7 @@ class IPUDS extends UDS {
             this.cMap[key].suppress = item.suppress
             this.cMap[key].receive = true
             if (this.cMap[key].fd.write(msg, () => {
+                this.waitDoipAck = true
                 this.cMap[key].timer = setTimeout(() => {
                     /*no response*/
                     this.emit('udsError', {
