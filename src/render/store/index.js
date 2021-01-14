@@ -7,10 +7,12 @@ export default new Vuex.Store({
   state: {
     canConnect: false,
     doipConnect: false,
+    linConnect: false,
     logLevel:'info',
     /*addr*/
     canAddrTable: [],
     doipAddrTable: [],
+    linAddrTable: [], 
     lpAddrTable:[{
       name:'emulate-lp',
       SA:0,
@@ -20,7 +22,8 @@ export default new Vuex.Store({
     /* service */ 
     canTable: [],
     doipTable: [],
-    lpTable:[],
+    lpTable: [],
+    linTable: [],
     running: false,
 
   },
@@ -47,6 +50,9 @@ export default new Vuex.Store({
     },
     doipChange(state, connect) {
       state.doipConnect = connect
+    },
+    linChange(state, connect) {
+      state.linConnect = connect
     },
     /* doip addr table */
     doipAddrAdd(state, item) {
@@ -79,9 +85,23 @@ export default new Vuex.Store({
     canAddrLoad(state, data) {
       state.canAddrTable = data
     },
+    /* lin addr table */
+    linAddrAdd(state, item) {
+      state.linAddrTable.push(item)
+    },
+    linAddrDelete(state, index) {
+      state.linAddrTable.splice(index, 1)
+    },
+    linAddrLoad(state, data) {
+      state.linAddrTable = data
+    },
     /*can table*/
     canTableLoad(state, data) {
       state.canTable = data
+    },
+    /*lin table*/
+    linTableLoad(state, data) {
+      state.linTable = data
     },
     /*doip table*/
     doipTableLoad(state, data) {

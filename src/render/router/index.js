@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import PCAN from './../views/Pcan.vue'
+import LIN from './../views/Lin.vue'
 import HOME from './../views/Home.vue'
 import SHE from './../views/SHE.vue'
 import DOIP from './../views/DOIP.vue'
@@ -38,7 +39,12 @@ const routes = [
     path: '/certificate',
     name: 'certificate',
     component: Certificate
-  }
+  },
+  {
+    path: '/lin',
+    name: 'lin',
+    component: LIN
+  },
 ]
 
 const router = new VueRouter({

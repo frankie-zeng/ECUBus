@@ -104,20 +104,19 @@ export default {
     window.addEventListener("resize", resizeTerminal);
     this.logLevel = this.$store.state.logLevel;
     ipcRenderer.on("udsEnd", (event, val) => {
-      if(!this.schRun()){
+      if (!this.schRun()) {
         if (this.interCycle > 1) {
           this.interCycle--;
           this.terminal.write(
             `\x1B[1;;33mStart again:${this.interCycle}\x1B[0m\r\n`
           );
           /* restart a new sch*/
-          this.schIndex=0;
+          this.schIndex = 0;
           this.schRun();
-        }else{
+        } else {
           this.success(val);
         }
       }
-      
     });
     ipcRenderer.on(log.transports.ipc.eventId, (event, message) => {
       const text = util.format.apply(util, message.data);
@@ -127,19 +126,27 @@ export default {
         usedTime = 0;
       }
       if (message.level == "info") {
-        msg = `\x1B[1;;32m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
-      } else if (message.level == "error"){
-        msg = `\x1B[1;;31m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;32m[${usedTime}ms][${
+          this.udsTable[this.schIndex - 1].name
+        }]${text}\x1B[0m\r\n`;
+      } else if (message.level == "error") {
+        msg = `\x1B[1;;31m[${usedTime}ms][${
+          this.udsTable[this.schIndex - 1].name
+        }]${text}\x1B[0m\r\n`;
       } else if (message.level == "warn") {
-        msg = `\x1B[1;;33m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;33m[${usedTime}ms][${
+          this.udsTable[this.schIndex - 1].name
+        }]${text}\x1B[0m\r\n`;
       } else {
-        msg = `\x1B[1;;30m[${usedTime}ms][${this.udsTable[this.schIndex-1].name}]${text}\x1B[0m\r\n`;
+        msg = `\x1B[1;;30m[${usedTime}ms][${
+          this.udsTable[this.schIndex - 1].name
+        }]${text}\x1B[0m\r\n`;
       }
       this.terminal.write(msg);
     });
     ipcRenderer.on("udsError", (event, val) => {
       this.failed(val.msg);
-      this.$store.commit("setTableError", [this.schIndex-1,val.index]);
+      this.$store.commit("setTableError", [this.schIndex - 1, val.index]);
     });
   },
   destroyed() {
@@ -158,40 +165,20 @@ export default {
   },
   computed: {
     connected: function () {
-      if (this.mode === "can") {
-        return this.$store.state.canConnect;
-      } else if (this.mode === "doip") {
-        return this.$store.state.doipConnect;
-      } else if (this.mode === "lp") {
+      if (this.mode === "lp") {
         return true;
       } else {
-        return false;
+        return this.$store.state[this.mode + "Connect"];
       }
     },
     udsTable: function () {
-      if (this.mode === "can") {
-        return this.$store.state.canTable;
-      } else if (this.mode === "doip") {
-        return this.$store.state.doipTable;
-      } else if (this.mode === "lp") {
-        return this.$store.state.lpTable;
-      } else {
-        return [];
-      }
+      return this.$store.state[this.mode + "Table"];
     },
     running: function () {
       return this.$store.state.running;
     },
     addrTable: function () {
-      if (this.mode === "doip") {
-        return this.$store.state.doipAddrTable;
-      } else if (this.mode === "can") {
-        return this.$store.state.canAddrTable;
-      } else if (this.mode === "lp") {
-        return this.$store.state.lpAddrTable;
-      } else {
-        return [];
-      }
+      return this.$store.state[this.mode + "AddrTable"];
     },
   },
   methods: {
@@ -220,7 +207,7 @@ export default {
       this.terminal.clear();
       this.interCycle = this.cycle;
       //check all address
-      for(var i in this.udsTable){
+      for (var i in this.udsTable) {
         if (this.addrTable[this.udsTable[i].addr] == undefined) {
           this.$notify.error({
             title: "Error",
@@ -229,15 +216,15 @@ export default {
           return;
         }
       }
-      
+
       this.$store.commit("runChange", true);
       this.$store.commit("setTableError", -1);
       this.startTime = new Date().getTime();
-      this.schRun()
+      this.schRun();
     },
-    schRun(){
-      if(this.schIndex<this.udsTable.length){
-         var table = this.udsTable[this.schIndex];
+    schRun() {
+      if (this.schIndex < this.udsTable.length) {
+        var table = this.udsTable[this.schIndex];
         ipcRenderer.send(this.mode + "udsExcute", {
           addr: this.addrTable[table.addr],
           udsTable: table.services,
@@ -246,12 +233,11 @@ export default {
         });
         this.schIndex++;
         return true;
-      }else{
+      } else {
         /* all sch has excuted*/
         return false;
       }
-     
-    }
+    },
   },
 };
 </script>

@@ -24,6 +24,15 @@
           </div>
         </div>
       </el-carousel-item>
+      <el-carousel-item>
+        <div class="lin">
+          <img src="./../assets/PEAK.png" />
+          <div class="name">UDS Over LIN</div>
+          <div class="button">
+            <i class="el-icon-d-arrow-right" @click="goLIN"></i>
+          </div>
+        </div>
+      </el-carousel-item>
     </el-carousel>
     <el-divider></el-divider>
     <div class="catalog">UDS ISO-14299</div>
@@ -48,6 +57,15 @@
             <div class="name">UDS Loopback</div>
             <div class="tip">UDS Loopback Test</div>
             <el-button @click="goEmulate" type="text">GO</el-button>
+          </el-card>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="6" :offset="1">
+          <el-card shadow="always">
+            <div class="name">DoLIN ISO-17987-2</div>
+            <div class="tip">UDS Over LIN</div>
+            <el-button @click="goLIN" type="text">GO</el-button>
           </el-card>
         </el-col>
       </el-row>
@@ -92,6 +110,9 @@ export default {
   methods: {
     goPEAK() {
       this.$router.push("/pcan");
+    },
+    goLIN() {
+      this.$router.push("/lin");
     },
     goSECURITY() {
       this.$router.push("/security");
@@ -180,7 +201,29 @@ export default {
   right: 0px;
   bottom: 0px;
 }
-
+.lin {
+  background-color:rgb(135, 162, 235);
+  height: 100%;
+  border-radius: 10px;
+}
+.lin img {
+  margin-left: 10px;
+  margin-top: 5px;
+}
+.lin .name {
+  color: black;
+  font-size: 36px;
+  text-align: center;
+  margin: 20px;
+}
+.lin .button {
+  position: absolute;
+  color: white;
+  font-size: 25px;
+  margin: 10px;
+  right: 0px;
+  bottom: 0px;
+}
 .card button {
   float: right;
 }

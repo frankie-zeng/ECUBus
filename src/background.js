@@ -21,6 +21,7 @@ const { autoUpdater } = require("electron-updater")
 const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const LPUDS = require('./uds/lpuds.js')
+const LINUDS = require('./uds/linuds.js')
 
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
@@ -34,6 +35,9 @@ let win
 let canuds
 let ipuds
 let lpuds
+let linuds
+
+
 var menuTemplate = [
   {
     label: "Github",
@@ -87,6 +91,7 @@ function createWindow () {
   
   ipuds = new IPUDS(win)
   lpuds = new LPUDS(win)
+  linuds = new LINUDS(win)
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)

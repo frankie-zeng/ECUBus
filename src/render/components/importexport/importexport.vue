@@ -13,15 +13,7 @@ export default {
   },
   computed: {
     udsTable: function() {
-      if (this.mode === "can") {
-        return this.$store.state.canTable;
-      } else if (this.mode === "doip") {
-        return this.$store.state.doipTable;
-      } else if (this.mode === "lp") {
-        return this.$store.state.lpTable;
-      } else {
-        return [];
-      }
+      return this.$store.state[this.mode+'Table'];
     }
   },
   props: ["mode"],
@@ -39,15 +31,7 @@ export default {
             }]
           }
         }
-        if (this.mode === "doip") {
-          this.$store.commit("doipTableLoad", table);
-        } else if (this.mode === "can") {
-          this.$store.commit("canTableLoad", table);
-        } else if (this.mode === "lp") {
-          this.$store.commit("lpTableLoad", table);
-        } else {
-          return;
-        }
+        this.$store.commit(this.mode+"TableLoad", table);
       }
       this.$emit("imported");
     },

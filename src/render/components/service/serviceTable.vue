@@ -67,7 +67,7 @@
             size="mini"
           ></el-input
         ></el-col>
-        <el-col :span="6" :offset="1">
+        <el-col :span="8" :offset="1">
           <el-select
             v-model="sch.addr"
             placeholder="Address"
@@ -82,7 +82,10 @@
             >
               <span style="float: left">{{ item.name }}</span>
               <span style="float: right; color: #8492a6; font-size: 13px"
-                >SA:{{ item.SA }},TA:{{ item.TA }}</span
+                v-if="mode!='lin'">SA:{{ item.SA }},TA:{{ item.TA }}</span
+              >
+              <span style="float: right; color: #8492a6; font-size: 13px"
+                v-else>S-NAD:{{ item.sendNad }},R-NAD:{{ item.recvNad }}</span
               >
             </el-option>
           </el-select>
@@ -510,15 +513,7 @@ export default {
       return this.$store.state.running;
     },
     addrTable: function () {
-      if (this.mode === "doip") {
-        return this.$store.state.doipAddrTable;
-      } else if (this.mode === "can") {
-        return this.$store.state.canAddrTable;
-      } else if (this.mode === "lp") {
-        return this.$store.state.lpAddrTable;
-      } else {
-        return [];
-      }
+      return this.$store.state[this.mode+'AddrTable'];
     },
   },
 };
