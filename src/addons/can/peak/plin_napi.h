@@ -1,6 +1,6 @@
 #ifndef CANTP_H
 #define CANTP_H
-#define NAPI_VERSION 4
+#define NAPI_VERSION 6
 #include <napi.h>
 
 
