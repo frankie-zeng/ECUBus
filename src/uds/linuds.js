@@ -234,7 +234,7 @@ class LINUDS extends UDS {
         return -1
       }
       this.data = this.data.slice(5)
-      this.left = Math.ceil(this.data.length / 7)
+      this.left = Math.ceil(this.data.length / 6)
       this.sn = 1
     }
     if (!this.recvTimer.hasRef()) {
