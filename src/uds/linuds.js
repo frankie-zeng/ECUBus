@@ -330,7 +330,7 @@ class LINUDS extends UDS {
                     if (this.sn == 16) {
                       this.sn = 0
                     }
-                    this.recvData = this.recvData.concat(val.Data.slice(2, val.Length > this.needLen ? this.needLen : val.Length))
+                    this.recvData = this.recvData.concat(val.Data.slice(2, (val.Length - 2) > this.needLen ? this.needLen : val.Length))
                     this.needLen -= (val.Length > this.needLen ? this.needLen : val.Length - 2)
                     if (this.needLen == 0) {
                       this.verbose("receive a frame")
