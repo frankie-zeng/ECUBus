@@ -44,6 +44,39 @@
           style="width: 100px"
         ></el-input-number>
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
+        <el-button
+          icon="el-icon-s-tools"
+          size="small"
+          style="margin-left: 10px"
+          @click="startOptConfig"
+        ></el-button>
+      </el-col>
+    </el-row>
+    <el-row v-if="showOptCfg">
+      <el-col :span="22" :offset="1" style="text-align: right">
+        <el-checkbox
+          v-model="optConfig.restart"
+          label="Restart"
+          border
+          size="mini"
+        ></el-checkbox>
+        Restart Delay:
+        <el-input
+          :disabled="!optConfig.restart"
+          v-model.number="optConfig.reDelay"
+          controls-position="right"
+          :min="1"
+          size="small"
+          style="width: 100px"
+        ></el-input>
+        <el-button
+          size="small"
+          type="danger"
+          style="margin-left: 5px"
+          :disabled="!optConfig.restart"
+          @click="stopRestart"
+          >Stop</el-button
+        >
       </el-col>
     </el-row>
     <Progress ref="prog" />
@@ -58,13 +91,12 @@
         >
       </el-col>
     </el-row>
-
     <div id="terminal" class="logWindow"></div>
   </div>
 </template>
 <script>
 /* eslint-disable no-unused-vars */
-import Progress from './progress.vue'
+import Progress from "./progress.vue";
 const { Terminal } = require("xterm");
 const { FitAddon } = require("xterm-addon-fit");
 const { ipcRenderer } = require("electron");
@@ -87,10 +119,16 @@ export default {
       logLevel: "info",
       terminal: "",
       schIndex: 0,
+      showOptCfg: false,
+      optConfig: {
+        restart: false,
+        reDelay: 2000,
+        reTimer: {},
+      },
     };
   },
-  components:{
-    Progress
+  components: {
+    Progress,
   },
   mounted() {
     this.terminal = new Terminal({
@@ -153,6 +191,11 @@ export default {
     ipcRenderer.on("udsError", (event, val) => {
       this.failed(val.msg);
       this.$store.commit("setTableError", [this.schIndex - 1, val.index]);
+      if (this.optConfig.restart) {
+        this.optConfig.reTimer = setTimeout(() => {
+          this.run();
+        }, this.optConfig.reDelay);
+      }
     });
   },
   destroyed() {
@@ -188,6 +231,13 @@ export default {
     },
   },
   methods: {
+    stopRestart() {
+      clearTimeout(this.optConfig.reTimer);
+      this.optConfig.restart = false;
+    },
+    startOptConfig() {
+      this.showOptCfg = !this.showOptCfg;
+    },
     logLevelChange() {
       ipcRenderer.send("logLevel", this.logLevel);
       this.$store.commit("logLevel", this.logLevel);
