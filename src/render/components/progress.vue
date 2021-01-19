@@ -1,18 +1,17 @@
 <template>
   <div>
     <div v-for="item in progress" :key="item.name">
-      <el-row>
+      <el-row v-if="item.show">
         <el-col :span="2" style="text-align: center">
           <el-tag size="mini" style="width: 100%">{{
             item.name
           }}</el-tag></el-col
         >
-        <el-col :span="21" :offset="1">
+        <el-col :span="20" :offset="1">
           <el-progress
             :stroke-width="20"
             :text-inside="true"
             :percentage="item.percent"
-            v-if="item.show"
             :show-text="true"
             :color="item.color"
             class="mypro"
@@ -53,12 +52,15 @@ export default {
   },
   methods: {
     randomColor() {
-      var letters = "0123456789ABCDEF";
-      var color = "#";
-      for (var i = 0; i < 6; i++) {
-        color += letters[Math.floor(Math.random() * 16)];
+      var letters = "89ABCDEF";
+      var color = "#59a";
+      for (var i = 0; i < 3; i++) {
+        color += letters[Math.floor(Math.random() * 8)];
       }
       return color;
+    },
+    resetProgress() {
+      this.progress = [];
     },
   },
 };

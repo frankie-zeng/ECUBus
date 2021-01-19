@@ -46,7 +46,7 @@
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
       </el-col>
     </el-row>
-    <Progress/>
+    <Progress ref="prog" />
     <el-row style="margin-top: 10px">
       <el-col :span="22" :offset="1" style="text-align: right">
         <el-button
@@ -209,6 +209,7 @@ export default {
       });
     },
     run() {
+      this.$refs.prog.resetProgress();
       this.schIndex = 0;
       this.terminal.clear();
       this.interCycle = this.cycle;
