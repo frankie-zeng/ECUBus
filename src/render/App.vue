@@ -6,13 +6,13 @@
       </el-main>
     </el-container>
     <el-footer>
-      <Progress/>
+      <!-- <Progress/> -->
       <Updater/>
     </el-footer>
   </div>
 </template>
 <script>
-import Progress from './components/progress.vue'
+/* eslint-disable vue/no-unused-components */
 import Updater from './components/updater.vue'
 export default {
   data(){
@@ -21,7 +21,6 @@ export default {
     }
   },
   components:{
-    Progress,
     Updater
   }
 }

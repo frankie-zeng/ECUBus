@@ -46,6 +46,7 @@
         <!-- <el-button @click="run" size="small" type="success" :disabled="!connected||running">开始</el-button> -->
       </el-col>
     </el-row>
+    <Progress/>
     <el-row style="margin-top: 10px">
       <el-col :span="22" :offset="1" style="text-align: right">
         <el-button
@@ -57,11 +58,13 @@
         >
       </el-col>
     </el-row>
+
     <div id="terminal" class="logWindow"></div>
   </div>
 </template>
 <script>
 /* eslint-disable no-unused-vars */
+import Progress from './progress.vue'
 const { Terminal } = require("xterm");
 const { FitAddon } = require("xterm-addon-fit");
 const { ipcRenderer } = require("electron");
@@ -85,6 +88,9 @@ export default {
       terminal: "",
       schIndex: 0,
     };
+  },
+  components:{
+    Progress
   },
   mounted() {
     this.terminal = new Terminal({

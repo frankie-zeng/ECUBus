@@ -16,8 +16,9 @@ class UDS {
         }
         this.win.webContents.send(channel, msg)
     }
-    progress(show, percent) {
+    progress(show, percent,name='main') {
         this.emit('progress', {
+            name: name,
             show: show,
             percent: percent
         })

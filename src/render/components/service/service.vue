@@ -299,6 +299,11 @@ export default {
           params: "key:string",
           desc: "Return last store value in this.set",
         },
+        {
+          func: "this.progress(show,percent,name='main')",
+          params: "show:true to display progress,percent:10%,name:support multi progress",
+          desc: "Display scedule progress",
+        }
       ],
     };
   },
