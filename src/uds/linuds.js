@@ -127,7 +127,7 @@ class LINUDS extends UDS {
     })
   }
   write(data) {
-    this.verbose(data)
+    this.debug(data)
     let msg = {
       FrameId: 0x3c,
       Length: data.length,
@@ -156,7 +156,8 @@ class LINUDS extends UDS {
       //stop scheduel
       this.linapi.SuspendSchedule(this.device)
       try {
-        if ((this.recvData[0] == 0x7F) && (this.recvData[1] == 0x78)) {
+        if ((this.recvData[0] == 0x7F) && (this.recvData[2] == 0x78)) {
+          this.debug("receive a wati frame")
           this.delay()
           this.recvData = []
           this.ff = false
@@ -238,16 +239,16 @@ class LINUDS extends UDS {
       this.sn = 1
     }
     if (!this.recvTimer.hasRef()) {
-      this.verbose("start receve poll feature")
+      this.debug("start receve poll feature")
       this.recvTimer = setInterval(() => {
         let val = {}
         while (this.linapi.Read(val) == 0) {
 
           if ((val.ErrorFlags == 0) && (val.Direction == PLIN.dirPublisher)) {
-            this.verbose(val)
+            this.debug(val)
             if (this.left > 0) {
               let usedTime = new Date().getTime() - this.writeTime
-              this.verbose(`usedtime:${usedTime}`)
+              this.debug(`usedtime:${usedTime}`)
               setTimeout(() => {
                 /* ready raw data */
                 rawdata[1] = 0x20 | this.sn
@@ -280,7 +281,7 @@ class LINUDS extends UDS {
               }, this.stMin - usedTime > 0 ? this.stMin - usedTime : 0);
             } else {
               // this.linapi.SuspendSchedule(this.device)
-              this.verbose("end one tp write")
+              this.debug("end one tp write")
               this.recvData = []
               this.ff = false
               //check suppress
@@ -305,21 +306,21 @@ class LINUDS extends UDS {
             }
           } else if ((val.ErrorFlags == 0) && (val.Direction == PLIN.dirSubscriber)) {
             if ((val.FrameId == 0x7d) && (val.Data[0] == this.recvNad)) {
-              this.verbose(val)
+              this.debug(val)
               //check frame type
               try {
                 if ((val.Data[1] & 0xf0) == 0) {
                   //simple frame
                   this.recvData = val.Data.slice(2, 2 + val.Data[1] & 0xf)
-                  this.verbose("receive a frame")
-                  this.verbose(this.recvData)
+                  this.debug("receive a frame")
+                  this.debug(this.recvData)
                   this.recvHandle()
                 } else if ((val.Data[1] & 0xf0) == 0x10) {
                   //ff
                   this.ff = true
                   this.sn = 1
                   this.needLen = (val.Data[1] & 0xf) * 256 + val.Data[2]
-                  this.verbose(`long frame len:${this.needLen}`)
+                  this.debug(`long frame len:${this.needLen}`)
                   this.recvData = this.recvData.concat(val.Data.slice(3, val.Length))
                   this.needLen -= (val.Length - 3)
                 } else if (((val.Data[1] & 0xf0) == 0x20) && (this.ff)) {
@@ -333,8 +334,8 @@ class LINUDS extends UDS {
                     this.recvData = this.recvData.concat(val.Data.slice(2, (val.Length - 2) > this.needLen ? (2 + this.needLen) : val.Length))
                     this.needLen -= ((val.Length - 2) > this.needLen ? this.needLen : (val.Length - 2))
                     if (this.needLen == 0) {
-                      this.verbose("receive a frame")
-                      this.verbose(this.recvData)
+                      this.debug("receive a frame")
+                      this.debug(this.recvData)
                       this.recvHandle()
 
 
