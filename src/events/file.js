@@ -4,10 +4,14 @@ const fs = require('fs')
 
 
 ipcMain.on('readFile', (event, arg) => {
+  let filter
+  if(arg==undefined){
+    filter= [{ name: 'JSON', extensions: ['json'] }]
+  }else{
+    filter = arg
+  }
   var file = dialog.showOpenDialogSync({
-    filters: [
-      { name: 'JSON', extensions: ['json'] },
-    ],
+    filters: filter,
   })
   if (Array.isArray(file)) {
     event.returnValue = fs.readFileSync(file[0],'utf8')

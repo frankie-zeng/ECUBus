@@ -7,6 +7,7 @@ import SHE from './../views/SHE.vue'
 import DOIP from './../views/DOIP.vue'
 import UDS_EMULATE from './../views/udsEmulate.vue'
 import Certificate from './../views/Certificate.vue'
+import HseHelper from './../views/HseHelper.vue'
 Vue.use(VueRouter)
 
 const routes = [
@@ -45,6 +46,11 @@ const routes = [
     name: 'lin',
     component: LIN
   },
+  {
+    path: '/hseHelper',
+    name: 'HseHelper',
+    component: HseHelper
+  }
 ]
 
 const router = new VueRouter({

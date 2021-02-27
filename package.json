@@ -29,6 +29,7 @@
     "node-addon-api": "^2.0.0",
     "node-addon-loader": "0.0.6",
     "node-aes-cmac": "^0.1.1",
+    "node-aes-gcm": "git+https://github.com/frankie-zeng/node-aes-gcm.git",
     "node-forge": "^0.10.0",
     "patch-package": "^6.2.0",
     "sortablejs": "^1.10.2",

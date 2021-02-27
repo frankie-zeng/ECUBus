@@ -5,7 +5,12 @@
       <span>ECU-BUS</span>
     </div>
 
-    <el-carousel type="card" height="200px" :autoplay="false" indicatorPosition="none">
+    <el-carousel
+      type="card"
+      height="200px"
+      :autoplay="false"
+      indicatorPosition="none"
+    >
       <el-carousel-item>
         <div class="peak">
           <img src="./../assets/PEAK.png" />
@@ -35,6 +40,18 @@
       </el-carousel-item>
     </el-carousel>
     <el-divider></el-divider>
+    <div class="catalog">S32 HSE</div>
+    <div class="card">
+      <el-row>
+        <el-col :span="6" :offset="1">
+          <el-card shadow="always">
+            <div class="name">HSE Helper</div>
+            <div class="tip">GMAC, SMR</div>
+            <el-button @click="goHseHelper" type="text">GO</el-button>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
     <div class="catalog">UDS ISO-14299</div>
     <div class="card">
       <el-row>
@@ -84,7 +101,9 @@
           <el-card shadow="always">
             <div class="name">Certificate Tool</div>
             <div class="tip">S32K3-HSE</div>
-            <el-button @click="goPage('/certificate')" type="text">GO</el-button>
+            <el-button @click="goPage('/certificate')" type="text"
+              >GO</el-button
+            >
           </el-card>
         </el-col>
       </el-row>
@@ -93,10 +112,10 @@
 </template>
 <script>
 export default {
-  data: function() {
+  data: function () {
     return {
       height: 0,
-      width: 0
+      width: 0,
     };
   },
   mounted() {
@@ -126,10 +145,13 @@ export default {
     goEmulate() {
       this.$router.push("/udsEmulate");
     },
+    goHseHelper() {
+      this.$router.push("/hseHelper");
+    },
     resizeHandle() {
       this.height = window.innerHeight;
-    }
-  }
+    },
+  },
 };
 </script>
 <style>
@@ -154,8 +176,8 @@ export default {
 .title1 img {
   height: 48px;
 }
-.doip{
-  background-color:white;
+.doip {
+  background-color: white;
   height: 98%;
   border-radius: 10px;
   border-style: solid;
@@ -175,7 +197,7 @@ export default {
   bottom: 0px;
 }
 .doip img {
-  margin:5px;
+  margin: 5px;
   width: 100px;
 }
 .peak {
@@ -202,7 +224,7 @@ export default {
   bottom: 0px;
 }
 .lin {
-  background-color:rgb(135, 162, 235);
+  background-color: rgb(135, 162, 235);
   height: 100%;
   border-radius: 10px;
 }
