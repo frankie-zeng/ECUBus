@@ -25,9 +25,26 @@ export default new Vuex.Store({
     lpTable: [],
     linTable: [],
     running: false,
+    /* hse config */
+    hseConfig:{
+      format:{
+        nvm:[],
+        ram:[]
+      },
+      smr:[]
+    }
 
   },
   mutations: {
+    /* hse config*/
+    hseFormatLoad(state,val){
+      if(val.catalog==1){
+        state.hseConfig.format.nvm=val.data
+      }else{
+        state.hseConfig.format.ram=val.data
+      }
+    },
+    /* uds */
     addSch(state,mode){
       state[mode+'Table'].push({
         name:'sch'+(state[mode+'Table'].length+1),

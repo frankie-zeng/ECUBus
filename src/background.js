@@ -5,9 +5,9 @@ import { app, protocol, BrowserWindow, dialog, Menu, ipcMain} from 'electron'
 // import CANUDS from './uds/canuds.js'
 
 import {
-  createProtocol,
-  installVueDevtools 
+  createProtocol, 
 } from 'vue-cli-plugin-electron-builder/lib'
+import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
 import { CancellationToken } from "electron-updater"
@@ -140,7 +140,7 @@ app.on('ready', async () => {
     // If you are not using Windows 10 dark mode, you may uncomment these lines
     // In addition, if the linked issue is closed, you can upgrade electron and uncomment these lines
     try {
-      await installVueDevtools()
+      await installExtension(VUEJS_DEVTOOLS)
     } catch (e) {
       console.error('Vue Devtools failed to install:', e.toString())
     }
