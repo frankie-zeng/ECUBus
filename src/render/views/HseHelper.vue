@@ -15,24 +15,27 @@
         >
       </div>
       <div v-else>
-         <FwStatus :fwInfo="fwInfo" :smr="smr"/>
-         <div class="fwDel"> <el-button type="danger" icon="el-icon-delete" class="fwDel" @click="isFw=false" size="mini"></el-button>
-         </div>
-          
+        <FwStatus :fwInfo="fwInfo" :smr="smr" />
+        <div class="fwDel">
+          <el-button
+            type="danger"
+            icon="el-icon-delete"
+            class="fwDel"
+            @click="isFw = false"
+            size="mini"
+          ></el-button>
+        </div>
       </div>
     </div>
-    <div>
-        
-    </div>
     <el-row>
-        <!-- smr install -->
-        <el-col :span="10" :offset="1">
-            <el-card shadow="hover">
-                <HseSMR/>
-            </el-card>
-        </el-col>
+      <HseFormat />
     </el-row>
-    
+    <el-row>
+      <el-card shadow="hover">
+        <h4>HSE SMR</h4>
+        <HseSMR />
+      </el-card>
+    </el-row>
   </div>
 </template>
 
@@ -40,12 +43,15 @@
 const { ipcRenderer } = require("electron");
 const hexParser = require("./../../hse_helper/intel_hex.js");
 const ivtTAG = Buffer.from("a55aa55a", "hex");
+
 import FwStatus from "./../components/fwStatus.vue";
-import HseSMR from "./../components/hsesmr.vue"
+import HseSMR from "./../components/hsesmr.vue";
+import HseFormat from "./../components/hseformat.vue";
 export default {
   components: {
     FwStatus,
-    HseSMR
+    HseSMR,
+    HseFormat,
   },
   data() {
     return {
@@ -76,8 +82,12 @@ export default {
         },
         size: 0,
       },
-      smr:[],
-      
+      config: {
+        format: {
+          nvm: [],
+          ram: [],
+        },
+      },
     };
   },
 
@@ -137,7 +147,6 @@ export default {
               });
               return;
             } else {
-                console.log('xxx')
               this.fwInfo.xrdcInfo.config = this.fw.data.slice(
                 this.fwInfo.ivtInfo.xrdcAddr - this.fwInfo.startAddr + 0x4,
                 this.fwInfo.ivtInfo.xrdcAddr - this.fwInfo.startAddr + 0x90
@@ -146,7 +155,6 @@ export default {
                 this.fwInfo.ivtInfo.xrdcAddr - this.fwInfo.startAddr + 0xf0,
                 this.fwInfo.ivtInfo.xrdcAddr - this.fwInfo.startAddr + 0x100
               );
-              console.log(this.fwInfo.xrdcInfo)
             }
           }
           if (this.fwInfo.ivtInfo.appBlAddr != 0) {
@@ -189,7 +197,6 @@ export default {
             }
           }
           this.isFw = true;
-          console.log(this.fwInfo);
         } catch (e) {
           this.$notify.error({
             title: "Error",
@@ -204,18 +211,18 @@ export default {
 </script>
 
 <style>
-.fwDel{
-    text-align: right;
-    border-radius: 20px;
-    margin:5px;
+.fwDel {
+  text-align: right;
+  border-radius: 20px;
+  margin: 5px;
 }
-.smr{
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 10px;
-    border-color: #409EFF;
-    margin:5px;
-    height: 300px;
-    width: 100%;
+.smr {
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+  border-color: #409eff;
+  margin: 5px;
+  height: 300px;
+  width: 100%;
 }
 </style>

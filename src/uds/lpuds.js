@@ -48,7 +48,6 @@ class LPUDS extends UDS {
         try {
             var item = this.getNextService()
         } catch (e) {
-            console.log(e)
             this.emit('udsError', {
                 msg: "User defined function syntax error",
                 index: this.tableIndex

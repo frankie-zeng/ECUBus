@@ -53,7 +53,6 @@ function payload2data(payload) {
     for (i in payload) {
         $[payload[i].name] = payload[i][payload[i].name]
     }
-    console.log($)
     var buf
     for (i in payload) {
         if (payload[i].type === 'subfunction') {
@@ -76,7 +75,6 @@ function payload2data(payload) {
                         payload[i][payload[i].name] = buf.toString('hex')
                         $[payload[i].name] = buf.toString('hex')
                     } catch (error) {
-                        console.log(error)
                         buf = Buffer.alloc(0)
                     }
                 } else {
