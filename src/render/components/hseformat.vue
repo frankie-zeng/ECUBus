@@ -131,7 +131,7 @@
           <el-collapse-item title="NVM Catalog" name="2">
             
             <el-alert
-              title="EXT type key can't load in this tool,you should load key in your FW!"
+              title="EXT type key can't load in this tool,you should load key in your firmware!"
               type="info"
               :closable="false"
               style="padding:5px"
@@ -208,7 +208,7 @@
           </el-collapse-item>
           <el-collapse-item title="RAM Catalog" name="3">
             <el-alert
-              title="RAM catalog key can't load in this tool,you should load key in your FW!"
+              title="RAM catalog key can't load in this tool,you should load key in your firmware!"
               type="info"
               :closable="false"
               style="padding:5px"

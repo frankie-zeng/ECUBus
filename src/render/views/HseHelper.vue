@@ -15,7 +15,7 @@
         >
       </div>
       <div v-else>
-        <FwStatus :fwInfo="fwInfo" :smr="smr" />
+        <FwStatus :fwInfo="fwInfo"/>
         <div class="fwDel">
           <el-button
             type="danger"
@@ -31,10 +31,7 @@
       <HseFormat />
     </el-row>
     <el-row>
-      <el-card shadow="hover">
-        <h4>HSE SMR</h4>
-        <HseSMR />
-      </el-card>
+      <HseSMR :isFw="isFw" :fwInfo="fwInfo"/>
     </el-row>
   </div>
 </template>
@@ -81,12 +78,6 @@ export default {
           gmac: Buffer.from([]),
         },
         size: 0,
-      },
-      config: {
-        format: {
-          nvm: [],
-          ram: [],
-        },
       },
     };
   },

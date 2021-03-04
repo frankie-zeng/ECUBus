@@ -4,10 +4,10 @@
       <el-tag type="danger">IVT</el-tag>
       <el-tag type="success">XRDC</el-tag>
       <el-tag type="warning">APP-BL</el-tag>
-      <el-tag >SMR</el-tag>
+      <el-tag>SMR</el-tag>
     </div>
     <el-divider
-      >Firmware Size: 0x{{ this.fwInfo.size.toString(16) }} Bytes</el-divider
+      >Firmware Size: 0x{{ fwInfo.size.toString(16) }} Bytes</el-divider
     >
     <div class="fw">
       <div style="width: 100%">
@@ -15,11 +15,11 @@
           <div style="text-align: center">
             <el-tag type="danger">IVT-Header</el-tag>
             <div style="margin: 2px">
-              0x{{ this.fwInfo.ivtAddr.toString(16) }}~0x{{
-                (this.fwInfo.ivtAddr + 256).toString(16)
+              0x{{ fwInfo.ivtAddr.toString(16) }}~0x{{
+                (fwInfo.ivtAddr + 256).toString(16)
               }}
             </div>
-            <div v-for="(val, key) in this.fwInfo.ivtInfo" :key="key">
+            <div v-for="(val, key) in fwInfo.ivtInfo" :key="key">
               <div v-if="key != 'gmac'">
                 <strong>{{ key }}</strong
                 >:0x{{ val.toString(16) }}
@@ -33,7 +33,10 @@
           <el-button
             slot="reference"
             class="ivt"
-            :style="{ width: (256 / this.fwInfo.size) * 100 + '%' }"
+            :style="{
+              width: (256 / fwInfo.size) * 100 + '%',
+              left: (fwInfo.ivtInfo.ivtAddr / fwInfo.size) * 100 + '%',
+            }"
           ></el-button>
         </el-popover>
         <el-popover
@@ -44,16 +47,16 @@
           <div style="text-align: center">
             <el-tag type="warning">APP-Header</el-tag>
             <div style="margin: 2px">
-              0x{{ this.fwInfo.ivtInfo.appBlAddr.toString(16) }}~0x{{
+              0x{{ fwInfo.ivtInfo.appBlAddr.toString(16) }}~0x{{
                 (
-                  this.fwInfo.ivtInfo.appBlAddr +
+                  fwInfo.ivtInfo.appBlAddr +
                   64 +
-                  this.fwInfo.appBlHeaderInfo.size +
+                  fwInfo.appBlHeaderInfo.size +
                   16
                 ).toString(16)
               }}
             </div>
-            <div v-for="(val, key) in this.fwInfo.appBlHeaderInfo" :key="key">
+            <div v-for="(val, key) in fwInfo.appBlHeaderInfo" :key="key">
               <div v-if="key != 'gmac'">
                 <strong>{{ key }}</strong
                 >:0x{{ val.toString(16) }}
@@ -69,13 +72,10 @@
             class="appbl"
             :style="{
               width:
-                ((64 + this.fwInfo.appBlHeaderInfo.size + 16) /
-                  this.fwInfo.size) *
-                  100 +
+                ((64 + fwInfo.appBlHeaderInfo.size + 16) / fwInfo.size) * 100 +
                 '%',
               left:
-                ((this.fwInfo.ivtInfo.appBlAddr - this.fwInfo.startAddr) /
-                  this.fwInfo.size) *
+                ((fwInfo.ivtInfo.appBlAddr - fwInfo.startAddr) / fwInfo.size) *
                   100 +
                 '%',
             }"
@@ -89,16 +89,16 @@
           <div style="text-align: center">
             <el-tag type="warning">APP-Header</el-tag>
             <div style="margin: 2px">
-              0x{{ this.fwInfo.ivtInfo.appBlAddr.toString(16) }}~0x{{
+              0x{{ fwInfo.ivtInfo.appBlAddr.toString(16) }}~0x{{
                 (
-                  this.fwInfo.ivtInfo.appBlAddr +
+                  fwInfo.ivtInfo.appBlAddr +
                   64 +
-                  this.fwInfo.appBlHeaderInfo.size +
+                  fwInfo.appBlHeaderInfo.size +
                   16
                 ).toString(16)
               }}
             </div>
-            <div v-for="(val, key) in this.fwInfo.appBlHeaderInfo" :key="key">
+            <div v-for="(val, key) in fwInfo.appBlHeaderInfo" :key="key">
               <div v-if="key != 'gmac'">
                 <strong>{{ key }}</strong
                 >:0x{{ val.toString(16) }}
@@ -114,13 +114,10 @@
             class="appbl"
             :style="{
               width:
-                ((64 + this.fwInfo.appBlHeaderInfo.size + 16) /
-                  this.fwInfo.size) *
-                  100 +
+                ((64 + fwInfo.appBlHeaderInfo.size + 16) / fwInfo.size) * 100 +
                 '%',
               left:
-                ((this.fwInfo.ivtInfo.appBlAddr - this.fwInfo.startAddr) /
-                  this.fwInfo.size) *
+                ((fwInfo.ivtInfo.appBlAddr - fwInfo.startAddr) / fwInfo.size) *
                   100 +
                 '%',
             }"
@@ -134,12 +131,12 @@
           <div style="text-align: center">
             <el-tag type="success">XRDC</el-tag>
             <div style="margin: 2px">
-              0x{{ this.fwInfo.ivtInfo.xrdcAddr.toString(16) }}~0x{{
-                (this.fwInfo.ivtInfo.xrdcAddr + 256).toString(16)
+              0x{{ fwInfo.ivtInfo.xrdcAddr.toString(16) }}~0x{{
+                (fwInfo.ivtInfo.xrdcAddr + 256).toString(16)
               }}
             </div>
-            <div v-for="(val, key) in this.fwInfo.xrdcInfo" :key="key">
-              <div v-if="typeof(key) =='number'">
+            <div v-for="(val, key) in fwInfo.xrdcInfo" :key="key">
+              <div v-if="typeof key == 'number'">
                 <strong>{{ key }}</strong
                 >:0x{{ val.toString(16) }}
               </div>
@@ -153,15 +150,54 @@
             slot="reference"
             class="xrdc"
             :style="{
-              width: (256 / this.fwInfo.size) * 100 + '%',
+              width: (256 / fwInfo.size) * 100 + '%',
               left:
-                ((this.fwInfo.ivtInfo.xrdcAddr - this.fwInfo.startAddr) /
-                  this.fwInfo.size) *
+                ((fwInfo.ivtInfo.xrdcAddr - fwInfo.startAddr) / fwInfo.size) *
                   100 +
                 '%',
             }"
           ></el-button>
         </el-popover>
+
+        <div v-for="item in smr" :key="item.index">
+          <el-popover placement="bottom" trigger="hover">
+            <div style="text-align: center">
+              <el-tag type="success">SMR#{{ item.index }}</el-tag>
+              <div style="margin: 2px">
+                0x{{ item.startAddr.toString(16) }}~0x{{
+                  (item.startAddr + item.length).toString(16)
+                }}
+              </div>
+            </div>
+            <el-button
+              slot="reference"
+              class="smr"
+              :style="{
+                width: (item.length / fwInfo.size) * 100 + '%',
+                left:
+                  ((item.startAddr - fwInfo.startAddr) / fwInfo.size) * 100 +
+                  '%',
+              }"
+            ></el-button>
+          </el-popover>
+
+          <el-popover placement="bottom" trigger="hover" v-if="item.proof">
+            <div style="text-align: center">
+              <el-tag type="success">Proof#{{ item.index }}</el-tag>
+              <div style="margin: 2px">0x{{ item.proofAddr.toString(16) }}</div>
+            </div>
+            <el-button
+              slot="reference"
+              class="proof"
+              :style="{
+                width: (100 / fwInfo.size) * 100 + '%',
+                left:
+                  ((item.proofAddr - fwInfo.startAddr) / fwInfo.size) * 100 +
+                  '%',
+              }"
+            ></el-button>
+          </el-popover>
+        </div>
       </div>
     </div>
   </div>
@@ -169,6 +205,14 @@
 
 <script>
 export default {
+  data() {
+    return {};
+  },
+  computed: {
+    smr: function () {
+      return this.$store.state.hseConfig.smr;
+    },
+  },
   props: {
     fwInfo: {
       type: Object,
@@ -200,12 +244,6 @@ export default {
         };
       },
     },
-    smr:{
-        type: Array,
-        default: function(){
-            return []
-        }
-    }
   },
 };
 </script>
@@ -217,6 +255,7 @@ export default {
   background-color: lightgray;
   border-radius: 10px;
   margin-top: 10px;
+  z-index: 10;
 }
 .fw .ivt {
   height: 50px;
@@ -225,6 +264,8 @@ export default {
   position: absolute;
   padding: 0px;
   min-width: 10px;
+  z-index: 10;
+  margin-left: 20px;
 }
 .fw .appbl {
   height: 50px;
@@ -233,6 +274,8 @@ export default {
   position: absolute;
   padding: 0px;
   min-width: 10px;
+  z-index: 10;
+  margin-left: 20px;
 }
 
 .fw .xrdc {
@@ -242,5 +285,28 @@ export default {
   border-radius: 1px;
   position: absolute;
   min-width: 10px;
+  z-index: 10;
+  margin-left: 20px;
+}
+
+.fw .smr {
+  padding: 0px;
+  height: 50px;
+  background-color: #409EFF;
+  border-radius: 1px;
+  position: absolute;
+  min-width: 10px;
+  z-index: 2;
+  margin-left: 20px;
+}
+.fw .proof {
+  padding: 0px;
+  height: 50px;
+  background-color: black;
+  border-radius: 1px;
+  position: absolute;
+  min-width: 10px;
+  z-index: 3;
+  margin-left: 20px;
 }
 </style>

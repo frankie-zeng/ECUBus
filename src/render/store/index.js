@@ -8,55 +8,58 @@ export default new Vuex.Store({
     canConnect: false,
     doipConnect: false,
     linConnect: false,
-    logLevel:'info',
+    logLevel: 'info',
     /*addr*/
     canAddrTable: [],
     doipAddrTable: [],
-    linAddrTable: [], 
-    lpAddrTable:[{
-      name:'emulate-lp',
-      SA:0,
-      TA:1
+    linAddrTable: [],
+    lpAddrTable: [{
+      name: 'emulate-lp',
+      SA: 0,
+      TA: 1
     }],
-    tableErrorIndex:[-1,-1],
-    /* service */ 
+    tableErrorIndex: [-1, -1],
+    /* service */
     canTable: [],
     doipTable: [],
     lpTable: [],
     linTable: [],
     running: false,
     /* hse config */
-    hseConfig:{
-      format:{
-        nvm:[],
-        ram:[]
+    hseConfig: {
+      format: {
+        nvm: [],
+        ram: []
       },
-      smr:[]
+      smr: []
     }
 
   },
   mutations: {
     /* hse config*/
-    hseFormatLoad(state,val){
-      if(val.catalog==1){
-        state.hseConfig.format.nvm=val.data
-      }else{
-        state.hseConfig.format.ram=val.data
+    hseFormatLoad(state, val) {
+      if (val.catalog == 1) {
+        state.hseConfig.format.nvm = val.data
+      } else {
+        state.hseConfig.format.ram = val.data
       }
     },
+    hseSmrLoad(state, val) {
+      state.hseConfig.smr = val
+    },
     /* uds */
-    addSch(state,mode){
-      state[mode+'Table'].push({
-        name:'sch'+(state[mode+'Table'].length+1),
-        addr:'',
-        services:[]
+    addSch(state, mode) {
+      state[mode + 'Table'].push({
+        name: 'sch' + (state[mode + 'Table'].length + 1),
+        addr: '',
+        services: []
       })
     },
-    logLevel(state,level){
-      state.logLevel=level
+    logLevel(state, level) {
+      state.logLevel = level
     },
-    setTableError(state,index){
-      state.tableErrorIndex=index
+    setTableError(state, index) {
+      state.tableErrorIndex = index
     },
     runChange(state, run) {
       state.running = run
