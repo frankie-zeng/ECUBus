@@ -88,7 +88,9 @@
                 </el-select>
               </el-form-item>
               <el-form-item label="Flash Proof" prop="proof" required>
-                <el-checkbox v-model="addSmr.proof">Proof In Flash</el-checkbox>
+                <el-checkbox v-model="addSmr.proof" :disabled="mac"
+                  >Proof In Flash</el-checkbox
+                >
               </el-form-item>
               <el-form-item
                 label="ProofAddr"
@@ -104,6 +106,15 @@
               </el-form-item>
               <el-form-item label="Sign Key" prop="signKey" required>
                 <el-input
+                  v-if="mac"
+                  :maxlength="keySize / 4"
+                  v-model="addSmr.signKey"
+                  show-word-limit
+                >
+                  <template slot="prepend">0x</template>
+                </el-input>
+                <el-input
+                  v-else
                   v-model="addSmr.signKey"
                   type="textarea"
                   :autosize="{ minRows: 1, maxRows: 12 }"
@@ -182,6 +193,11 @@
                   {{ "0x" + scope.row.proofAddr.toString(16) }}
                 </template>
               </el-table-column>
+              <el-table-column prop="tag" label="Auth Tag">
+                <template slot-scope="scope">
+                  {{ scope.row.tag.toString(16) }}
+                </template>
+              </el-table-column>
               <el-table-column
                 fixed="right"
                 label="Action"
@@ -208,12 +224,16 @@
 </template>
 
 <script>
+const { ipcRenderer } = require("electron");
 export default {
   data() {
     return {
-      symKeyType: [0x12, 0x20, 0x30],
+      mac: true,
       activeNames: ["1"],
       smrTable: [],
+      keyType: "",
+      keySize: "",
+      signTable: [],
       rules: {
         startAddr: [
           {
@@ -306,6 +326,21 @@ export default {
               return false;
             }
           }
+          //calculate tag
+          let ret = ipcRenderer.sendSync("signFw", {
+            file: this.fwInfo.fileName,
+            info: this.addSmr,
+          });
+          if (!ret.err) {
+            this.$notify.error({
+              title: "Error",
+              message: ret.msg,
+              duration: 0,
+            });
+            return false;
+          }
+          clone.tag = ret.tag;
+
           for (let i = 0; i < this.smrTable.length; i++) {
             if (this.smrTable[i].index == clone.index) {
               //same smr index
@@ -325,38 +360,32 @@ export default {
     schemeChange() {},
     targetKeyChange() {
       this.addSmr.authWay = "";
-    },
-  },
-  watch: {
-    watch: {
-      smrTable: function (val) {
-        this.$store.commit("hseSmrLoad", val);
-      },
-    },
-  },
-  computed: {
-    keyTable: function () {
-      let nvm = this.$store.state.hseConfig.format.nvm;
-      let table = [];
-      for (let i = 0; i < nvm.length; i++) {
-        let group = nvm[i].keyHandle;
-        for (let j = 0; j < group.length; j++) {
-          table.push(group[j]);
-        }
+      this.addSmr.proof = false;
+      this.addSmr.proofAddr = "";
+      this.addSmr.signKey = "";
+      this.$nextTick(() => {
+        this.$refs.smr.clearValidate();
+      });
+      let gorup = (this.addSmr.key >> 8) & 0xff;
+      let slot = this.addSmr.key & 0xff;
+      this.keySize = this.$store.state.hseConfig.format.nvm[gorup].keySize;
+      this.keyType = this.$store.state.hseConfig.format.nvm[gorup].keyType;
+      const symKeyType = [0x12, 0x20, 0x30];
+      const privKeyType = [0x87, 0x97, 0xa7];
+      this.mac = symKeyType.indexOf(parseInt(this.keyType)) != -1;
+
+      let priv = privKeyType.indexOf(parseInt(this.keyType)) != -1;
+      if (
+        this.$store.state.hseConfig.format.nvm[gorup].keyHandle[slot]
+          .keyLoaded &&
+        (this.mac || priv)
+      ) {
+        this.addSmr.signKey = this.$store.state.hseConfig.format.nvm[
+          gorup
+        ].keyHandle[slot].value.data;
       }
-      return table;
-    },
-    keyType: function () {
-      if (this.addSmr.key != "") {
-        let gorup = (this.addSmr.key >> 8) & 0xff;
-        return this.$store.state.hseConfig.format.nvm[gorup].keyType;
-      } else {
-        return 0;
-      }
-    },
-    signTable: function () {
-      if (this.symKeyType.indexOf(parseInt(this.keyType)) == -1) {
-        return [
+      if (!this.mac) {
+        this.signTable = [
           {
             value: "rsa-pkcs1-sha2-224",
             support: false,
@@ -391,7 +420,7 @@ export default {
           },
         ];
       } else {
-        return [
+        this.signTable = [
           {
             value: "cmac-aes",
             support: true,
@@ -422,6 +451,35 @@ export default {
           },
         ];
       }
+    },
+  },
+  watch: {
+    watch: {
+      smrTable: function (val) {
+        this.$store.commit("hseSmrLoad", val);
+      },
+    },
+  },
+  computed: {
+    keyTable: function () {
+      let nvm = this.$store.state.hseConfig.format.nvm;
+      let table = [];
+      for (let i = 0; i < nvm.length; i++) {
+        if((nvm[i].keyType==0xa7)||(nvm[i].keyType==0xa8)){
+          //dh type key can verify
+          continue;
+        }
+        let group = nvm[i].keyHandle;
+        for (let j = 0; j < group.length; j++) {
+          //TODO:check keyload status
+          // if(gorup[j].keyLoaded){
+          //   //check verify flag in 
+          // }
+
+          table.push(group[j]);
+        }
+      }
+      return table;
     },
   },
 };

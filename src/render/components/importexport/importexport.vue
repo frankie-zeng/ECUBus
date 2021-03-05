@@ -21,7 +21,7 @@ export default {
     importConfig() {
       var file = ipcRenderer.sendSync("readFile");
       if (file) {
-        var table = JSON.parse(file);
+        var table = JSON.parse(file.data);
         /* compatible old verison config file*/
         if(table.length>0){
           if('type' in table[0]){

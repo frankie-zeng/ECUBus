@@ -660,6 +660,7 @@ export default {
           this.keyHandle[this.sheKeyLoad.keyId & 0xff].value = {
             raw: this.sheKeyLoad,
             data: M,
+            type:'she'
           };
           this.keyHandle[this.sheKeyLoad.keyId & 0xff].keyLoaded = true;
         } else {
@@ -695,6 +696,7 @@ export default {
             this.keyHandle[this.genKeyLoad.key & 0xff].value = {
               raw: this.sheKeyLoad,
               data: this.genKeyLoad.value,
+              type:'gen'
             };
             this.keyHandle[this.genKeyLoad.key & 0xff].keyLoaded = true;
           } else {

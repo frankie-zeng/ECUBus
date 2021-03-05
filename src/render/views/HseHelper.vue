@@ -55,6 +55,7 @@ export default {
       isFw: false,
       fw: {},
       fwInfo: {
+        fileName:'',
         startAddr: 0x400000,
         ivtAddr: 0,
         ivtInfo: {
@@ -91,9 +92,10 @@ export default {
       var file = ipcRenderer.sendSync("readFile", [
         { name: "HEX", extensions: ["hex"] },
       ]);
-      if (file !== " ") {
+      if (file) {
         try {
-          this.fw = hexParser.parse(file);
+          this.fwInfo.fileName=file.name
+          this.fw = hexParser.parse(file.data);
           //find ivt header in fw
           this.fwInfo.size = this.fw.data.length;
           this.fwInfo.ivtAddr = this.fw.data.indexOf(ivtTAG);

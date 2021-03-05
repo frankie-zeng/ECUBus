@@ -168,6 +168,8 @@
                   (item.startAddr + item.length).toString(16)
                 }}
               </div>
+              <div><strong>Auth Scheme</strong>:{{ item.authWay }}</div>
+              <div><strong>TAG</strong>:{{ item.tag.toString(16) }}</div>
             </div>
             <el-button
               slot="reference"
@@ -292,7 +294,7 @@ export default {
 .fw .smr {
   padding: 0px;
   height: 50px;
-  background-color: #409EFF;
+  background-color: #409eff;
   border-radius: 1px;
   position: absolute;
   min-width: 10px;

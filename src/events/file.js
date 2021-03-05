@@ -14,7 +14,10 @@ ipcMain.on('readFile', (event, arg) => {
     filters: filter,
   })
   if (Array.isArray(file)) {
-    event.returnValue = fs.readFileSync(file[0],'utf8')
+    event.returnValue = {
+      name:file[0],
+      data:fs.readFileSync(file[0],'utf8')
+    }
   } else {
     event.returnValue = ''
   }
