@@ -3,7 +3,7 @@
     <div>
       <el-card shadow="hover">
         <div slot="header">
-          <span>HSE Format</span>
+          <span>HSE SMR</span>
           <el-button
             v-if="activeNames.length > 0"
             style="float: right; padding: 3px 0"
@@ -43,7 +43,33 @@
                   controls-position="right"
                   :min="0"
                   :max="7"
+                  @change="indexChange"
                 ></el-input-number>
+              </el-form-item>
+              <el-form-item label="Verify Way" prop="verifyWay" required>
+                <el-select
+                  v-model="addSmr.verifyWay"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option
+                    label="VERIFY_PRE_BOOT_MASK"
+                    :value="0x56"
+                  ></el-option>
+                  <el-option
+                    label="VERIFY_PRE_BOOT_ALT_MASK"
+                    :value="0x75"
+                  ></el-option>
+                  <el-option
+                    label="VERIFY_POST_BOOT_MASK"
+                    :value="0xa7"
+                  ></el-option>
+                  <el-option
+                    label="VERIFY_PUN_TIME_MASK"
+                    :value="0x65"
+                    disabled
+                  ></el-option>
+                </el-select>
               </el-form-item>
               <el-form-item label="StartAddr" prop="startAddr" required>
                 <el-input
@@ -72,6 +98,7 @@
                     :key="index"
                     :label="item.label"
                     :value="item.handle"
+                    :disabled="item.handle == 0x20001 && addSmr.index != 0"
                   >
                     <span style="float: left">{{ item.label }}</span>
                     <span
@@ -101,6 +128,7 @@
                   v-model="addSmr.proofAddr"
                   :maxlength="8"
                   show-word-limit
+                  :disabled="mac"
                   ><template slot="prepend">0x</template></el-input
                 >
               </el-form-item>
@@ -137,6 +165,15 @@
                   >
                   </el-option>
                 </el-select>
+              </el-form-item>
+              <el-form-item
+                label="IV"
+                prop="iv"
+                :required="addSmr.authWay == 'gmac'"
+              >
+                <el-input :maxlength="24" v-model="addSmr.iv" show-word-limit>
+                  <template slot="prepend">0x</template>
+                </el-input>
               </el-form-item>
               <el-form-item>
                 <el-button type="primary" @click="addSmrHandle">Add</el-button>
@@ -177,6 +214,20 @@
                   {{ "0x" + scope.row.key.toString(16) }}
                 </template>
               </el-table-column>
+              <el-table-column prop="verifyWay" label="Verify Way">
+                <template slot-scope="scope">
+                  <span v-if="scope.row.verifyWay == 0x56"
+                    >VERIFY_PRE_BOOT_MASK</span
+                  >
+                  <span v-else-if="scope.row.verifyWay == 0x75"
+                    >VERIFY_PRE_BOOT_ALT_MASK</span
+                  >
+                  <span v-else-if="scope.row.verifyWay == 0xa7"
+                    >VERIFY_POST_BOOT_MASK</span
+                  >
+                  <span v-else>VERIFY_RUN_TIME_MASK</span>
+                </template>
+              </el-table-column>
               <el-table-column
                 prop="proof"
                 label="Flash In Proof"
@@ -198,6 +249,7 @@
                   {{ scope.row.tag.toString(16) }}
                 </template>
               </el-table-column>
+
               <el-table-column
                 fixed="right"
                 label="Action"
@@ -229,7 +281,7 @@ export default {
   data() {
     return {
       mac: true,
-      activeNames: ["1"],
+      activeNames: ["1", "2"],
       smrTable: [],
       keyType: "",
       keySize: "",
@@ -250,15 +302,24 @@ export default {
             trigger: "change",
           },
         ],
+        iv: [
+          {
+            pattern: /^[0-9a-fA-F]+$/,
+            message: 'Please input HEX format，eg:"0001020304"',
+            trigger: "change",
+          },
+        ],
       },
       addSmr: {
         index: 0,
         startAddr: "400000",
+        verifyWay: 0x56,
         length: "",
         proof: false,
         proofAddr: "",
         key: "",
         signKey: "",
+        iv: "",
         authWay: "",
         proofValue: "",
       },
@@ -290,7 +351,8 @@ export default {
           clone.startAddr = parseInt(clone.startAddr, 16);
           clone.proofAddr = parseInt(clone.proofAddr, 16);
           clone.length = parseInt(clone.length, 16);
-
+          clone.mac = this.mac;
+          console.log(clone);
           if (clone.startAddr < this.fwInfo.startAddr) {
             this.$notify.error({
               title: "Error",
@@ -329,7 +391,7 @@ export default {
           //calculate tag
           let ret = ipcRenderer.sendSync("signFw", {
             file: this.fwInfo.fileName,
-            info: this.addSmr,
+            info: clone,
           });
           if (!ret.err) {
             this.$notify.error({
@@ -358,6 +420,10 @@ export default {
       this.smrTable.splice(index, 1);
     },
     schemeChange() {},
+    indexChange() {
+      this.addSmr.key = "";
+      this.targetKeyChange();
+    },
     targetKeyChange() {
       this.addSmr.authWay = "";
       this.addSmr.proof = false;
@@ -370,7 +436,7 @@ export default {
       let slot = this.addSmr.key & 0xff;
       this.keySize = this.$store.state.hseConfig.format.nvm[gorup].keySize;
       this.keyType = this.$store.state.hseConfig.format.nvm[gorup].keyType;
-      const symKeyType = [0x12, 0x20, 0x30];
+      const symKeyType = [0x11, 0x12, 0x20, 0x30];
       const privKeyType = [0x87, 0x97, 0xa7];
       this.mac = symKeyType.indexOf(parseInt(this.keyType)) != -1;
 
@@ -380,102 +446,150 @@ export default {
           .keyLoaded &&
         (this.mac || priv)
       ) {
-        this.addSmr.signKey = this.$store.state.hseConfig.format.nvm[
-          gorup
-        ].keyHandle[slot].value.data;
+        if (this.keyType == 0x11) {
+          this.addSmr.signKey = this.$store.state.hseConfig.format.nvm[
+            gorup
+          ].keyHandle[slot].value.raw.keyValue;
+        } else {
+          this.addSmr.signKey = this.$store.state.hseConfig.format.nvm[
+            gorup
+          ].keyHandle[slot].value.data;
+        }
       }
       if (!this.mac) {
-        this.signTable = [
-          {
-            value: "rsa-pkcs1-sha2-224",
-            support: false,
-          },
-          {
-            value: "rsa-pkcs1-sha2-256",
-            support: true,
-          },
-          {
-            value: "rsa-pkcs1-sha2-384",
-            support: false,
-          },
-          {
-            value: "rsa-pkcs1-sha2-512",
-            support: false,
-          },
-          {
-            value: "rsa-pss-sha2-224",
-            support: false,
-          },
-          {
-            value: "rsa-pss-sha2-256",
-            support: false,
-          },
-          {
-            value: "rsa-pss-sha2-384",
-            support: false,
-          },
-          {
-            value: "rsa-pss-sha2-512",
-            support: false,
-          },
-        ];
+        if (this.keyType == 0x87 || this.keyType == 0x88) {
+          this.$set(this, "signTable", [
+            {
+              value: "ecdsa-sha224",
+              support: true,
+            },
+            {
+              value: "ecdsa-sha256",
+              support: true,
+            },
+            {
+              value: "ecdsa-sha384",
+              support: true,
+            },
+            {
+              value: "ecdsa-sha512",
+              support: true,
+            },
+            {
+              value: "eddsa",
+              support: true,
+            },
+          ]);
+        } else {
+          this.$set(this, "signTable", [
+            {
+              value: "rsa-pkcs1-sha2-224",
+              support: true,
+            },
+            {
+              value: "rsa-pkcs1-sha2-256",
+              support: true,
+            },
+            {
+              value: "rsa-pkcs1-sha2-384",
+              support: true,
+            },
+            {
+              value: "rsa-pkcs1-sha2-512",
+              support: true,
+            },
+            {
+              value: "rsa-pss-sha2-224",
+              support: true,
+            },
+            {
+              value: "rsa-pss-sha2-256",
+              support: true,
+            },
+            {
+              value: "rsa-pss-sha2-384",
+              support: true,
+            },
+            {
+              value: "rsa-pss-sha2-512",
+              support: true,
+            },
+          ]);
+        }
       } else {
-        this.signTable = [
-          {
-            value: "cmac-aes",
-            support: true,
-          },
-          {
-            value: "cmac-tdes",
-            support: false,
-          },
-          {
-            value: "gmac",
-            support: false,
-          },
-          {
-            value: "hmac-sha2-224",
-            support: false,
-          },
-          {
-            value: "hmac-sha2-256",
-            support: false,
-          },
-          {
-            value: "hmac-sha2-384",
-            support: false,
-          },
-          {
-            value: "hmac-sha2-512",
-            support: false,
-          },
-        ];
+        if (this.keyType == 0x11) {
+          this.$set(this, "signTable", [
+            {
+              value: "cmac-aes",
+              support: true,
+            },
+          ]);
+        } else {
+          this.$set(this, "signTable", [
+            {
+              value: "cmac-aes",
+              support: true,
+            },
+            {
+              value: "cmac-tdes",
+              support: true,
+            },
+            {
+              value: "gmac",
+              support: true,
+            },
+            {
+              value: "hmac-sha2-224",
+              support: true,
+            },
+            {
+              value: "hmac-sha2-256",
+              support: true,
+            },
+            {
+              value: "hmac-sha2-384",
+              support: true,
+            },
+            {
+              value: "hmac-sha2-512",
+              support: true,
+            },
+          ]);
+        }
       }
     },
   },
-  watch: {
-    watch: {
-      smrTable: function (val) {
-        this.$store.commit("hseSmrLoad", val);
-      },
-    },
-  },
+  // watch: {
+  //   smrTable: function (val) {
+  //     this.$store.commit("hseSmrLoad", val);
+  //   },
+  // },
   computed: {
     keyTable: function () {
       let nvm = this.$store.state.hseConfig.format.nvm;
       let table = [];
       for (let i = 0; i < nvm.length; i++) {
-        if((nvm[i].keyType==0xa7)||(nvm[i].keyType==0xa8)){
-          //dh type key can verify
+        if (
+          nvm[i].keyType == 0xa7 ||
+          nvm[i].keyType == 0xa8 ||
+          nvm[i].keyType == 0x89 ||
+          nvm[i].keyType == 0x99
+        ) {
+          //dh type key can't verify, ext type key can't verify;
           continue;
         }
         let group = nvm[i].keyHandle;
         for (let j = 0; j < group.length; j++) {
           //TODO:check keyload status
           // if(gorup[j].keyLoaded){
-          //   //check verify flag in 
+          //   //check verify flag in
           // }
-
+          if (nvm[i].keyType == 0x11) {
+            if (group[j].handle != 0x20001) {
+              //she only boot mac key can as sign key;
+              continue;
+            }
+          }
           table.push(group[j]);
         }
       }

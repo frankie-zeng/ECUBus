@@ -63,7 +63,7 @@
                   <el-option
                     v-for="(item, key) in keyTypeMap"
                     :key="key"
-                    :label="item"
+                    :label="item.label"
                     :value="key"
                     :disabled="
                       (key == 0x40 && addGroup.catalog == 1) ||
@@ -116,7 +116,10 @@
                     :key="item"
                     :label="item + ' bits'"
                     :value="item"
-                    :disabled="addGroup.keyType == 0x11 && item > 128"
+                    :disabled="
+                      addGroup.keyType != '' &&
+                      keyTypeMap[addGroup.keyType].size.indexOf(item) == -1
+                    "
                   >
                   </el-option>
                 </el-select>
@@ -129,12 +132,11 @@
             </el-form>
           </el-collapse-item>
           <el-collapse-item title="NVM Catalog" name="2">
-            
             <el-alert
               title="EXT type key can't load in this tool,you should load key in your firmware!"
               type="info"
               :closable="false"
-              style="padding:5px"
+              style="padding: 5px"
             >
             </el-alert>
             <el-table
@@ -167,7 +169,7 @@
               </el-table-column>
               <el-table-column prop="keyType" label="Key Type" width="250">
                 <template slot-scope="scope">
-                  <span>{{ keyTypeMap[scope.row.keyType] }}</span>
+                  <span>{{ keyTypeMap[scope.row.keyType].label }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="keyNum" label="Key Size">
@@ -211,7 +213,7 @@
               title="RAM catalog key can't load in this tool,you should load key in your firmware!"
               type="info"
               :closable="false"
-              style="padding:5px"
+              style="padding: 5px"
             ></el-alert>
             <el-table
               :data="ram"
@@ -243,7 +245,7 @@
               </el-table-column>
               <el-table-column prop="keyType" label="Key Type" width="250">
                 <template slot-scope="scope">
-                  <span>{{ keyTypeMap[scope.row.keyType] }}</span>
+                  <span>{{ keyTypeMap[scope.row.keyType].label }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="keyNum" label="Key Size">
@@ -280,19 +282,58 @@
 
 <script>
 const keyTypeMap = {
-  0x11: "HSE_KEY_TYPE_SHE",
-  0x12: "HSE_KEY_TYPE_AES",
-  0x20: "HSE_KEY_TYPE_HMAC",
-  0x30: "HSE_KEY_TYPE_TDES",
-  0x40: "HSE_KEY_TYPE_SHARED_SECRET",
-  0x87: "HSE_KEY_TYPE_ECC_PAIR",
-  0x88: "HSE_KEY_TYPE_ECC_PUB",
-  0x89: "HSE_KEY_TYPE_ECC_PUB_EXT",
-  0x97: "HSE_KEY_TYPE_RSA_PAIR",
-  0x98: "HSE_KEY_TYPE_RSA_PUB",
-  0x99: "HSE_KEY_TYPE_RSA_PUB_EXT",
-  0xa7: "HSE_KEY_TYPE_DH_PAIR",
-  0xa8: "HSE_KEY_TYPE_DH_PUB",
+  0x11: {
+    label: "HSE_KEY_TYPE_SHE",
+    size: [128],
+  },
+  0x12: {
+    label: "HSE_KEY_TYPE_AES",
+    size: [128, 192, 256],
+  },
+  0x20: {
+    label: "HSE_KEY_TYPE_HMAC",
+    size: [128, 160, 192, 224, 240, 256, 320, 384, 512, 521, 638, 1024],
+  },
+  0x30: {
+    label: "HSE_KEY_TYPE_TDES",
+    size: [192],
+  },
+  0x40: {
+    label: "HSE_KEY_TYPE_SHARED_SECRET",
+    size: [128, 160, 192, 224, 240, 256, 320, 384, 512, 521, 638, 1024, 2048],
+  },
+  0x87: {
+    label: "HSE_KEY_TYPE_ECC_PAIR",
+    size: [192, 224, 240, 256, 320, 384, 512, 521, 638],
+  },
+  0x88: {
+    label: "HSE_KEY_TYPE_ECC_PUB",
+    size: [192, 224, 240, 256, 320, 384, 512, 521, 638],
+  },
+  0x89: {
+    label: "HSE_KEY_TYPE_ECC_PUB_EXT",
+    size: [192, 224, 240, 256, 320, 384, 512, 521, 638],
+  },
+  0x97: {
+    label: "HSE_KEY_TYPE_RSA_PAIR",
+    size: [1024, 2048, 3072, 4096],
+  },
+  0x98: {
+    label: "HSE_KEY_TYPE_RSA_PUB",
+    size: [1024, 2048, 3072, 4096],
+  },
+  0x99: {
+    label: "HSE_KEY_TYPE_RSA_PUB_EXT",
+    size: [1024, 2048, 3072, 4096],
+  },
+  0xa7: {
+    label: "HSE_KEY_TYPE_DH_PAIR",
+    size: [1024, 2048, 3072, 4096],
+  },
+  0xa8: {
+    label: "HSE_KEY_TYPE_DH_PUB",
+    size: [1024, 2048, 3072, 3096],
+  },
 };
 import HseKeyLoad from "./hseKeyLoad.vue";
 export default {
@@ -481,7 +522,7 @@ export default {
               this.addGroup.keyHandle.push({
                 handle: (2 << 16) | (this.nvm.length << 8) | i,
                 label: `NVM_GROUP${this.nvm.length}_SLOT${i}_${
-                  this.keyTypeMap[this.addGroup.keyType]
+                  this.keyTypeMap[this.addGroup.keyType].label
                 }_${this.addGroup.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
@@ -494,7 +535,7 @@ export default {
               this.addGroup.keyHandle.push({
                 handle: (2 << 16) | (this.ram.length << 8) | i,
                 label: `RAM_GROUP${this.ram.length}_SLOT${i}_${
-                  this.keyTypeMap[this.addGroup.keyType]
+                  this.keyTypeMap[this.addGroup.keyType].label
                 }_${this.addGroup.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
@@ -520,5 +561,4 @@ export default {
 </script>
 
 <style scoped>
-
 </style>

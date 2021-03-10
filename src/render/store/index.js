@@ -31,7 +31,8 @@ export default new Vuex.Store({
         nvm: [],
         ram: []
       },
-      smr: []
+      smr: [],
+      cr: []
     }
 
   },
@@ -46,6 +47,9 @@ export default new Vuex.Store({
     },
     hseSmrLoad(state, val) {
       state.hseConfig.smr = val
+    },
+    hseCrLoad(state, val) {
+      state.hseConfig.cr = val
     },
     /* uds */
     addSch(state, mode) {

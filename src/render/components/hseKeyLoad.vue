@@ -181,17 +181,10 @@
         </el-form-item>
         <el-form-item label="Value" prop="value">
           <el-input
-            v-if="group.keyType == 0x12 || group.keyType == 0x20"
+            v-if="group.keyType == 0x12 || group.keyType == 0x20 || group.keyType == 0x30"
             v-model="genKeyLoad.value"
             placeholder="hex"
             :maxlength="group.keySize / 4"
-            show-word-limit
-          ></el-input>
-          <el-input
-            v-else-if="group.keyType == 0x30"
-            v-model="genKeyLoad.value"
-            placeholder="hex"
-            :maxlength="(group.keySize / 4) * 3"
             show-word-limit
           ></el-input>
           <el-input

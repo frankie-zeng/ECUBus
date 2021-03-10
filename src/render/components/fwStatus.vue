@@ -267,7 +267,7 @@ export default {
   padding: 0px;
   min-width: 10px;
   z-index: 10;
-  margin-left: 20px;
+  /* margin-left: 20px; */
 }
 .fw .appbl {
   height: 50px;

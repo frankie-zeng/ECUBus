@@ -12,6 +12,9 @@ import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
 import { CancellationToken } from "electron-updater"
 
+const crypto=require('crypto')
+console.log(crypto.getCiphers());
+console.log(crypto.getHashes());
 
 const log = require('electron-log');
 // enable ipc 
@@ -71,7 +74,7 @@ protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ width: 1200, height: 620, minWidth:1000, webPreferences: {
-    nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
+    nodeIntegration: true
   },
   // eslint-disable-next-line no-undef
   icon: `${__static}/logo.ico` })

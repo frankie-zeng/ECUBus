@@ -3,7 +3,7 @@
     <el-page-header
       style="margin: 0px"
       @back="goBack"
-      content="HSE Helper"
+      content="HSE CF Tool"
       class="header"
       title=""
     ></el-page-header>
@@ -33,6 +33,9 @@
     <el-row>
       <HseSMR :isFw="isFw" :fwInfo="fwInfo"/>
     </el-row>
+    <el-row>
+      <HseCR  :isFw="isFw" :fwInfo="fwInfo"/>
+    </el-row>
   </div>
 </template>
 
@@ -44,11 +47,13 @@ const ivtTAG = Buffer.from("a55aa55a", "hex");
 import FwStatus from "./../components/fwStatus.vue";
 import HseSMR from "./../components/hsesmr.vue";
 import HseFormat from "./../components/hseformat.vue";
+import HseCR from "./../components/hsecr.vue"
 export default {
   components: {
     FwStatus,
     HseSMR,
     HseFormat,
+    HseCR,
   },
   data() {
     return {

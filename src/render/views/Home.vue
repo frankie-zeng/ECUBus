@@ -45,7 +45,7 @@
       <el-row>
         <el-col :span="6" :offset="1">
           <el-card shadow="always">
-            <div class="name">HSE Helper</div>
+            <div class="name">HSE CF Tool</div>
             <div class="tip">GMAC, SMR</div>
             <el-button @click="goHseHelper" type="text">GO</el-button>
           </el-card>
@@ -252,6 +252,7 @@ export default {
 .card .name {
   font-size: 24px;
   color: darkcyan;
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 .card .tip {
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
