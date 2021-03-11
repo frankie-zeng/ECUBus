@@ -520,13 +520,12 @@ export default {
           if (this.addGroup.catalog == 1) {
             for (let i = 0; i < this.addGroup.keyNum; i++) {
               this.addGroup.keyHandle.push({
-                handle: (2 << 16) | (this.nvm.length << 8) | i,
+                handle: (1 << 16) | (this.nvm.length << 8) | i,
                 label: `NVM_GROUP${this.nvm.length}_SLOT${i}_${
                   this.keyTypeMap[this.addGroup.keyType].label
                 }_${this.addGroup.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
-                flag: 0,
               });
             }
             this.nvm.push(JSON.parse(JSON.stringify(this.addGroup)));
@@ -539,7 +538,6 @@ export default {
                 }_${this.addGroup.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
-                flag: 0,
               });
             }
             this.ram.push(JSON.parse(JSON.stringify(this.addGroup)));

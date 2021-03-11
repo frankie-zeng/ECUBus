@@ -98,7 +98,7 @@
                     :key="index"
                     :label="item.label"
                     :value="item.handle"
-                    :disabled="item.handle == 0x20001 && addSmr.index != 0"
+                    :disabled="item.handle == 0x10001 && addSmr.index != 0"
                   >
                     <span style="float: left">{{ item.label }}</span>
                     <span
@@ -585,7 +585,7 @@ export default {
           //   //check verify flag in
           // }
           if (nvm[i].keyType == 0x11) {
-            if (group[j].handle != 0x20001) {
+            if (group[j].handle != 0x10001) {
               //she only boot mac key can as sign key;
               continue;
             }

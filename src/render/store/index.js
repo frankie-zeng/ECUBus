@@ -32,7 +32,14 @@ export default new Vuex.Store({
         ram: []
       },
       smr: [],
-      cr: []
+      cr: [],
+      attr: {
+        password: "",
+        ivt: false,
+        auth: false,
+        adkp: false,
+        lc: "oem",
+      }
     }
 
   },
@@ -50,6 +57,9 @@ export default new Vuex.Store({
     },
     hseCrLoad(state, val) {
       state.hseConfig.cr = val
+    },
+    hseAttrLoad(state, val) {
+      state.hseConfig.attr = val
     },
     /* uds */
     addSch(state, mode) {

@@ -181,7 +181,11 @@
         </el-form-item>
         <el-form-item label="Value" prop="value">
           <el-input
-            v-if="group.keyType == 0x12 || group.keyType == 0x20 || group.keyType == 0x30"
+            v-if="
+              group.keyType == 0x12 ||
+              group.keyType == 0x20 ||
+              group.keyType == 0x30
+            "
             v-model="genKeyLoad.value"
             placeholder="hex"
             :maxlength="group.keySize / 4"
@@ -263,7 +267,7 @@
               <div>M2:{{ scope.row.value.data.M2 }}</div>
               <div>M3:{{ scope.row.value.data.M3 }}</div>
             </div>
-            <div v-else-if="symKeyType.indexOf(parseInt(group.keyType))!=-1">
+            <div v-else-if="symKeyType.indexOf(parseInt(group.keyType)) != -1">
               0x{{ scope.row.value.data }}
             </div>
             <div v-else>
@@ -310,215 +314,215 @@ const keyRightMap = {
 };
 
 const sheSpecMap = {
-  0x20000: {
+  0x10000: {
     label: "MASTER_ECU_KEY",
     value: [0, 1],
   },
-  0x20001: {
+  0x10001: {
     label: "BOOT_MAC_KEY",
     value: [0, 2],
   },
-  0x20002: {
+  0x10002: {
     label: "BOOT_MAC",
     value: [0, 3],
   },
-  0x20003: {
+  0x10003: {
     label: "KEY1",
     value: [0, 4],
   },
-  0x20004: {
+  0x10004: {
     label: "KEY2",
     value: [0, 5],
   },
-  0x20005: {
+  0x10005: {
     label: "KEY3",
     value: [0, 6],
   },
-  0x20006: {
+  0x10006: {
     label: "KEY4",
     value: [0, 7],
   },
-  0x20007: {
+  0x10007: {
     label: "KEY5",
     value: [0, 8],
   },
-  0x20008: {
+  0x10008: {
     label: "KEY6",
     value: [0, 9],
   },
-  0x20009: {
+  0x10009: {
     label: "KEY7",
     value: [0, 10],
   },
-  0x2000a: {
+  0x1000a: {
     label: "KEY8",
     value: [0, 11],
   },
-  0x2000b: {
+  0x1000b: {
     label: "KEY9",
     value: [0, 12],
   },
-  0x2000c: {
+  0x1000c: {
     label: "KEY10",
     value: [0, 13],
   },
-  0x20100: {
+  0x10100: {
     label: "KEY11",
     value: [1, 4],
   },
-  0x20101: {
+  0x10101: {
     label: "KEY12",
     value: [1, 5],
   },
-  0x20102: {
+  0x10102: {
     label: "KEY13",
     value: [1, 6],
   },
-  0x20103: {
+  0x10103: {
     label: "KEY14",
     value: [1, 7],
   },
-  0x20104: {
+  0x10104: {
     label: "KEY15",
     value: [1, 8],
   },
-  0x20105: {
+  0x10105: {
     label: "KEY16",
     value: [1, 9],
   },
-  0x20106: {
+  0x10106: {
     label: "KEY17",
     value: [1, 10],
   },
-  0x20107: {
+  0x10107: {
     label: "KEY18",
     value: [1, 11],
   },
-  0x20108: {
+  0x10108: {
     label: "KEY19",
     value: [1, 12],
   },
-  0x20109: {
+  0x10109: {
     label: "KEY20",
     value: [1, 13],
   },
-  0x20200: {
+  0x10200: {
     label: "KEY21",
     value: [2, 4],
   },
-  0x20201: {
+  0x10201: {
     label: "KEY22",
     value: [2, 5],
   },
-  0x20202: {
+  0x10202: {
     label: "KEY23",
     value: [2, 6],
   },
-  0x20203: {
+  0x10203: {
     label: "KEY24",
     value: [2, 7],
   },
-  0x20204: {
+  0x10204: {
     label: "KEY25",
     value: [2, 8],
   },
-  0x20205: {
+  0x10205: {
     label: "KEY26",
     value: [2, 9],
   },
-  0x20206: {
+  0x10206: {
     label: "KEY27",
     value: [2, 10],
   },
-  0x20207: {
+  0x10207: {
     label: "KEY28",
     value: [2, 11],
   },
-  0x20208: {
+  0x10208: {
     label: "KEY29",
     value: [2, 12],
   },
-  0x20209: {
+  0x10209: {
     label: "KEY30",
     value: [2, 13],
   },
-  0x20300: {
+  0x10300: {
     label: "KEY31",
     value: [3, 4],
   },
-  0x20301: {
+  0x10301: {
     label: "KEY32",
     value: [3, 5],
   },
-  0x20302: {
+  0x10302: {
     label: "KEY33",
     value: [3, 6],
   },
-  0x20303: {
+  0x10303: {
     label: "KEY34",
     value: [3, 7],
   },
-  0x20304: {
+  0x10304: {
     label: "KEY35",
     value: [3, 8],
   },
-  0x20305: {
+  0x10305: {
     label: "KEY36",
     value: [3, 9],
   },
-  0x20306: {
+  0x10306: {
     label: "KEY37",
     value: [3, 10],
   },
-  0x20307: {
+  0x10307: {
     label: "KEY38",
     value: [3, 11],
   },
-  0x20308: {
+  0x10308: {
     label: "KEY39",
     value: [3, 12],
   },
-  0x20309: {
+  0x10309: {
     label: "KEY40",
     value: [3, 13],
   },
-  0x20400: {
+  0x10400: {
     label: "KEY41",
     value: [4, 4],
   },
-  0x20401: {
+  0x10401: {
     label: "KEY42",
     value: [4, 5],
   },
-  0x20402: {
+  0x10402: {
     label: "KEY43",
     value: [4, 6],
   },
-  0x20403: {
+  0x10403: {
     label: "KEY44",
     value: [4, 7],
   },
-  0x20404: {
+  0x10404: {
     label: "KEY45",
     value: [4, 8],
   },
-  0x20405: {
+  0x10405: {
     label: "KEY46",
     value: [4, 9],
   },
-  0x20406: {
+  0x10406: {
     label: "KEY47",
     value: [4, 10],
   },
-  0x20407: {
+  0x10407: {
     label: "KEY48",
     value: [4, 11],
   },
-  0x20408: {
+  0x10408: {
     label: "KEY49",
     value: [4, 12],
   },
-  0x20409: {
+  0x10409: {
     label: "KEY50",
     value: [4, 13],
   },
@@ -644,16 +648,16 @@ export default {
       }
     },
     loadSheKey() {
-      let she = JSON.parse(JSON.stringify(this.sheKeyLoad));
-      she.keyId = this.sheSpecMap[she.keyId].value;
-      she.authKeyId = this.sheSpecMap[she.authKeyId].value;
       this.$refs.sheForm.validate((valid) => {
         if (valid) {
+          let she = JSON.parse(JSON.stringify(this.sheKeyLoad));
+          she.keyId = this.sheSpecMap[she.keyId].value;
+          she.authKeyId = this.sheSpecMap[she.authKeyId].value;
           let M = ipcRenderer.sendSync("k3SHEGen", she);
           this.keyHandle[this.sheKeyLoad.keyId & 0xff].value = {
             raw: this.sheKeyLoad,
             data: M,
-            type:'she'
+            type: "she",
           };
           this.keyHandle[this.sheKeyLoad.keyId & 0xff].keyLoaded = true;
         } else {
@@ -689,7 +693,7 @@ export default {
             this.keyHandle[this.genKeyLoad.key & 0xff].value = {
               raw: this.sheKeyLoad,
               data: this.genKeyLoad.value,
-              type:'gen'
+              type: "gen",
             };
             this.keyHandle[this.genKeyLoad.key & 0xff].keyLoaded = true;
           } else {

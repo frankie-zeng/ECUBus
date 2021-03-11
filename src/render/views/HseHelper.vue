@@ -15,27 +15,46 @@
         >
       </div>
       <div v-else>
-        <FwStatus :fwInfo="fwInfo"/>
-        <div class="fwDel">
-          <el-button
-            type="danger"
-            icon="el-icon-delete"
-            class="fwDel"
-            @click="isFw = false"
-            size="mini"
-          ></el-button>
-        </div>
+        <FwStatus :fwInfo="fwInfo" />
+      </div>
+      <div class="fwDel">
+        <el-button
+          v-if="isFw"
+          type="danger"
+          icon="el-icon-delete"
+          size="mini"
+          @click="isFw = false"
+        ></el-button>
+        <el-button
+          type="primary"
+          icon="el-icon-folder"
+          size="mini"
+          @click="importConfig"
+          >Import</el-button
+        >
+        <el-button
+          type="primary"
+          icon="el-icon-share"
+          size="mini"
+          @click="exportConfig"
+          >Export</el-button
+        >
       </div>
     </div>
-    <el-row>
-      <HseFormat />
-    </el-row>
-    <el-row>
-      <HseSMR :isFw="isFw" :fwInfo="fwInfo"/>
-    </el-row>
-    <el-row>
-      <HseCR  :isFw="isFw" :fwInfo="fwInfo"/>
-    </el-row>
+    <div v-if="refresh">
+      <el-row>
+        <HseAttr />
+      </el-row>
+      <el-row>
+        <HseFormat />
+      </el-row>
+      <el-row>
+        <HseSMR :isFw="isFw" :fwInfo="fwInfo" />
+      </el-row>
+      <el-row>
+        <HseCR :isFw="isFw" :fwInfo="fwInfo" />
+      </el-row>
+    </div>
   </div>
 </template>
 
@@ -47,20 +66,23 @@ const ivtTAG = Buffer.from("a55aa55a", "hex");
 import FwStatus from "./../components/fwStatus.vue";
 import HseSMR from "./../components/hsesmr.vue";
 import HseFormat from "./../components/hseformat.vue";
-import HseCR from "./../components/hsecr.vue"
+import HseCR from "./../components/hsecr.vue";
+import HseAttr from "./../components/hseattr.vue";
 export default {
   components: {
     FwStatus,
     HseSMR,
     HseFormat,
     HseCR,
+    HseAttr,
   },
   data() {
     return {
       isFw: false,
       fw: {},
+      refresh: true,
       fwInfo: {
-        fileName:'',
+        fileName: "",
         startAddr: 0x400000,
         ivtAddr: 0,
         ivtInfo: {
@@ -90,6 +112,46 @@ export default {
 
   created() {},
   methods: {
+    exportConfig() {
+      var val = JSON.parse(JSON.stringify(this.$store.state.hseConfig));
+      var file = ipcRenderer.sendSync(
+        "saveFile",
+        JSON.stringify(val, null, "\t")
+      );
+      if (file != null) {
+        this.$notify({
+          title: "Success",
+          message: "Saved：" + file,
+          type: "success",
+        });
+      }
+    },
+    importConfig() {
+      var file = ipcRenderer.sendSync("readFile");
+      if (file) {
+        var hseConfig = JSON.parse(file.data);
+        /* compatible old verison config file*/
+        if (hseConfig.format.nvm != undefined) {
+          this.$store.commit("hseFormatLoad", {
+            catalog: 1,
+            data: hseConfig.format.nvm,
+          });
+        }
+        if (hseConfig.format.ram != undefined) {
+          this.$store.commit("hseFormatLoad", {
+            catalog: 2,
+            data: hseConfig.format.ram,
+          });
+        }
+        if (hseConfig.attr != undefined) {
+          this.$store.commit("hseAttrLoad", hseConfig.attr);
+        }
+        this.refresh = false;
+        this.$nextTick(() => {
+          this.refresh = true;
+        });
+      }
+    },
     goBack() {
       this.$router.push("/");
     },
@@ -99,7 +161,7 @@ export default {
       ]);
       if (file) {
         try {
-          this.fwInfo.fileName=file.name
+          this.fwInfo.fileName = file.name;
           this.fw = hexParser.parse(file.data);
           //find ivt header in fw
           this.fwInfo.size = this.fw.data.length;
