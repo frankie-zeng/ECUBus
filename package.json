@@ -2,7 +2,7 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "private": false,
   "repository": {
     "type": "git",
@@ -48,7 +48,7 @@
     "@vue/cli-plugin-vuex": "~4.2.0",
     "@vue/cli-service": "~4.2.0",
     "babel-eslint": "^10.0.3",
-    "electron": "^7.2.4",
+    "electron": "11.3.0",
     "electron-rebuild": "^1.10.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.1.2",

@@ -608,7 +608,7 @@ export default {
           this.mma += sprintf("/* %s M1,M2,M3 */\r\n", this.k1she.name);
           /* M1 */
           a = [];
-          mstr = m.M1.toString("hex");
+          mstr = Buffer.from(m.M1).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -619,7 +619,7 @@ export default {
           );
           /* M2 */
           a = [];
-          mstr = m.M2.toString("hex");
+          mstr = Buffer.from(m.M2).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -630,7 +630,7 @@ export default {
           );
           /* M3 */
           a = [];
-          mstr = m.M3.toString("hex");
+          mstr = Buffer.from(m.M3).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -641,7 +641,7 @@ export default {
           );
           /* M4 */
           a = [];
-          mstr = m.M4.toString("hex");
+          mstr = Buffer.from(m.M4).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -652,7 +652,7 @@ export default {
           );
           /* M5 */
           a = [];
-          mstr = m.M5.toString("hex");
+          mstr = Buffer.from(m.M5).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -678,7 +678,7 @@ export default {
           this.mma += sprintf("/* %s M1,M2,M3 */\r\n", this.k2she.name);
           /* M1 */
           a = [];
-          mstr = m.M1.toString("hex");
+          mstr = Buffer.from(m.M1).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -689,7 +689,7 @@ export default {
           );
           /* M2 */
           a = [];
-          mstr = m.M2.toString("hex");
+          mstr = Buffer.from(m.M2).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -700,7 +700,7 @@ export default {
           );
           /* M3 */
           a = [];
-          mstr = m.M3.toString("hex");
+          mstr = Buffer.from(m.M3).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -711,7 +711,7 @@ export default {
           );
           /* M4 */
           a = [];
-          mstr = m.M4.toString("hex");
+          mstr = Buffer.from(m.M4).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -722,7 +722,7 @@ export default {
           );
           /* M5 */
           a = [];
-          mstr = m.M5.toString("hex");
+          mstr = Buffer.from(m.M5).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -748,7 +748,7 @@ export default {
           this.mma += sprintf("/* %s M1,M2,M3 */\r\n", this.k3she.name);
           /* M1 */
           a = [];
-          mstr = m.M1.toString("hex");
+          mstr = Buffer.from(m.M1).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -759,7 +759,7 @@ export default {
           );
           /* M2 */
           a = [];
-          mstr = m.M2.toString("hex");
+          mstr = Buffer.from(m.M2).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -770,7 +770,7 @@ export default {
           );
           /* M3 */
           a = [];
-          mstr = m.M3.toString("hex");
+          mstr = Buffer.from(m.M3).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -781,7 +781,7 @@ export default {
           );
           /* M4 */
           a = [];
-          mstr = m.M4.toString("hex");
+          mstr = Buffer.from(m.M4).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
@@ -792,7 +792,7 @@ export default {
           );
           /* M5 */
           a = [];
-          mstr = m.M5.toString("hex");
+          mstr = Buffer.from(m.M5).toString("hex");
           for (i = 0; i < mstr.length / 2; i++) {
             a.push("0x" + mstr.slice(i * 2, (i + 1) * 2));
           }
