@@ -153,8 +153,11 @@
               </el-table-column>
               <el-table-column prop="muMask" label="MU Mask" width="180">
                 <template slot-scope="scope">
-                  <span v-for="mu in scope.row.muMask" :key="mu">{{
-                    "MU" + mu + " "
+                  <span v-if="scope.row.muMask&1">{{
+                    "MU0 "
+                  }}</span>
+                  <span v-if="scope.row.muMask&2">{{
+                    "MU1 "
                   }}</span>
                 </template>
               </el-table-column>
@@ -169,7 +172,7 @@
               </el-table-column>
               <el-table-column prop="keyType" label="Key Type" width="250">
                 <template slot-scope="scope">
-                  <span>{{ keyTypeMap[scope.row.keyType].label }}</span>
+                  <span>{{ keyTypeMap[scope.row.keyType.toString(16)].label }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="keyNum" label="Key Size">
@@ -245,7 +248,7 @@
               </el-table-column>
               <el-table-column prop="keyType" label="Key Type" width="250">
                 <template slot-scope="scope">
-                  <span>{{ keyTypeMap[scope.row.keyType].label }}</span>
+                  <span>{{ keyTypeMap[scope.row.keyType.toString(16)].label }}</span>
                 </template>
               </el-table-column>
               <el-table-column prop="keyNum" label="Key Size">
@@ -378,7 +381,6 @@ export default {
       ],
       addGroup: {
         catalog: 1,
-        date: 0,
         muMask: [0, 1],
         keyOwn: "",
         keyType: "",
@@ -514,33 +516,40 @@ export default {
           /*design rule check*/
           /*she group check*/
           if (!this.sheKeyCheck()) return;
-          this.addGroup.date = new Date().getTime();
-          this.addGroup.keyHandle = [];
+          let group=JSON.parse(JSON.stringify(this.addGroup))
+          group.date = new Date().getTime();
+          group.keyHandle = [];
+          group.muMask=0;
+          for(let i=0;i<this.addGroup.muMask.length;i++){
+            group.muMask|=(1<<this.addGroup.muMask[i])
+          }
 
-          if (this.addGroup.catalog == 1) {
-            for (let i = 0; i < this.addGroup.keyNum; i++) {
-              this.addGroup.keyHandle.push({
+          if (group.catalog == 1) {
+            for (let i = 0; i < group.keyNum; i++) {
+              group.keyHandle.push({
                 handle: (1 << 16) | (this.nvm.length << 8) | i,
                 label: `NVM_GROUP${this.nvm.length}_SLOT${i}_${
-                  this.keyTypeMap[this.addGroup.keyType].label
-                }_${this.addGroup.keySize}BITS`,
+                  this.keyTypeMap[group.keyType].label
+                }_${group.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
               });
             }
-            this.nvm.push(JSON.parse(JSON.stringify(this.addGroup)));
+            group.keyType=parseInt(group.keyType,16)
+            this.nvm.push(group);
           } else {
-            for (let i = 0; i < this.addGroup.keyNum; i++) {
-              this.addGroup.keyHandle.push({
+            for (let i = 0; i < group.keyNum; i++) {
+              group.keyHandle.push({
                 handle: (2 << 16) | (this.ram.length << 8) | i,
                 label: `RAM_GROUP${this.ram.length}_SLOT${i}_${
-                  this.keyTypeMap[this.addGroup.keyType].label
-                }_${this.addGroup.keySize}BITS`,
+                  this.keyTypeMap[group.keyType].label
+                }_${group.keySize}BITS`,
                 value: {},
                 keyLoaded: false,
               });
             }
-            this.ram.push(JSON.parse(JSON.stringify(this.addGroup)));
+            group.keyType=parseInt(group.keyType,16)
+            this.ram.push(group);
           }
         } else {
           return false;

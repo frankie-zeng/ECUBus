@@ -23,6 +23,7 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("importSymKey", &HSE::importSymKey),
                    InstanceMethod("importPubKey", &HSE::importPubKey),
                    InstanceMethod("importPrivKey", &HSE::importPrivKey),
+                   InstanceMethod("formatCatalog", &HSE::formatCatalog),
                    });
 
   constructor = Napi::Persistent(func);
@@ -271,6 +272,60 @@ Napi::Value HSE::importPubKey(const Napi::CallbackInfo& info){
     // else{
     // }
     mbedtls_pk_free(&ctx);
+    
+    return ret;
+}
+Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
+    hseSrvDescriptor_t service;
+    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
+    Napi::Object ret=Napi::Object::New(info.Env());
+    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
+    Napi::Array nvm= info[1].As<Napi::Array>();
+    Napi::Array ram= info[2].As<Napi::Array>();
+
+    uint32_t nvmLen= nvm.Length();
+    uint32_t ramLen= ram.Length();
+    
+    hseKeyGroupCfgEntry_t* nvmCat = new hseKeyGroupCfgEntry_t[nvmLen];
+    hseKeyGroupCfgEntry_t* ramCat = new hseKeyGroupCfgEntry_t[ramLen];
+
+    for(uint32_t i=0;i<nvmLen;i++){
+        Napi::Value v=nvm[i];
+        nvmCat[i].groupOwner=v.ToObject().Get("keyOwn").ToNumber().Uint32Value();
+        nvmCat[i].keyType=v.ToObject().Get("keyType").ToNumber().Uint32Value();
+        nvmCat[i].maxKeyBitLen=v.ToObject().Get("keySize").ToNumber().Uint32Value();
+        nvmCat[i].muMask=v.ToObject().Get("muMask").ToNumber().Uint32Value();
+        nvmCat[i].numOfKeySlots=v.ToObject().Get("keyNum").ToNumber().Uint32Value();
+        nvmCat[i].hseReserved[0]=0;
+        nvmCat[i].hseReserved[1]=0;
+    } 
+    for(uint32_t i=0;i<ramLen;i++){
+        Napi::Value v=ram[i];
+        ramCat[i].groupOwner=v.ToObject().Get("keyOwn").ToNumber().Uint32Value();
+        ramCat[i].keyType=v.ToObject().Get("keyType").ToNumber().Uint32Value();
+        ramCat[i].maxKeyBitLen=v.ToObject().Get("keySize").ToNumber().Uint32Value();
+        ramCat[i].muMask=v.ToObject().Get("muMask").ToNumber().Uint32Value();
+        ramCat[i].numOfKeySlots=v.ToObject().Get("keyNum").ToNumber().Uint32Value();
+        ramCat[i].hseReserved[0]=0;
+        ramCat[i].hseReserved[1]=0;
+    } 
+
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*nvmLen+sizeof(hseKeyGroupCfgEntry_t)*ramLen);
+    uint8_t* data=payload.Data();
+    service.srvId=HSE_SRV_ID_FORMAT_KEY_CATALOGS;
+    service.hseSrv.formatKeyCatalogsReq.pNvmKeyCatalogCfg= (HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
+    service.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg= (HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*nvmLen);
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
+    data+=sizeof(hseSrvDescriptor_t);
+    memcpy(data,nvmCat,sizeof(hseKeyGroupCfgEntry_t)*nvmLen);
+    data+=sizeof(hseKeyGroupCfgEntry_t)*nvmLen;
+    memcpy(data,ramCat,sizeof(hseKeyGroupCfgEntry_t)*ramLen);
+    delete nvmCat;
+    delete ramCat;
+    
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
     
     return ret;
 }

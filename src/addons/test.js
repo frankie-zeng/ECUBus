@@ -76,3 +76,17 @@ VjPsx0JC7+V4mfO63n5jpvsiT8VPvTXTRA==\r\n
 
 keyMaterial=hse.importPrivKey(info,eccPrivKey)
 console.log(keyMaterial)
+
+
+const catalog=[
+    {
+        keyOwn:1,
+        keyType:2,
+        keySize:4,
+        muMask:6,
+        keyNum:10
+    }
+]
+
+keyMaterial=hse.formatCatalog(5000,catalog,catalog)
+console.log(keyMaterial)

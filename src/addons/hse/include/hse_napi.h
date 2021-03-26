@@ -21,6 +21,7 @@ class HSE : public Napi::ObjectWrap<HSE>{
   Napi::Value HSE::importSymKey(const Napi::CallbackInfo& info);
   Napi::Value HSE::importPubKey(const Napi::CallbackInfo& info);
   Napi::Value HSE::importPrivKey(const Napi::CallbackInfo& info);
+  Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info);
 };
 
 #endif
