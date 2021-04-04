@@ -9,7 +9,7 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib'
 import { compile } from 'vue-template-compiler'
 import { mapState } from 'vuex'
-import { CancellationToken } from "electron-updater"
+import { CancellationToken } from "builder-util-runtime"
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
 const log = require('electron-log');
