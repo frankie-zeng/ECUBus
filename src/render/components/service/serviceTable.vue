@@ -16,7 +16,11 @@
       width="80%"
     >
       <div class="connect">
-        <Group :mode="mode" @added="groupAddedCb" :table="schs[schIndex].services"/>
+        <Group
+          :mode="mode"
+          @added="groupAddedCb"
+          :table="schs[schIndex].services"
+        />
       </div>
     </el-dialog>
 
@@ -46,13 +50,26 @@
           @current-change="showNewCode"
         ></el-pagination>
       </div>
-      <div>function(writeData,readData){</div>
-      <codemirror
-        v-model="jsFn[codeIndex]"
-        :options="codeOption"
-        ref="cmEditor"
-      />
-      <div>}</div>
+      <el-row>
+        <el-col :span="12">
+          <div>function preLoad(writeData) {</div>
+          <codemirror
+            v-model="jsPreFn[codeIndex]"
+            :options="codeOption"
+            ref="cmEditorPre"
+          />
+          <div>}</div>
+        </el-col>
+        <el-col :span="12">
+          <div>function afterLoad(writeData,readData) {</div>
+          <codemirror
+            v-model="jsFn[codeIndex]"
+            :options="codeOption"
+            ref="cmEditorAfter"
+          />
+          <div>}</div>
+        </el-col>
+      </el-row>
     </el-dialog>
     <div v-for="(sch, index) in schs" :key="index">
       <el-row style="text-align: left; margin-top: 10px">
@@ -81,11 +98,13 @@
               :value="key"
             >
               <span style="float: left">{{ item.name }}</span>
-              <span style="float: right; color: #8492a6; font-size: 13px"
-                v-if="mode!='lin'">SA:{{ item.SA }},TA:{{ item.TA }}</span
+              <span
+                style="float: right; color: #8492a6; font-size: 13px"
+                v-if="mode != 'lin'"
+                >SA:{{ item.SA }},TA:{{ item.TA }}</span
               >
-              <span style="float: right; color: #8492a6; font-size: 13px"
-                v-else>S-NAD:{{ item.sendNad }},R-NAD:{{ item.recvNad }}</span
+              <span style="float: right; color: #8492a6; font-size: 13px" v-else
+                >S-NAD:{{ item.sendNad }},R-NAD:{{ item.recvNad }}</span
               >
             </el-option>
           </el-select>
@@ -290,6 +309,7 @@ export default {
       editIndex: 0,
       service: {},
       jsFn: [" "],
+      jsPreFn: [" "],
       codeIndex: 0,
       codeNum: 1,
       codeOption: {
@@ -322,7 +342,7 @@ export default {
   },
   props: ["mode"],
   methods: {
-    update(){
+    update() {
       if (this.$store.state[this.mode + "Table"].length > 0) {
         this.schs = this.$store.state[this.mode + "Table"];
       }
@@ -349,7 +369,7 @@ export default {
       // console.log(val.oldIndex,val.newIndex,fromIndex,toIndex);
     },
     deleteSch(val) {
-      this.schIndex=0;
+      this.schIndex = 0;
       this.schs.splice(val, 1);
       this.sortable.splice(val, 1);
     },
@@ -420,7 +440,7 @@ export default {
       return "";
     },
     closeError() {
-      this.$store.commit("setTableError", [-1,-1]);
+      this.$store.commit("setTableError", [-1, -1]);
     },
     loadGroup() {
       this.itemIndex = "";
@@ -440,13 +460,19 @@ export default {
     showCode(item) {
       this.codeItem = item;
       this.jsFn = [];
+      this.jsPreFn = [];
       this.codeIndex = 0;
       if (item.type == "uds") {
         this.codeNum = 1;
         this.jsFn[0] = item.func;
+        this.jsPreFn[0] = item.preFunc == undefined ? "" : item.preFunc;
       } else {
         for (var i in item.subtable) {
           this.jsFn[i] = item.subtable[i].func;
+          this.jsPreFn[i] =
+            item.subtable[i].preFunc == undefined
+              ? ""
+              : item.subtable[i].preFunc;
         }
         this.codeNum = item.subtable.length;
       }
@@ -513,7 +539,7 @@ export default {
       return this.$store.state.running;
     },
     addrTable: function () {
-      return this.$store.state[this.mode+'AddrTable'];
+      return this.$store.state[this.mode + "AddrTable"];
     },
   },
 };

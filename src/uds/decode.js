@@ -9,6 +9,7 @@ function subItem(item) {
     }
 
     return {
+        preFunc: item.preFunc,
         func: item.func,
         payload: item.payload,
         service: item.service.value

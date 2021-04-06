@@ -36,7 +36,7 @@ class LPUDS extends UDS {
                     }
                 } catch (error) {
                     this.emit('udsError', {
-                        msg:  sprintf("User defined function syntax error,%s", error.message),
+                        msg: sprintf("User defined function syntax error,%s", error.message),
                         index: this.tableIndex
                     })
                 }
@@ -48,9 +48,8 @@ class LPUDS extends UDS {
         try {
             var item = this.getNextService()
         } catch (e) {
-            console.log(e)
             this.emit('udsError', {
-                msg: "User defined function syntax error",
+                msg: "User defined function syntax error," + e.message,
                 index: this.tableIndex
             })
             return -1

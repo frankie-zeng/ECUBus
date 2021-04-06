@@ -5,24 +5,33 @@
         <el-radio-button label="uds">UDS</el-radio-button>
         <el-radio-button label="group">GROUP</el-radio-button>
       </el-radio-group>
-      <div v-if="type=='uds'">
+      <div v-if="type == 'uds'">
         <div class="subheader">Serivce</div>
         <el-select
           v-model="itemIndex"
           placeholder="Service"
           class="choose"
           @change="itemChange"
-          style="width:100%"
+          style="width: 100%"
         >
-          <el-option v-for="(item,key) in config" :key="key" :label="item.name" :value="key">
+          <el-option
+            v-for="(item, key) in config"
+            :key="key"
+            :label="item.name"
+            :value="key"
+          >
             <span style="float: left">{{ item.name }}</span>
-            <span
-              style="float: right; color: #8492a6; font-size: 13px"
-            >0x{{ item.value.toString(16) }}</span>
+            <span style="float: right; color: #8492a6; font-size: 13px"
+              >0x{{ item.value.toString(16) }}</span
+            >
           </el-option>
         </el-select>
 
-        <Service :config="config[itemIndex]" @additem="addItem" v-if="refresh" />
+        <Service
+          :config="config[itemIndex]"
+          @additem="addItem"
+          v-if="refresh"
+        />
       </div>
       <div v-else>
         <div class="subheader">Group</div>
@@ -32,15 +41,20 @@
           placeholder="Group Service"
           class="choose"
           @change="itemChange"
-          style="width:80%"
+          style="width: 80%"
         >
-          <el-option v-for="(item,key) in group" :key="key" :label="key" :value="key"></el-option>
+          <el-option
+            v-for="(item, key) in group"
+            :key="key"
+            :label="key"
+            :value="key"
+          ></el-option>
         </el-select>
         <el-button
           icon="el-icon-refresh-right"
           type="success"
           plain
-          style="margin-left:20px"
+          style="margin-left: 20px"
           size="small"
           @click="typeChange('group')"
         ></el-button>
@@ -48,7 +62,7 @@
       </div>
     </div>
     <div v-else>
-      <div v-if="service.type=='uds'">
+      <div v-if="service.type == 'uds'">
         <Service
           :config="service.cfg"
           :input="service.val"
@@ -80,7 +94,7 @@ const { ipcRenderer } = require("electron");
 export default {
   components: {
     Service,
-    Group
+    Group,
   },
   data() {
     return {
@@ -88,37 +102,37 @@ export default {
       group: {},
       type: "uds",
       itemIndex: 0,
-      refresh: true
+      refresh: true,
     };
   },
 
   props: {
     mode: {
       type: String,
-      default: function() {
+      default: function () {
         return "doip";
-      }
+      },
     },
     editService: {
       type: Boolean,
-      default: function() {
+      default: function () {
         return false;
-      }
+      },
     },
     service: {
       type: Object,
-      default: function() {
+      default: function () {
         return {
           type: "uds",
           cfg: "",
-          val: ""
+          val: "",
         };
-      }
-    }
+      },
+    },
   },
   methods: {
     addItem(val) {
-      this.$emit("additem",val);
+      this.$emit("additem", val);
     },
     editItem(val) {
       this.$emit("edititem", val);
@@ -128,7 +142,9 @@ export default {
       if (this.editService) {
         if (this.service.type == "uds") {
           let tmp = this.$refs.editService.generateData();
-          if (tmp["func"] != this.service.val["func"]) {
+          if (tmp.func != this.service.val.func) {
+            dirty = true;
+          } else if (tmp.preFunc != this.service.val.preFunc) {
             dirty = true;
           } else {
             if (
@@ -144,7 +160,8 @@ export default {
           for (var i in subtable) {
             if (tmp[i].func != subtable[i].func) {
               dirty = true;
-            } else {
+            } else if (tmp[i].preFunc != subtable[i].preFunc) dirty = true;
+            else {
               if (
                 JSON.stringify(tmp[i].payload) !=
                 JSON.stringify(subtable[i].payload)
@@ -152,8 +169,8 @@ export default {
                 dirty = true;
               }
             }
-            if(dirty){
-              break
+            if (dirty) {
+              break;
             }
           }
         }
@@ -181,8 +198,8 @@ export default {
       this.$nextTick(() => {
         this.refresh = true;
       });
-    }
-  }
+    },
+  },
 };
 </script>
 

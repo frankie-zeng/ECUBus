@@ -1,36 +1,45 @@
 /* eslint-disable no-unused-vars */
 <template>
   <div class="subservice">
-    <div class="subheader">{{config.name}}</div>
-    <div v-for="(item,key) in config.service" :key="key">
-       <Service :config="item" :input="change?input.subtable[key]:config.table[key]" group @groupitem="groupChange" ref="service"/>
+    <div class="subheader">{{ config.name }}</div>
+    <div v-for="(item, key) in config.service" :key="key">
+      <Service
+        :config="item"
+        :input="change ? input.subtable[key] : config.table[key]"
+        group
+        @groupitem="groupChange"
+        ref="service"
+      />
     </div>
-    <div style="text-align:right;margin-top:10px">
-      <el-button type="primary" @click="addGroup" size="small" v-if="!change">Add Group</el-button>
-      <el-button type="warning" @click="addGroup" size="small" v-else>Change Group</el-button>
+    <div style="text-align: right; margin-top: 10px">
+      <el-button type="primary" @click="addGroup" size="small" v-if="!change"
+        >Add Group</el-button
+      >
+      <el-button type="warning" @click="addGroup" size="small" v-else
+        >Change Group</el-button
+      >
     </div>
   </div>
 </template>
 
 <script>
 const { ipcRenderer } = require("electron");
-import Service from './service.vue'
+import Service from "./service.vue";
 export default {
   data() {
     return {
-      cnt:0,
-      group:[],
+      cnt: 0,
+      group: [],
       inputData: {},
       error: "",
       refresh: true,
-
     };
   },
-  components:{
-    Service
+  components: {
+    Service,
   },
   computed: {
-    rules: function() {
+    rules: function () {
       var a = {};
       for (var i in this.config.input) {
         if (this.config.input[i].rule) {
@@ -38,60 +47,61 @@ export default {
         }
       }
       return a;
-    }
+    },
   },
   props: {
     config: {
       type: Object,
-      default: function() {
+      default: function () {
         return {};
-      }
+      },
     },
     type: {
       type: String,
-      default: function() {
+      default: function () {
         return "uds";
-      }
+      },
     },
     change: {
       type: Boolean,
-      default: function() {
+      default: function () {
         return false;
-      }
+      },
     },
     input: {
       type: Object,
-      default: function() {
+      default: function () {
         return undefined;
-      }
-    }
+      },
+    },
   },
   methods: {
-    groupChange(val){
-      this.group[this.cnt].func=val.func
-      for(var i in val.payload){
-        for(var j in this.group[this.cnt].payload){
-          let name=this.group[this.cnt].payload[j].name
-          if(val.payload[i].name==name){
-            this.group[this.cnt].payload[j][name]=val.payload[i][name]
-            if(this.group[this.cnt].payload[j].type=='subfunction'){
-              this.group[this.cnt].payload[j].suppress=val.payload[i].suppress
+    groupChange(val) {
+      this.group[this.cnt].func = val.func;
+      this.group[this.cnt].preFunc = val.preFunc;
+      for (var i in val.payload) {
+        for (var j in this.group[this.cnt].payload) {
+          let name = this.group[this.cnt].payload[j].name;
+          if (val.payload[i].name == name) {
+            this.group[this.cnt].payload[j][name] = val.payload[i][name];
+            if (this.group[this.cnt].payload[j].type == "subfunction") {
+              this.group[this.cnt].payload[j].suppress =
+                val.payload[i].suppress;
             }
             break;
           }
         }
       }
       this.cnt++;
-      if(this.cnt==this.group.length){
-         this.$emit(this.change?"edititem":"additem", {
-           service:{
-             name:this.config.name,
-           },
-           type:'group',
-           subtable:this.group
-         });
+      if (this.cnt == this.group.length) {
+        this.$emit(this.change ? "edititem" : "additem", {
+          service: {
+            name: this.config.name,
+          },
+          type: "group",
+          subtable: this.group,
+        });
       }
-     
     },
     suppressChange(key) {
       var index = this.config.changeslot[key].split(",")[0];
@@ -102,7 +112,7 @@ export default {
     uploadFIle(name) {
       this.inputData[name] = {
         name: ipcRenderer.sendSync("saveFilePath"),
-        size: 0
+        size: 0,
       };
       this.refresh = false;
       this.$nextTick(() => {
@@ -113,41 +123,41 @@ export default {
       var val = ipcRenderer.sendSync("downloadFilePath");
       this.inputData[name] = {
         name: val.path,
-        size: val.size
+        size: val.size,
       };
       this.refresh = false;
       this.$nextTick(() => {
         this.refresh = true;
       });
     },
-    addGroup(){
-      this.group=JSON.parse(JSON.stringify(this.config.table))
-      for(var i in this.$refs.service){
-        this.$refs.service[i].addService('groupitem')
+    addGroup() {
+      this.group = JSON.parse(JSON.stringify(this.config.table));
+      for (var i in this.$refs.service) {
+        this.$refs.service[i].addService("groupitem");
       }
-      this.cnt=0;
-      
+      this.cnt = 0;
     },
-    generateData(){
-      var group=JSON.parse(JSON.stringify(this.config.table))
-      for(var z in this.$refs.service){
-        let val=this.$refs.service[z].generateData()
-        group[z].func=val.func
-        for(var i in val.payload){
-          for(var j in group[z].payload){
-            let name=group[z].payload[j].name
-            if(val.payload[i].name==name){
-              group[z].payload[j][name]=val.payload[i][name]
-              if(group[z].payload[j].type=='subfunction'){
-                group[z].payload[j].suppress=val.payload[i].suppress
+    generateData() {
+      var group = JSON.parse(JSON.stringify(this.config.table));
+      for (var z in this.$refs.service) {
+        let val = this.$refs.service[z].generateData();
+        group[z].func = val.func;
+        group[z].preFunc = val.preFunc;
+        for (var i in val.payload) {
+          for (var j in group[z].payload) {
+            let name = group[z].payload[j].name;
+            if (val.payload[i].name == name) {
+              group[z].payload[j][name] = val.payload[i][name];
+              if (group[z].payload[j].type == "subfunction") {
+                group[z].payload[j].suppress = val.payload[i].suppress;
               }
               break;
             }
           }
         }
       }
-      return group
-    }
+      return group;
+    },
     // addService() {
     //   var data = {};
     //   this.$refs.groupForm.validate(valid => {
@@ -190,7 +200,7 @@ export default {
     //     }
     //   });
     // }
-  }
+  },
 };
 </script>
 

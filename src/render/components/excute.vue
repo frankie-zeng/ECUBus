@@ -64,7 +64,7 @@
 </template>
 <script>
 /* eslint-disable no-unused-vars */
-import Progress from './progress.vue'
+import Progress from "./progress.vue";
 const { Terminal } = require("xterm");
 const { FitAddon } = require("xterm-addon-fit");
 const { ipcRenderer } = require("electron");
@@ -89,8 +89,8 @@ export default {
       schIndex: 0,
     };
   },
-  components:{
-    Progress
+  components: {
+    Progress,
   },
   mounted() {
     this.terminal = new Terminal({
@@ -209,6 +209,10 @@ export default {
       });
     },
     run() {
+      if (this.udsTable.length == 0) {
+        this.success('Excute successful')
+        return;
+      }
       this.$refs.prog.resetProgress();
       this.schIndex = 0;
       this.terminal.clear();

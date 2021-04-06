@@ -195,7 +195,10 @@ class LINUDS extends UDS {
     try {
       var item = this.getNextService()
     } catch (e) {
-      this.errorEnd("User defined function syntax error")
+      this.emit('udsError', {
+        msg: "User defined function syntax error," + e.message,
+        index: this.tableIndex
+      })
       return -1
     }
     if (item === null) {

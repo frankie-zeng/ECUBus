@@ -238,7 +238,7 @@ class IPUDS extends UDS {
             var item = this.getNextService()
         } catch (e) {
             this.emit('udsError', {
-                msg: "User defined function syntax error",
+                msg: "User defined function syntax error," + e.message,
                 index: this.tableIndex
             })
             return -1
@@ -249,7 +249,6 @@ class IPUDS extends UDS {
         }
         this.checkFunc = item.checkFunc
         this.writeData = item.payload
-
         var key = this.addr.key
         var msg = this.writeDiaMsg(this.addr.SA, this.addr.TA, item.data)
 

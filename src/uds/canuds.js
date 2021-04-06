@@ -211,7 +211,7 @@ class CANUDS extends UDS {
       var item = this.getNextService()
     } catch (e) {
       this.emit('udsError', {
-        msg: "User defined function syntax error",
+        msg: "User defined function syntax error," + e.message,
         index: this.tableIndex
       })
       return -1

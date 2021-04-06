@@ -131,21 +131,40 @@
         </template>
 
         <el-row>
-          <el-button
-            type="text"
-            icon="el-icon-full-screen"
-            class="btn1"
-            @click="fullScreen"
-          ></el-button>
-          <div class="fn">function(writeData,readData){</div>
-          <codemirror
-            v-model="jsFn"
-            @blur="jsCheck"
-            ref="cmEditor"
-            v-if="showCode"
-            :options="cmOptions"
-          />
-          <div class="fn">}</div>
+          <el-col :span="12">
+            <el-button
+              type="text"
+              icon="el-icon-full-screen"
+              class="btn1"
+              @click="fullScreen(0)"
+            ></el-button>
+            <div class="fn">function preLoad(writeData) {</div>
+            <codemirror
+              v-model="jsPreFn"
+              @blur="jsCheck(jsPreFn)"
+              ref="cmEditorPre"
+              v-if="showCode"
+              :options="cmOptions"
+            />
+            <div class="fn">}</div>
+          </el-col>
+          <el-col :span="12">
+            <el-button
+              type="text"
+              icon="el-icon-full-screen"
+              class="btn2"
+              @click="fullScreen(1)"
+            ></el-button>
+            <div class="fn">function afterLoad(writeData,readData) {</div>
+            <codemirror
+              v-model="jsFn"
+              @blur="jsCheck(jsFn)"
+              ref="cmEditorAfter"
+              v-if="showCode"
+              :options="cmOptions"
+            />
+            <div class="fn">}</div>
+          </el-col>
         </el-row>
         <div id="JSLINT_" v-if="jsError != ''">
           <fieldset id="JSLINT_WARNINGS" class="none">
@@ -186,6 +205,7 @@ export default {
   data() {
     return {
       jsFn: "return true;",
+      jsPreFn: "",
       showCode: true,
       activeNames: ["1"],
       cmOptions: {
@@ -301,15 +321,19 @@ export default {
         },
         {
           func: "this.progress(show,percent,name='main')",
-          params: "show:true to display progress,percent:10%,name:support multi progress",
+          params:
+            "show:true to display progress,percent:10%,name:support multi progress",
           desc: "Display scedule progress",
-        }
+        },
       ],
     };
   },
   mounted() {
     if (!this.group) {
-      this.codemirror.setSize("100%", 200);
+      for (let i = 0; i < this.codemirror.length; i++) {
+        this.codemirror[i].setSize("100%", 200);
+      }
+
       // this.codemirror.setOption('fullScreen',true)
     }
   },
@@ -324,6 +348,7 @@ export default {
         }
       }
       this.jsFn = val.func;
+      this.jsPreFn = val.preFunc == undefined ? "" : val.preFunc;
       if (this.group) {
         // this.$nextTick(() => {
         //   this.activeNames = [];
@@ -343,7 +368,6 @@ export default {
               this.rules[this.config.input[i].name][j].pattern = new RegExp(
                 raw.source + "|" + other.source
               );
-              
 
               break;
             }
@@ -354,7 +378,10 @@ export default {
   },
   computed: {
     codemirror() {
-      return this.$refs.cmEditor.codemirror;
+      let a = [];
+      a.push(this.$refs.cmEditorPre.codemirror);
+      a.push(this.$refs.cmEditorAfter.codemirror);
+      return a;
     },
   },
   props: {
@@ -390,9 +417,9 @@ export default {
     },
   },
   methods: {
-    fullScreen() {
-      if (!this.codemirror.getOption("fullScreen")) {
-        this.codemirror.setOption("fullScreen", true);
+    fullScreen(index) {
+      if (!this.codemirror[index].getOption("fullScreen")) {
+        this.codemirror[index].setOption("fullScreen", true);
       }
     },
     colChange(val) {
@@ -405,7 +432,7 @@ export default {
         this.showCode = false;
       }
     },
-    jsCheck() {
+    jsCheck(val) {
       var option = {
         white: true,
         bitwise: true,
@@ -418,7 +445,7 @@ export default {
       /* workaroud unused arg */
       var result = jslint(
         "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
-          this.jsFn +
+          val +
           "\r\n}\r\nmodule.exports=check;",
         option,
         undefined
@@ -443,6 +470,7 @@ export default {
       var data = {};
       data.type = this.type;
       data.func = this.jsFn;
+      data.preFunc = this.jsPreFn;
       data.service = {
         name: this.config.name,
         value: this.config.value,
@@ -514,6 +542,11 @@ export default {
 
 <style>
 .btn1 {
+  position: absolute;
+  z-index: 2;
+  right: 50%;
+}
+.btn2 {
   position: absolute;
   z-index: 2;
   right: 0px;

@@ -72,6 +72,7 @@ function createWindow () {
   win = new BrowserWindow({ width: 1200, height: 620, minWidth:1000, webPreferences: {
     nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
   },
+  show:false,
   // eslint-disable-next-line no-undef
   icon: `${__static}/logo.ico` })
   const menu = Menu.buildFromTemplate(menuTemplate)
@@ -100,7 +101,11 @@ function createWindow () {
     // Load the index.html when not in development
     win.loadURL('app://./index.html')
   }
-  autoUpdater.checkForUpdates();
+  
+  win.once('ready-to-show', () => {
+    autoUpdater.checkForUpdates();
+    win.show()
+  })
   win.on('closed', () => {
     win = null
   })

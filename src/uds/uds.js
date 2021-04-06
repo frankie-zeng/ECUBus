@@ -9,14 +9,14 @@ class UDS {
         this.map = {}
     }
     emit(channel, msg) {
-        if(channel=='udsError'){
+        if (channel == 'udsError') {
             this.error(msg)
-        }else if(channel=='udsEnd'){
+        } else if (channel == 'udsEnd') {
             this.info(msg)
         }
         this.win.webContents.send(channel, msg)
     }
-    progress(show, percent,name='main') {
+    progress(show, percent, name = 'main') {
         this.emit('progress', {
             name: name,
             show: show,
@@ -32,13 +32,13 @@ class UDS {
         else
             return null
     }
-    verbose(msg){
+    verbose(msg) {
         elelog.verbose(JSON.stringify(msg))
     }
-    error(msg){
+    error(msg) {
         elelog.error(JSON.stringify(msg))
     }
-    info(msg){
+    info(msg) {
         elelog.info(JSON.stringify(msg))
     }
     debug(msg) {
@@ -75,9 +75,10 @@ class UDS {
             }
         }
     }
-    insertItem(service, payload, func = (writeData, readData) => { return true }) {
+    insertItem(service, payload, func = (writeData, readData) => { return true }, preFunc = (writeData) => { }) {
         this.subTable.unshift({
             func: func,
+            preFunc: preFunc,
             payload: payload,
             service: service
         })
@@ -108,6 +109,21 @@ class UDS {
         } else {
             obj.checkFunc = item.func
         }
+        if (item.preFunc == undefined) {
+            item.preFunc = ""
+        }
+        if (typeof item.preFunc === 'string') {
+            try {
+                // eslint-disable-next-line no-eval
+                obj.preFunc = eval('(writeData)=>{' + item.preFunc + '}')
+            } catch (error) {
+                // eslint-disable-next-line no-eval
+                throw 'User function syntax error'
+            }
+        } else {
+            obj.preFunc = item.preFunc
+        }
+
         obj.payload = item.payload
         obj.suppress = false
         for (var i in obj.payload) {
@@ -118,6 +134,7 @@ class UDS {
                 break
             }
         }
+        obj.preFunc(obj.payload)
         var data = [item.service]
         obj.data = data.concat(payload2data(obj.payload))
         return obj
