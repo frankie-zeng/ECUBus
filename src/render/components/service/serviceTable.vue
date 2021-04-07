@@ -480,10 +480,22 @@ export default {
       this.cd = true;
     },
     deleteMulti(schIndex) {
-      this.schs[schIndex].services = [];
+      this.schs[schIndex].services = this.schs[schIndex].services.filter(
+        (x) => {
+          return this.selectTable.indexOf(x) < 0;
+        }
+      );
     },
     deleteService(schIndex, srcIndex) {
-      this.schs[schIndex].services.splice(srcIndex, 1);
+      this.$confirm(`Delete service ${srcIndex}-${this.schs[schIndex].services[srcIndex].service.name} !`, "Delete", {
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+        type: "warning",
+      })
+        .then(() => {
+          this.schs[schIndex].services.splice(srcIndex, 1);
+        })
+        .catch(() => {});
     },
     editItem(val) {
       this.$set(this.schs[this.editIndex[0]].services, this.editIndex[1], val);
