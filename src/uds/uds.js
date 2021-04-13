@@ -7,6 +7,7 @@ class UDS {
     constructor(win) {
         this.win = win
         this.map = {}
+        this.keeyMap = {}
     }
     emit(channel, msg) {
         if (channel == 'udsError') {
@@ -23,12 +24,17 @@ class UDS {
             percent: percent
         })
     }
-    set(key, value) {
+    set(key, value, keep = false) {
         this.map[key] = value
+        if (keep) {
+            this.keeyMap[key] = value
+        }
     }
     get(key) {
         if (key in this.map)
             return this.map[key]
+        else if (key in this.keeyMap)
+            return this.keeyMap[key]
         else
             return null
     }
@@ -87,6 +93,7 @@ class UDS {
         this.udsTable = udsTable
         this.allLen = udsTable.length
         this.subTable = []
+        this.map = {}
     }
     getNextService() {
         if ((this.udsTable.length == 0) && (this.subTable.length == 0)) {
