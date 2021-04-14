@@ -62,6 +62,9 @@ class HSE extends HSEnode.HSE{
             'KEY50':[4,13],
         }
     }
+    getSSLVersion(){
+        return this.getVersion();
+    }
     GET_CATALOG_ID(keyHandle){
         return ((keyHandle>>16)&0xff)
     }
@@ -176,4 +179,4 @@ class HSE extends HSEnode.HSE{
     }
 
 }
-module.exports = new HSE()
+module.exports = HSE

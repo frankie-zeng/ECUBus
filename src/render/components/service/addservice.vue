@@ -146,6 +146,8 @@ export default {
             dirty = true;
           } else if (tmp.preFunc != this.service.val.preFunc) {
             dirty = true;
+          } else if (tmp.desc != this.service.val.desc) {
+            dirty = true;
           } else {
             if (
               JSON.stringify(tmp["payload"]) !=
@@ -160,8 +162,11 @@ export default {
           for (var i in subtable) {
             if (tmp[i].func != subtable[i].func) {
               dirty = true;
-            } else if (tmp[i].preFunc != subtable[i].preFunc) dirty = true;
-            else {
+            } else if (tmp[i].preFunc != subtable[i].preFunc) {
+              dirty = true;
+            } else if (tmp[i].desc != subtable[i].desc) {
+              dirty = true;
+            } else {
               if (
                 JSON.stringify(tmp[i].payload) !=
                 JSON.stringify(subtable[i].payload)

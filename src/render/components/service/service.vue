@@ -96,6 +96,18 @@
         </div>
       </el-form-item>
     </el-form>
+    <el-row>
+      <el-col :span="6">
+        <el-tag type="info">Service Feature Description:</el-tag>
+      </el-col>
+      <el-col :span="18">
+        <el-input
+          v-model="desc"
+          type="textarea"
+          :autosize="{ minRows: 1, maxRows: 3 }"
+        ></el-input>
+      </el-col>
+    </el-row>
     <span style="color: red; margin-right: 5px">{{ error }}</span>
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
@@ -207,6 +219,7 @@ export default {
       jsFn: "return true;",
       jsPreFn: "",
       showCode: true,
+      desc: "",
       activeNames: ["1"],
       cmOptions: {
         extraKeys: {
@@ -349,6 +362,7 @@ export default {
       }
       this.jsFn = val.func;
       this.jsPreFn = val.preFunc == undefined ? "" : val.preFunc;
+      this.desc = val.desc == undefined ? "" : val.desc;
       if (this.group) {
         // this.$nextTick(() => {
         //   this.activeNames = [];
@@ -470,6 +484,7 @@ export default {
       var data = {};
       data.type = this.type;
       data.func = this.jsFn;
+      data.desc = this.desc;
       data.preFunc = this.jsPreFn;
       data.service = {
         name: this.config.name,

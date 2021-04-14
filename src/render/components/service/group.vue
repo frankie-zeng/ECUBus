@@ -79,6 +79,7 @@ export default {
     groupChange(val) {
       this.group[this.cnt].func = val.func;
       this.group[this.cnt].preFunc = val.preFunc;
+      this.group[this.cnt].desc = val.desc;
       for (var i in val.payload) {
         for (var j in this.group[this.cnt].payload) {
           let name = this.group[this.cnt].payload[j].name;
@@ -143,6 +144,7 @@ export default {
         let val = this.$refs.service[z].generateData();
         group[z].func = val.func;
         group[z].preFunc = val.preFunc;
+        group[z].desc = val.desc;
         for (var i in val.payload) {
           for (var j in group[z].payload) {
             let name = group[z].payload[j].name;

@@ -4,9 +4,12 @@ const fs = require('fs')
 const { payload2data, decodeTable } = require('./decode.js')
 const elelog = require('electron-log');
 const hse = require('./../hse');
-class UDS {
+/**
+ * @class UDS
+ */
+class UDS extends hse{
     constructor(win) {
-        this.hse = hse
+        super()
         this.win = win
         this.map = {}
         this.keeyMap = {}

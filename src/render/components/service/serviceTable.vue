@@ -219,6 +219,21 @@
             ></el-button>
           </template>
         </el-table-column>
+        <el-table-column prop="desc" label="Description" align="center" width="200" show-overflow-tooltip>
+          <template slot-scope="scope">
+            <div v-if="scope.row.type == 'uds'">
+              {{scope.row.desc}}
+            </div>
+            <div
+              v-else-if="scope.row.subtable && scope.row.type == 'group'"
+            >
+              <div v-for="(item, key) in scope.row.subtable" :key="key">
+                {{item.desc}}
+              </div>
+            </div>
+            <div v-else>NULL</div>
+          </template>
+        </el-table-column>
         <el-table-column
           fixed="right"
           label="Action"
