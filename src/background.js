@@ -36,7 +36,6 @@ let ipuds
 let lpuds
 let linuds
 
-
 var menuTemplate = [
   {
     label: "Github",
