@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ "$(grep -ic "unreleased" CHANGELOG.md)" -eq "0" ]; then
+  echo "(version) ERROR The changelog doesn't appear to include the string"
+  echo "(version) ERROR \"Unreleased\". Make sure the changelog is updated and"
+  echo "(version) ERROR Unreleased is spelled correctly, then try again."
+  exit 1
+fi
+
+releaseVersion="v${npm_package_version} ($(date +%Y-%m-%d))"
+
+sed -i "" "s/[Uu]nreleased/$releaseVersion/" CHANGELOG.md
+
+git add CHANGELOG.md

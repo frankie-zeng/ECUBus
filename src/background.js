@@ -12,6 +12,7 @@ import { mapState } from 'vuex'
 import { CancellationToken } from "builder-util-runtime"
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 
+const path = require('path');
 const log = require('electron-log');
 // enable ipc 
 log.transports.ipc.level='info'
@@ -65,6 +66,36 @@ var menuTemplate = [
 }];
 // Scheme must be registered before the app is ready
 protocol.registerSchemesAsPrivileged([{scheme: 'app', privileges: { secure: true, standard: true } }])
+
+function createApiHelper () {
+  // Create the browser window.
+  let apiwin = new BrowserWindow({ width: 1200, height: 620, minWidth:1000, webPreferences: {
+    nodeIntegration: false
+  },
+  show:false,
+  // eslint-disable-next-line no-undef
+  icon: `${__static}/logo.ico` })
+  const menu = Menu.buildFromTemplate(menuTemplate)
+  Menu.setApplicationMenu(menu)
+    
+  
+  if (process.env.WEBPACK_DEV_SERVER_URL) {
+    // Load the url of the dev server if in development mode
+    // eslint-disable-next-line no-undef
+    apiwin.loadURL(`${__static}/api_helper/global.html`)
+  } else {
+    // Load the index.html when not in development
+    apiwin.loadURL(path.join(process.resourcesPath,'api_helper','global.html'))
+  }
+  
+  apiwin.once('ready-to-show', () => {
+    apiwin.show()
+  })
+  apiwin.on('closed', () => {
+    apiwin = null
+  })
+}
+
 
 function createWindow () {
   // Create the browser window.
@@ -197,4 +228,7 @@ ipcMain.on('cancelUpdate',()=>{
 ipcMain.on('startUpdate',()=>{
   cancellationToken = new CancellationToken()
   autoUpdater.downloadUpdate(cancellationToken)
+})
+ipcMain.on("startApiHelper",()=>{
+  createApiHelper()
 })

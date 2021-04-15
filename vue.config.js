@@ -21,6 +21,14 @@ module.exports = {
               "*.dll"
             ]
           },
+          {
+            
+            "from": "public/api_helper",
+            "to": "resources/api_helper",
+            "filter": [
+              "*"
+            ]
+          }
         ],
         "win": {  
           "icon": './public/logo.ico',

@@ -112,34 +112,7 @@
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
         <template slot="title">
-          User function
-          <el-popover
-            placement="top-start"
-            title="Tips"
-            width="600"
-            trigger="hover"
-            style="margin: 10px; font-size: 16px"
-          >
-            <el-table :data="tipsData" height="300px">
-              <el-table-column
-                width="150"
-                property="func"
-                label="Function"
-              ></el-table-column>
-              <el-table-column
-                width="100"
-                property="params"
-                label="Params"
-              ></el-table-column>
-              <el-table-column
-                width="300"
-                property="desc"
-                label="Description"
-              ></el-table-column>
-            </el-table>
-            <i class="el-icon-warning-outline" slot="reference"></i>
-            <!-- <el-button slot="reference" icon="el-icon-warning-outline"></el-button> -->
-          </el-popover>
+          User function 
         </template>
 
         <el-row>
@@ -167,6 +140,7 @@
               class="btn2"
               @click="fullScreen(1)"
             ></el-button>
+            <el-button type="text" @click="openApi" class="btn3" icon="el-icon-question"></el-button>
             <div class="fn">function afterLoad(writeData,readData) {</div>
             <codemirror
               v-model="jsFn"
@@ -269,76 +243,6 @@ export default {
       rules: {},
       error: "",
       jsError: "",
-      tipsData: [
-        {
-          func: "this.log(msg,type='debug')",
-          params: "type:'error, warn, info, verbose, debug, silly'",
-          desc: "Ouput log information",
-        },
-        {
-          func: "this.error(msg)",
-          params: "msg:any type",
-          desc: "Equal this.log(msg,'error')",
-        },
-        {
-          func: "this.debug(msg)",
-          params: "msg:any type",
-          desc: "Equal this.log(msg,'debug')",
-        },
-        {
-          func: "this.info(msg)",
-          params: "msg:any type",
-          desc: "Equal this.log(msg,'info')",
-        },
-        {
-          func: "this.delay(ms)",
-          params: "ms,type int",
-          desc: "Insert a new delay and wait another new reponse",
-        },
-        {
-          func: "this.openFile(filename,flag)",
-          params: "filename is a absolute file name path,flag:default is 'r'",
-          desc:
-            "Open a file,this function must be call before using readFile,WriteFile and CloseFile",
-        },
-        {
-          func: "this.readFile(size)",
-          params: "size,type int",
-          desc:
-            "Read data from a file,return type is a array, the length of array maybe less than size",
-        },
-        {
-          func: "this.writeFile(data)",
-          params: "data,type array of buffer",
-          desc: "Write data to a file",
-        },
-        {
-          func: "this.closeFile()",
-          params: "null",
-          desc: "Close a file",
-        },
-        {
-          func: "this.changeNextFrame(name,value)",
-          params: "name:should be payload name,value:the change value",
-          desc: "Change the next service data in the schedule table",
-        },
-        {
-          func: "this.set(key,value)",
-          params: "key:string,value:any type",
-          desc: "Store value in all life cycle",
-        },
-        {
-          func: "this.get(key)",
-          params: "key:string",
-          desc: "Return last store value in this.set",
-        },
-        {
-          func: "this.progress(show,percent,name='main')",
-          params:
-            "show:true to display progress,percent:10%,name:support multi progress",
-          desc: "Display scedule progress",
-        },
-      ],
     };
   },
   mounted() {
@@ -431,6 +335,9 @@ export default {
     },
   },
   methods: {
+    openApi(){
+      ipcRenderer.send('startApiHelper')
+    },
     fullScreen(index) {
       if (!this.codemirror[index].getOption("fullScreen")) {
         this.codemirror[index].setOption("fullScreen", true);
@@ -565,6 +472,11 @@ export default {
   position: absolute;
   z-index: 2;
   right: 0px;
+}
+.btn3 {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
 }
 .CodeMirror-fullscreen {
   position: fixed;

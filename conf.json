@@ -1,0 +1,10 @@
+{
+    "templates": {
+        "referenceTitle": "ECU-Bus Script API",
+        "disableSort": false,
+        "collapse": true,
+        "default":{
+            "outputSourceFiles" : false
+        }
+    }
+}
