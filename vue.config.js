@@ -12,7 +12,7 @@ module.exports = {
         "appId": "ECUBus",
         "copyright":"Copyright © 2020 ${author}",
         "productName":"ECUBus",
-        "nodeGypRebuild":true,
+        "nodeGypRebuild":false,
         "extraFiles": [
           {
             "from": "public/peak",
@@ -26,7 +26,7 @@ module.exports = {
             "from": "public/api_helper",
             "to": "resources/api_helper",
             "filter": [
-              "*"
+              "**/*"
             ]
           }
         ],
