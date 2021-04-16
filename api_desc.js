@@ -206,9 +206,9 @@ function cmac(key,value){
  * @param {buffer} uid - UID lenght must equal 8 bytes 
  * @returns {HSERet} 
  * @example
- * this.hse.importSheKey(0x20000000,
- *          this.hse.sheKey.MASTER_ECU_KEY,Buffer.alloc(16,0),
- *          this.hse.sheKey.MASTER_ECU_KEY,Buffer.from('000102030405060708090a0b0c0d0e0f','hex'),
+ * this.importSheKey(0x20000000,
+ *          this.sheKey.MASTER_ECU_KEY,Buffer.alloc(16,0),
+ *          this.sheKey.MASTER_ECU_KEY,Buffer.from('000102030405060708090a0b0c0d0e0f','hex'),
  *          {
  *              VERIFY_ONLY:true,
  *              KEY_USAGE:true,
@@ -331,6 +331,15 @@ function setFirc(offset,divider)
  * @param {number} keyHandle 
  * @param {KeyInfo} keyInfo 
  * @param {Buffer} key 
+ * @example 
+ * var keyInfo={
+ *       keyFlags:this.HSE_KF_USAGE_ENCRYPT,
+ *      keyCounter:0,
+ *      smrFlags:this.HSE_KF_SMR_0,
+ *       keyType:this.HSE_KEY_TYPE_AES
+ *   }
+ *   var symkey = Buffer.from('000102030405060708090a0b0c0d0e0f','hex')
+ *   this.importSymKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey)
  */
 function importSymKey(offset,keyHandle,keyInfo,key){
 
@@ -341,7 +350,27 @@ function importSymKey(offset,keyHandle,keyInfo,key){
  * @param {number} offset 
  * @param {number} keyHandle 
  * @param {KeyInfo} keyInfo 
- * @param {Buffer} key 
+ * @param {string} key
+ * @example
+ * var keyInfo={
+ *       keyFlags:this.HSE_KF_USAGE_VERIFY,
+ *       keyCounter:0,
+ *       smrFlags:this.HSE_KF_SMR_0,
+ *       keyType:this.HSE_KEY_TYPE_RSA_PUB
+ *   }
+ *   var rsaPubkey = 
+`
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAx0KfhKB3VgKSUdyrdVE6
+J7iSW0EIDAsv81bpKOjtA/Tj9GvSab0eP8+JwFsHTB+ES/Nc0FzAcITsqP4W/XXo
+jgcT6M8ROZe0IuynZjI6zkOQFzolPkFJanSCjPgigPNtJDVJoKMmStEM3sj5xB+Q
+VMuo/3agd1SBatS9XW6M545znl+YxW42qmjNZXK2/g9xvBF79yEJncGdUa2TnA3Y
+tjAx0OPHAsDsFvgpkXe1YAXZ8Og/PHKqeheSkJP5cEKqfF4JIfqJdvQ9jR08ypas
+x0lhmbgbVO9LvJ36RflGXHYYCfYx4j0d/O6voKmkxFS2wFgqcDN8En8YgWZTxoQb
+6QIDAQAB
+-----END PUBLIC KEY-----
+`
+ *   this.importPubKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey) 
  */
 function importPubKey(offset,keyHandle,keyInfo,key){
 
@@ -353,6 +382,43 @@ function importPubKey(offset,keyHandle,keyInfo,key){
  * @param {number} keyHandle 
  * @param {KeyInfo} keyInfo 
  * @param {Buffer} key 
+ * @example
+ * var keyInfo={
+ *       keyFlags:this.HSE_KF_USAGE_VERIFY,
+ *       keyCounter:0,
+ *       smrFlags:this.HSE_KF_SMR_0,
+ *       keyType:this.HSE_KEY_TYPE_RSA_PUB
+ *   }
+ *   var rsaPrivkey = 
+`-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEAx0KfhKB3VgKSUdyrdVE6J7iSW0EIDAsv81bpKOjtA/Tj9GvS
+ab0eP8+JwFsHTB+ES/Nc0FzAcITsqP4W/XXojgcT6M8ROZe0IuynZjI6zkOQFzol
+PkFJanSCjPgigPNtJDVJoKMmStEM3sj5xB+QVMuo/3agd1SBatS9XW6M545znl+Y
+xW42qmjNZXK2/g9xvBF79yEJncGdUa2TnA3YtjAx0OPHAsDsFvgpkXe1YAXZ8Og/
+PHKqeheSkJP5cEKqfF4JIfqJdvQ9jR08ypasx0lhmbgbVO9LvJ36RflGXHYYCfYx
+4j0d/O6voKmkxFS2wFgqcDN8En8YgWZTxoQb6QIDAQABAoIBAQC0fqgKtmSC979d
+AfwaQCLiujFxEd5dMoET9wUrdprD+7/FtymZeKL/AFrycEKS9PWc6uyHHY2AHxhV
+GBzxKS4oAUdKms8qkT2uaRpV22gjUVYjhBsaYn9DPBjJ4zc2Acs6gj6YkVDtcqIq
+6Hg+7KyL8xO5nNZMYbL9d4m1KZ/fWzL5rHjPr7HcL8HbP5BtEby3zKz/2cLyzpPJ
+s+QFjTl981l0AS4g7ezhbNWPuBG0bDl6AnSFYVyQd6DNO44Xp62pSBvwmEIfus6K
+yh3UfOnLQy/h6m3Vax/JKzr4jzFfCxsBCGHqn2rGIuvqPylAfv0+YxBMBmR6qYNm
+57Uihp8BAoGBAPQwo9xp45HLrvpDto2bzx+he4OL7z9NNXvGziQDbgyw3nRsvXs8
+GJS2GCUl7hQme20If7JWaYm6BQpg+Xz00w3q5ib077UUTlLqe7Vi9StRu/MdQ0G9
+JP2VbGXQotBYimful2UQrtfOsmXYgCFkvtS8KSjzPvsUXjpx3m5uSKiJAoGBANDl
+syKLrGB3//Jq4xuEWi2frdpRCpi7zho4Dm2lJoAQJe8FHvOaEW/1AQT3IOdT6kM0
+872disBy2MfJ6vK6nvEtA55U6/EZ3YXFrs/9wZrz6WZFUWZLpMzfjIjSAisttYrb
+S+HYaS/Ff+IkviJ25HeWR2Ss0Hw+nnM5zubxikBhAoGBALEVwQ9sPxuRMcDOcEn7
+r1ZJ/k+koIkwjdPIld/qGNndPkYCQdtn9o+KCrKN8jzst1+X5TtIjVrS6yrerq9e
+wNv7+JJR2LBiHHbnE3W0YQXcTUf+dbLr3zKDNUwU5K3hN+YtUd96HMHmZNuVCT6u
+V/Hgzpyi4o6k87zArUU6dzi5AoGAAzNBp0nUfjXYafJRQF6qswA7PZj4PJbD9Yre
+Tbe1+0hEDIFblAfMNJbgSR8wFdsnP5hUE5eSRJh90bG6M7XAMZmq8IYEh1EKH76D
+ixQsHx+Vd8egE50dDTZvhLkS525v1Yy+gNs74Ut5RhGiCA0iOuLGfThYiU68Rq+g
+B9GzeIECgYEA0rS5cVc694gHeKuuUufrBMJJ6HMvWtS2/RNLJ0EhOcVfsPo5KP7a
+ncFcn1DP0B+bxSRr7Viz5IKI6j2ZeJb3zMVOn7AS5h7Mcf2u4pnSin7C56s9ksDJ
+y3Uv31Ek6iHz/mUmz1uC28ich/lcaNwcYYyODiWE/upq6KEFfwL0QCU=
+-----END RSA PRIVATE KEY-----
+`
+ *   this.importPrivKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPrivkey) 
  */
 function importPrivKey(offset,keyHandle,keyInfo,key){
 
@@ -366,7 +432,6 @@ function importPrivKey(offset,keyHandle,keyInfo,key){
  * @property {number} maxKeyBitLen 
  * @property {number} muMask
  * @property {number} numOfKeySlots
- * 
  */
 
 
@@ -375,6 +440,14 @@ function importPrivKey(offset,keyHandle,keyInfo,key){
  * @param {Catalog[]} nvm 
  * @param {Catalog[]} ram
  * @returns {HSERet} 
+ * @example
+ * var nvmCatalog=[
+ *  {groupOwner:this.HSE_KEY_OWNER_OEM, keyType:this.HSE_KEY_TYPE_RSA_PUB,maxKeyBitLen:4096,muMask:this.HSE_ALL_MU_MASK,numOfKeySlots:1}
+ * ]
+ * var ramCatalog=[
+ *  {groupOwner:this.HSE_KEY_OWNER_ANY, keyType:this.HSE_KEY_TYPE_AES,maxKeyBitLen:256,muMask:this.HSE_ALL_MU_MASK,numOfKeySlots:2}
+ * ]
+ * this.formatCatalog(nvmCatalog,ramCatalog)
  */
 function formatCatalog(offset,nvm,ram){
 
@@ -437,6 +510,28 @@ function formatCatalog(offset,nvm,ram){
  * @param {SMRGenWithData} genInfo 
  * @param {Buffer[]} tagInfo 
  * @returns {HSERet}
+ * @example
+ * var smrEntry={
+ *  pSmrSrc:0x20000000,
+ *  smrSize:0x2000,
+ *  configFlags:this.HSE_SMR_CFG_FLAG_INSTALL_AUTH,
+ *  verifMethod:this.HSE_SMR_VERIF_PRE_BOOT_MASK,
+ *  checkPeriod:0,
+    keyHandle:this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),
+    pInstAuthTag:[0,0x20000000],
+    authScheme:{
+        type:'cmac-aes',
+    }
+ * }
+   var genInfo={
+        accessMode:this.HSE_ACCESS_MODE_ONE_PASS,
+        entryIndex:0,
+        smrData:Buffer.alloc(200,2),
+    }
+    var tagInfo={
+        Buffer.alloc(0),Buffer.alloc(16,2)
+    }
+    this.smrInstallWithData(0x20000000,smrEntry,genInfo,tagInfo)
  */
 function smrInstallWithData(offset,smrEntry,genInfo,tagInfo){
 
@@ -449,6 +544,29 @@ function smrInstallWithData(offset,smrEntry,genInfo,tagInfo){
  * @param {SMRGenWithoutData} genInfo 
  * @param {Buffer[]} tagInfo 
  * @returns {HSERet}
+ * @example
+ * var smrEntry={
+ *  pSmrSrc:0x20000000,
+ *  smrSize:0x2000,
+ *  configFlags:this.HSE_SMR_CFG_FLAG_INSTALL_AUTH,
+ *  verifMethod:this.HSE_SMR_VERIF_PRE_BOOT_MASK,
+ *  checkPeriod:0,
+    keyHandle:this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),
+    pInstAuthTag:[0,0x20000000],
+    authScheme:{
+        type:'cmac-aes',
+    }
+ * }
+   var genInfo={
+        accessMode:this.HSE_ACCESS_MODE_ONE_PASS,
+        entryIndex:0,
+        pSmrData:0x20000000,
+        smrDataLength:0x2000
+    }
+    var tagInfo={
+        Buffer.alloc(0),Buffer.alloc(16,2)
+    }
+    this.smrInstallWithoutData(0x20000000,smrEntry,genInfo,tagInfo)
  */
  function smrInstallWithoutData(offset,smrEntry,genInfo,tagInfo){
 
@@ -459,7 +577,29 @@ function smrInstallWithData(offset,smrEntry,genInfo,tagInfo){
  * @param {number} index
  * @param {CREntry} crEntry 
  * @returns {HSERet}
+ * @example
+ * var crEntry={
+ *  coreId:0,
+ *  crSanction:this.HSE_CR_SANCTION_RESET_SOC,
+ *  smrVerifMap:1,
+ *  pPassReset:0x20000000,
+ *  altSmrVerifMap:2,
+ *  pAltReset:0x20004000
+ * }
+ * this.crInstall(0x20000000,0,crEntry)
  */
 function crInstall(offset,index,crEntry){
+
+}
+
+/**
+ * 
+ * @param {number} offset 
+ * @param {number} index
+ * @returns {HSERet}
+ * @example
+ * this.smrVerify(0x20000000,0)
+ */
+ function smrVerify(offset,index){
 
 }

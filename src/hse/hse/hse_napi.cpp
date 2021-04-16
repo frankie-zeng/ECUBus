@@ -204,6 +204,7 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     InstanceMethod("setAttr", &HSE::setAttr),
                     InstanceMethod("smrInstallWithData", &HSE::smrInstallWithData),
                     InstanceMethod("smrInstallWithoutData", &HSE::smrInstallWithoutData),
+                    InstanceMethod("smrVerify", &HSE::smrVerify),
                     InstanceMethod("crInstall", &HSE::crInstall),
                    });
 
@@ -1020,6 +1021,27 @@ Napi::Value HSE::crInstall(const Napi::CallbackInfo& info){
     memcpy(data,&service,sizeof(hseSrvDescriptor_t));
     data+=sizeof(hseSrvDescriptor_t);
     memcpy(data,&cr,sizeof(hseCrEntry_t));
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
+    return ret;
+}
+
+Napi::Value HSE::smrVerify(const Napi::CallbackInfo& info){
+    hseSrvDescriptor_t service;
+    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
+    Napi::Object ret=Napi::Object::New(info.Env());
+
+    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
+    uint32_t index=info[1].As<Napi::Number>().Uint32Value();
+
+    service.srvId=HSE_SRV_ID_SMR_VERIFY;
+    //address assign
+    service.hseSrv.smrVerifyReq.entryIndex=index;
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t));
+    //*real copy
+    uint8_t* data=payload.Data();
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
     ret.Set("err",0);
     ret.Set("data",payload);
     ret.Set("msg","successful");
