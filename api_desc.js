@@ -172,7 +172,7 @@ function GET_SLOT_IDX(keyHandle){
  * @param {number} slot - HSE slot value
  * @returns {number} 
  * @example
- * this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0)
+ * this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0)
  */
 function GET_KEY_HANDLE(catalog,group,slot){
     
@@ -339,7 +339,7 @@ function setFirc(offset,divider)
  *       keyType:this.HSE_KEY_TYPE_AES
  *   }
  *   var symkey = Buffer.from('000102030405060708090a0b0c0d0e0f','hex')
- *   this.importSymKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey)
+ *   this.importSymKey(0x20000000,this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey)
  */
 function importSymKey(offset,keyHandle,keyInfo,key){
 
@@ -370,7 +370,7 @@ x0lhmbgbVO9LvJ36RflGXHYYCfYx4j0d/O6voKmkxFS2wFgqcDN8En8YgWZTxoQb
 6QIDAQAB
 -----END PUBLIC KEY-----
 `
- *   this.importPubKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey) 
+ *   this.importPubKey(0x20000000,this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey) 
  */
 function importPubKey(offset,keyHandle,keyInfo,key){
 
@@ -418,7 +418,7 @@ ncFcn1DP0B+bxSRr7Viz5IKI6j2ZeJb3zMVOn7AS5h7Mcf2u4pnSin7C56s9ksDJ
 y3Uv31Ek6iHz/mUmz1uC28ich/lcaNwcYYyODiWE/upq6KEFfwL0QCU=
 -----END RSA PRIVATE KEY-----
 `
- *   this.importPrivKey(0x20000000,this.GET_KEY_HANDLE(this.hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPrivkey) 
+ *   this.importPrivKey(0x20000000,this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPrivkey) 
  */
 function importPrivKey(offset,keyHandle,keyInfo,key){
 
