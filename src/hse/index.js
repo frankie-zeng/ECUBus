@@ -177,6 +177,29 @@ class HSE extends HSEnode.HSE{
         buf.writeUInt8(divider,0)
         return this.setAttr(offset,this.HSE_FIRC_DIVIDER_CONFIG_ATTR_ID,buf)
     }
+    /**
+     * 
+     * @param {buffer} key RAW ADKP
+     * @returns {buffer}
+     */
+    calADKPExtension(key){
+        const hash = crypto.createHash('sha256')
+        hash.update(key)
+        return hash.digest()
+    }
+    calADKPDeviceDep(key,uid){
+        const hash1 = crypto.createHash('sha256')
+        const hash2 = crypto.createHash('sha256')
+        hash1.update(key)
+        var realkey=hash1.digest()
+        hash2.update(uid)
+        var content=hash2.digest()
+        const cipher = crypto.createCipheriv('aes-256-ecb',realkey, null);
+        cipher.setAutoPadding(false)
+        var ret=cipher.update(content)
+        cipher.final()
+        return ret
+    }
 
 }
 module.exports = HSE

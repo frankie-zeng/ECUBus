@@ -603,3 +603,19 @@ function crInstall(offset,index,crEntry){
  function smrVerify(offset,index){
 
 }
+
+/**
+     * 
+     * @param {buffer} key - RAW ADKP 128bit
+     * @returns {buffer}
+     */
+function calADKPExtension(key){
+    
+}
+/**
+ * 
+ * @param {buffer} key - RAM ADKP 128bit
+ * @param {*} uid - Device ID 64bit
+ */
+function calADKPDeviceDep(key,uid){
+}

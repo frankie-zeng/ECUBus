@@ -111,9 +111,7 @@
     <span style="color: red; margin-right: 5px">{{ error }}</span>
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
-        <template slot="title">
-          User function 
-        </template>
+        <template slot="title"> User function </template>
 
         <el-row>
           <el-col :span="12">
@@ -140,7 +138,12 @@
               class="btn2"
               @click="fullScreen(1)"
             ></el-button>
-            <el-button type="text" @click="openApi" class="btn3" icon="el-icon-question"></el-button>
+            <el-button
+              type="text"
+              @click="openApi"
+              class="btn3"
+              icon="el-icon-question"
+            ></el-button>
             <div class="fn">function afterLoad(writeData,readData) {</div>
             <codemirror
               v-model="jsFn"
@@ -190,6 +193,7 @@ import report from "./../../JSLint/report.js";
 export default {
   data() {
     return {
+      codeMirror:[],
       jsFn: "return true;",
       jsPreFn: "",
       showCode: true,
@@ -246,6 +250,7 @@ export default {
     };
   },
   mounted() {
+    this.updateCodeMirror();
     if (!this.group) {
       for (let i = 0; i < this.codemirror.length; i++) {
         this.codemirror[i].setSize("100%", 200);
@@ -294,14 +299,14 @@ export default {
       }
     }
   },
-  computed: {
-    codemirror() {
-      let a = [];
-      a.push(this.$refs.cmEditorPre.codemirror);
-      a.push(this.$refs.cmEditorAfter.codemirror);
-      return a;
-    },
-  },
+  // computed: {
+  //   codemirror() {
+  //     let a = [];
+  //     a.push(this.$refs.cmEditorPre.codemirror);
+  //     a.push(this.$refs.cmEditorAfter.codemirror);
+  //     return a;
+  //   },
+  // },
   props: {
     group: {
       type: Boolean,
@@ -335,8 +340,13 @@ export default {
     },
   },
   methods: {
-    openApi(){
-      ipcRenderer.send('startApiHelper')
+    updateCodeMirror(){
+      this.codemirror=[]
+      this.codemirror.push(this.$refs.cmEditorPre.codemirror);
+      this.codemirror.push(this.$refs.cmEditorAfter.codemirror);
+    },
+    openApi() {
+      ipcRenderer.send("startApiHelper");
     },
     fullScreen(index) {
       if (!this.codemirror[index].getOption("fullScreen")) {
@@ -348,6 +358,12 @@ export default {
         this.showCode = false;
         this.$nextTick(() => {
           this.showCode = true;
+          this.$nextTick(() => {
+            this.updateCodeMirror();
+            for (let i = 0; i < this.codemirror.length; i++) {
+              this.codemirror[i].setSize("100%", 200);
+            }
+          });
         });
       } else {
         this.showCode = false;
