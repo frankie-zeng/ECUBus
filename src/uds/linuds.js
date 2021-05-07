@@ -246,7 +246,7 @@ class LINUDS extends UDS {
       this.recvTimer = setInterval(() => {
         let val = {}
         while (this.linapi.Read(val) == 0) {
-
+          this.debug(val)
           if ((val.ErrorFlags == 0) && (val.Direction == PLIN.dirPublisher)) {
             this.debug(val)
             if (this.left > 0) {
@@ -354,6 +354,8 @@ class LINUDS extends UDS {
                 this.errorEnd(sprintf("User defined function syntax error,%s", error.message))
               }
             }
+          } else if (val.ErrorFlags != 0) {
+            this.errorEnd(sprintf("Lin read error,0x%X", val.ErrorFlags))
           }
         }
 

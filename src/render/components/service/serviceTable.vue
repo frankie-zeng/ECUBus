@@ -277,6 +277,14 @@
               @click="editService(index, scope.$index, scope.row)"
               :disabled="running"
             ></el-button>
+            <el-button
+              type="primary"
+              size="mini"
+              icon="el-icon-copy-document"
+              circle
+              @click="copyService(index,scope.row)"
+              :disabled="running"
+            ></el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -500,6 +508,11 @@ export default {
           return this.selectTable.indexOf(x) < 0;
         }
       );
+    },
+    copyService(schIndex,val){
+      let copyVal=JSON.parse(JSON.stringify(val))
+      copyVal.date=new Date().getTime();
+      this.schs[schIndex].services.push(copyVal)
     },
     deleteService(schIndex, srcIndex) {
       this.$confirm(`Delete service ${srcIndex}-${this.schs[schIndex].services[srcIndex].service.name} !`, "Delete", {
