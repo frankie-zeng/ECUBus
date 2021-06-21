@@ -100,7 +100,8 @@ function createApiHelper () {
 function createWindow () {
   // Create the browser window.
   win = new BrowserWindow({ width: 1200, height: 620, minWidth:1000, webPreferences: {
-    nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION
+    nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+    enableRemoteModule: true
   },
   show:false,
   // eslint-disable-next-line no-undef

@@ -73,7 +73,7 @@ export default new Vuex.Store({
       }
     },
     doipAddrLoad(state, data) {
-      state.doipAddrTable = data
+      Vue.set(state,"doipAddrLoad",data);
     },
     /* can addr table */
     canAddrAdd(state, item) {
@@ -83,7 +83,7 @@ export default new Vuex.Store({
       state.canAddrTable.splice(index, 1)
     },
     canAddrLoad(state, data) {
-      state.canAddrTable = data
+      Vue.set(state,"canAddrTable",data);
     },
     /* lin addr table */
     linAddrAdd(state, item) {
@@ -93,23 +93,23 @@ export default new Vuex.Store({
       state.linAddrTable.splice(index, 1)
     },
     linAddrLoad(state, data) {
-      state.linAddrTable = data
+      Vue.set(state,"linAddrTable",data);
     },
     /*can table*/
     canTableLoad(state, data) {
-      state.canTable = data
+      Vue.set(state,"canTable",data);
     },
     /*lin table*/
     linTableLoad(state, data) {
-      state.linTable = data
+      Vue.set(state,"linTable",data);
     },
     /*doip table*/
     doipTableLoad(state, data) {
-      state.doipTable = data
+      Vue.set(state,"doipTable",data);
     },
     /*loopback table*/
     lpTableLoad(state, data) {
-      state.lpTable = data
+      Vue.set(state,"lpTable",data);
     },
   },
   actions: {
