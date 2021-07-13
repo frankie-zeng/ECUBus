@@ -29,8 +29,10 @@ jobs:
     - run: |
         npm install
     - run: npm run lint
+    - name: Generate helper docs
       shell: pwsh
-    - run: npm run generate-docs
+      run: npm run generate-docs
+      
     - run: npm run electron:build
       env:
         CI: true
