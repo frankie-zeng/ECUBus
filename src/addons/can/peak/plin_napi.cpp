@@ -39,6 +39,7 @@ Napi::Object LINAPI::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("SuspendSchedule",&LINAPI::SuspendSchedule),
                    InstanceMethod("ResumeSchedule",&LINAPI::ResumeSchedule),
                    InstanceMethod("CalculateChecksum",&LINAPI::CalculateChecksum),
+                   InstanceMethod("GetVersion",&LINAPI::GetVersion),
 #endif
                    });
 
@@ -82,6 +83,16 @@ Napi::Value LINAPI::Unload(const Napi::CallbackInfo& info){
 
 
 //dll api
+Napi::Value LINAPI::GetVersion(const Napi::CallbackInfo& info){
+
+    fpGetVersion realCall=(fpGetVersion)GetProcAddress(this->hDLL,"LIN_GetVersion");
+    TLINVersion version;
+    TLINError res=realCall(&version);
+    char buf[256];
+    sprintf(buf,"Major:%d,Minor:%d,Revision:%d,Build:%d",version.Major,version.Minor,version.Revision,version.Build);
+    return Napi::String::New(info.Env(),buf);
+}
+
 Napi::Value LINAPI::RegisterClient(const Napi::CallbackInfo& info){
     
     fpRegisterClient realCall=(fpRegisterClient)GetProcAddress(this->hDLL,"LIN_RegisterClient");

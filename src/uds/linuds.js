@@ -15,7 +15,7 @@ class LINUDS extends UDS {
     super(win)
     this.linapi = new PLIN.LINAPI(dllPath)
     this.device = 0
-
+    this.debug("LIN dll verion"+this.linapi.GetVersion())
     this.udsTimer = setTimeout(() => { }, 0)
     this.recvTimer = setInterval(() => {
 

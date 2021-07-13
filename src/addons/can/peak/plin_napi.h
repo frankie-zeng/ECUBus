@@ -33,7 +33,7 @@ typedef TLINError (__stdcall *fpDeleteSchedule)(HLINCLIENT,HLINHW,int);
 typedef TLINError (__stdcall *fpStartSchedule)(HLINCLIENT,HLINHW,int);
 typedef TLINError (__stdcall *fpResumechedule)(HLINCLIENT,HLINHW);
 typedef TLINError (__stdcall *fpSuspendSchedule)(HLINCLIENT,HLINHW);
-
+typedef TLINError (__stdcall *fpGetVersion)(TLINVersion*);
 
 // typedef TLINError (__stdcall *fpReset)(TPCANTPHandle);
 // typedef TLINError (__stdcall *fpGetStatus)(TPCANTPHandle);
@@ -75,7 +75,8 @@ class LINAPI : public Napi::ObjectWrap<LINAPI>{
   Napi::Value LINAPI::StartSchedule(const Napi::CallbackInfo& info);
   Napi::Value LINAPI::SuspendSchedule(const Napi::CallbackInfo& info);
   Napi::Value LINAPI::ResumeSchedule(const Napi::CallbackInfo& info);
-  
+  Napi::Value LINAPI::GetVersion(const Napi::CallbackInfo& info);
+
   HLINCLIENT client;
   HINSTANCE hDLL;
 };
