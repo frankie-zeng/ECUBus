@@ -17,7 +17,7 @@
     "electron:serve": "vue-cli-service electron:serve",
     "postinstall": "electron-builder install-app-deps && patch-package",
     "postuninstall": "electron-builder install-app-deps",
-    "generate-docs": "\"node_modules/.bin/jsdoc\" api_desc.js -c conf.json -d ./public/api_helper -t ./jsdoc-template"
+    "generate-docs": "./node_modules/.bin/jsdoc api_desc.js -c conf.json -d ./public/api_helper -t ./jsdoc-template"
   },
   "main": "background.js",
   "dependencies": {

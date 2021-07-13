@@ -31,6 +31,7 @@ jobs:
         npm install
     - run: npm run lint
     - run: npm run generate-docs
+      shell: pwsh
     - run: npm run electron:build
       env:
         CI: true
