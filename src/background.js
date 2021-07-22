@@ -22,7 +22,6 @@ const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const LPUDS = require('./uds/lpuds.js')
 const LINUDS = require('./uds/linuds.js')
-
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // autoUpdater.logger = log;

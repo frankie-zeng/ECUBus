@@ -7,6 +7,7 @@ import SHE from './../views/SHE.vue'
 import DOIP from './../views/DOIP.vue'
 import UDS_EMULATE from './../views/udsEmulate.vue'
 import Certificate from './../views/Certificate.vue'
+import SOMEIP from './../views/Someip.vue'
 Vue.use(VueRouter)
 
 const routes = [
@@ -14,6 +15,11 @@ const routes = [
     path: '/',
     name: 'home',
     component: HOME
+  },
+  {
+    path: '/someip',
+    name: 'someip',
+    component: SOMEIP
   },
   {
     path: '/pcan',

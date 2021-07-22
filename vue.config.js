@@ -104,7 +104,7 @@ module.exports = {
       //       .end()
       //   }
       // },
-      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js','src/uds/decode.js','src/uds/lpuds.js','src/uds/uds.js','src/uds/linuds.js']
+      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js','src/uds/decode.js','src/uds/lpuds.js','src/uds/uds.js','src/uds/linuds.js','src/events/**']
     }
   },
   publicPath: './',

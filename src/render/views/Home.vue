@@ -35,6 +35,18 @@
       </el-carousel-item>
     </el-carousel>
     <el-divider></el-divider>
+    <div class="catalog">SOA</div>
+    <div class="card">
+      <el-row>
+        <el-col :span="6" :offset="1">
+          <el-card shadow="always">
+            <div class="name">SOME/IP</div>
+            <div class="tip">TP SD E2E</div>
+            <el-button @click="goSOMEIP" type="text">GO</el-button>
+          </el-card>
+        </el-col>
+      </el-row>
+    </div>
     <div class="catalog">UDS ISO-14299</div>
     <div class="card">
       <el-row>
@@ -120,6 +132,9 @@ export default {
     goPage(url) {
       this.$router.push(url);
     },
+    goSOMEIP(){
+      this.$router.push("/someip");
+    },
     goDOIP() {
       this.$router.push("/doip");
     },
@@ -134,7 +149,7 @@ export default {
 </script>
 <style>
 .home {
-  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
 }
 .catalog {
   font-size: 20px;
@@ -229,7 +244,7 @@ export default {
 }
 .card .name {
   font-size: 24px;
-  color: darkcyan;
+  color: #409EFF;
 }
 .card .tip {
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
