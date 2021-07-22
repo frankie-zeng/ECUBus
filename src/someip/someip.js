@@ -9,18 +9,18 @@ process.env['VSOMEIP_CONFIGURATION'] = configFile;
 const SOMEIP = require("./index.js")
 var apps=new Map()
 process.on('message',(m)=>{
-    if(m.method=='CreateApp'){
-        var app= new SOMEIP(dllPath,m.name)
-        apps.set(m.name,app)
+    console.log(m)
+    if(m.method=='someipCreateApp'){
+        var app= new SOMEIP(dllPath,m.arg.name)
+        apps.set(m.arg.name,app)
         app.CreateApp()
-        if(m.route){
+        if(m.arg.route){
             app.IsRouting()
         }
-    }else if(m.method=='StartApp'){
-        apps.get(m.name).StartApp()
+    }else if(m.method=='someipStartApp'){
+        apps.get(m.arg).StartApp()
     }
 })
-
 
 // // eslint-disable-next-line no-unused-vars
 // const routed= new SOMEIP(dllPath,"vsomeipd")
