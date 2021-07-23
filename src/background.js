@@ -22,6 +22,7 @@ const CANUDS = require('./uds/canuds.js')
 const IPUDS = require('./uds/ipuds.js')
 const LPUDS = require('./uds/lpuds.js')
 const LINUDS = require('./uds/linuds.js')
+const SOMEIP = require('./someip')
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // autoUpdater.logger = log;
@@ -35,6 +36,7 @@ let canuds
 let ipuds
 let lpuds
 let linuds
+let someip
 
 var menuTemplate = [
   {
@@ -122,6 +124,7 @@ function createWindow () {
   ipuds = new IPUDS(win)
   lpuds = new LPUDS(win)
   linuds = new LINUDS(win)
+  someip = new SOMEIP(win)
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)

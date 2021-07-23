@@ -1,12 +1,17 @@
+/* eslint-disable no-undef */
 
 const path = require("path")
-const isDevelopment = true
-const dllPath = isDevelopment ? path.join(__dirname,"..","..","public",'someip') : path.join(process.resourcesPath, 'someip')
-const configFile = isDevelopment ? path.join(__dirname,"..","..","public",'someip','vsomeip.json') : path.join(process.resourcesPath, 'someip','vsomeip.json')
-console.log(dllPath)
-console.log(configFile)
+// const isDevelopment = process.env.NODE_ENV !== 'production'
+// const dllPath = isDevelopment ? path.join(__static,'someip') : path.join(process.resourcesPath, 'someip')
+// const configFile = isDevelopment ? path.join(__static,'someip','vsomeip.json') : path.join(process.resourcesPath, 'someip','vsomeip.json')
+// console.log(process.argv)
+const dllPath = path.join(process.argv[2],'someip') 
+const configFile = path.join(process.argv[2],'someip','vsomeip.json')
+console.log(`DLL Load Path:${dllPath}`)
+console.log(`Configurate File:${configFile}`)
+
 process.env['VSOMEIP_CONFIGURATION'] = configFile;
-const SOMEIP = require("./index.js")
+const SOMEIP = require("./someipnode.js")
 var apps=new Map()
 process.on('message',(m)=>{
     console.log(m)
@@ -21,6 +26,13 @@ process.on('message',(m)=>{
         apps.get(m.arg).StartApp()
     }
 })
+process.once('SIGTERM', function () {
+    let keys=apps.keys();
+    for(let i in keys){
+        let app=apps.get(i)
+        app.StopApp()
+    }
+});
 
 // // eslint-disable-next-line no-unused-vars
 // const routed= new SOMEIP(dllPath,"vsomeipd")
