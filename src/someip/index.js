@@ -66,7 +66,7 @@ class SOMEIP {
             subpath = path.join(process.resourcesPath, 'someip', 'subsomeip.js')
         }
         // eslint-disable-next-line no-undef
-        this.sub = cp.fork(subpath, [isDevelopment ? path.join(__static,'someip') : process.resourcesPath, isDevelopment ? path.join(__static,'someip') : app.getPath('appData')], opt);
+        this.sub = cp.fork(subpath, [isDevelopment ? path.join(__static,'someip') : path.join(process.resourcesPath,'someip'), isDevelopment ? path.join(__static,'someip') : app.getPath('appData')], opt);
         this.sub.on('message', (val) => {
             if (val.method == 'port') {
                 this.port = val.port
