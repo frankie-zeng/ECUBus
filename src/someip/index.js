@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-const { ipcMain } = require('electron')
+const { ipcMain, app } = require('electron')
 const http = require('http');
 const opt = { silent: true };
 const cp = require('child_process');
@@ -18,7 +18,7 @@ let methods = [
 ];
 
 function PostRequest(port, method, data, event) {
-    const vData=JSON.stringify(data)
+    const vData = JSON.stringify(data)
     const options = {
         hostname: 'localhost',
         port: port,
@@ -59,16 +59,16 @@ class SOMEIP {
     startSub() {
         const isDevelopment = process.env.NODE_ENV !== 'production'
         let subpath
-        if(isDevelopment){
-            subpath='./src/someip/subsomeip.js'
-        }else{
+        if (isDevelopment) {
+            subpath = './src/someip/subsomeip.js'
+        } else {
             // eslint-disable-next-line no-undef
-            subpath=path.join(process.resourcesPath,'someip','subsomeip.js')
+            subpath = path.join(process.resourcesPath, 'someip', 'subsomeip.js')
         }
         // eslint-disable-next-line no-undef
-        this.sub = cp.fork(subpath, [isDevelopment?__static:process.resourcesPath], opt);
+        this.sub = cp.fork(subpath, [isDevelopment ? path.join(__static,'someip') : process.resourcesPath, isDevelopment ? path.join(__static,'someip') : app.getPath('appData')], opt);
         this.sub.on('message', (val) => {
-            if(val.method=='port'){
+            if (val.method == 'port') {
                 this.port = val.port
                 for (let i in methods) {
                     let method = methods[i]
@@ -77,18 +77,18 @@ class SOMEIP {
                         PostRequest(this.port, method, arg, event)
                     })
                 }
-                this.win.webContents.send('someip_start',this.port)
-            }else if(val.method=='avl'){
-                this.win.webContents.send('someip_avl',{
-                    name:val.name,
-                    service:val.service,
-                    instance:val.instance,
-                    avl:val.avl
+                this.win.webContents.send('someip_start', this.port)
+            } else if (val.method == 'avl') {
+                this.win.webContents.send('someip_avl', {
+                    name: val.name,
+                    service: val.service,
+                    instance: val.instance,
+                    avl: val.avl
                 })
-            }else if(val.method=='msg'){
-                this.win.webContents.send('someip_msg',{
-                    name:val.name,
-                    msg:val.msg,
+            } else if (val.method == 'msg') {
+                this.win.webContents.send('someip_msg', {
+                    name: val.name,
+                    msg: val.msg,
                 })
             }
         })
@@ -96,7 +96,7 @@ class SOMEIP {
             let level = 'info'
             if (Buffer.from(data).toString('ascii').search('error') > 0) {
                 level = 'error'
-            }else if (Buffer.from(data).toString('ascii').search('warning') > 0) {
+            } else if (Buffer.from(data).toString('ascii').search('warning') > 0) {
                 level = 'warning'
             }
             this.win.webContents.send('someip_log', {

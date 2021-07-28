@@ -135,15 +135,13 @@ const fitAddon = new FitAddon();
 const path = remote.require("path");
 const fs = remote.require("fs");
 const util = require("util");
-const isDevelopment = process.env.NODE_ENV !== 'production'
-// eslint-disable-next-line no-undef
-const configFile = path.join(isDevelopment?__static:process.resourcesPath, "someip", "vsomeip.json");
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 import SPAPP from "./../components/spapp.vue";
 export default {
   data() {
     return {
-      configFile: configFile,
+      configFile: '',
       terminal: "",
       started: false,
       appShow: true,
@@ -171,11 +169,65 @@ export default {
     SPAPP,
   },
   mounted() {
-    this.configCode = JSON.stringify(
-      JSON.parse(fs.readFileSync(this.configFile).toString("ascii")),
-      null,
-      4
+    this.configFile = path.join(
+      // eslint-disable-next-line no-undef
+      isDevelopment ? path.join(__static, "someip") : remote.app.getPath("appData"),
+      "vsomeip.json"
     );
+    if (fs.existsSync(this.configFile)) {
+      this.configCode = JSON.stringify(
+        JSON.parse(fs.readFileSync(this.configFile).toString("ascii")),
+        null,
+        4
+      );
+    } else {
+      this.configCode = JSON.stringify({
+        unicast: "192.168.1.1",
+        netmask: "255.255.255.0",
+        logging: {
+          level: "debug",
+          console: "true",
+          file: {
+            enable: "false",
+            path: "",
+          },
+          dlt: "false",
+        },
+        applications: [
+          {
+            name: "client",
+            id: "0x5555",
+          },
+        ],
+        services: [
+          {
+            service: "0x1111",
+            instance: "0x2222",
+            reliable: {
+              port: "30000",
+              "enable-magic-cookies": "false",
+            },
+            unreliable: "30510",
+          },
+        ],
+        routing: "client",
+        "service-discovery": {
+          enable: "true",
+          multicast: "224.0.0.1",
+          port: "30490",
+          protocol: "udp",
+          initial_delay_min: "10",
+          initial_delay_max: "100",
+          repetitions_base_delay: "200",
+          repetitions_max: "3",
+          ttl: "3",
+          cyclic_offer_delay: "2000",
+          request_response_delay: "1500",
+        },
+      },null,4);
+      this.saveConfig();
+    }
+
     this.cm = this.$refs.editor.codemirror;
     this.cm.setSize("100%", window.innerHeight / 2 - 100);
     // this.cm.doc.markClean()
@@ -213,25 +265,24 @@ export default {
         msg = `\x1B[1;;31m${text}\x1B[0m`;
       } else if (message.level == "warning") {
         msg = `\x1B[1;;33m${text}\x1B[0m`;
-      }else{
+      } else {
         msg = `\x1B[1;;30m${text}\x1B[0m`;
       }
       this.terminal.write(msg);
     });
-    ipcRenderer.on('someip_start',()=>{
-      //recreate app       
+    ipcRenderer.on("someip_start", () => {
+      //recreate app
       for (let i in this.apps) {
         let app = this.apps[i];
         ipcRenderer.send("someipCreateApp", app);
       }
-      if(this.aApp!=''){
-        this.appShow=false
-        this.$nextTick(()=>{
-          this.appShow=true
-        })
-      }  
-      
-    })
+      if (this.aApp != "") {
+        this.appShow = false;
+        this.$nextTick(() => {
+          this.appShow = true;
+        });
+      }
+    });
   },
   destroyed() {
     if (this.started) {
@@ -293,6 +344,8 @@ export default {
     },
     saveConfig() {
       fs.writeFileSync(this.configFile, this.configCode);
+      this.cm.doc.markClean();
+      this.clean = true
     },
     codeChange() {
       if (this.firstCheck) {
@@ -317,7 +370,6 @@ export default {
       if (this.started) {
         ipcRenderer.send("someipStop");
         ipcRenderer.send("someipStart");
-        
       } else {
         ipcRenderer.send("someipStart");
         this.started = true;

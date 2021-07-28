@@ -1,8 +1,8 @@
 /* eslint-disable no-undef */
 const http = require('http');
 const path = require("path");
-const dllPath = path.join(process.argv[2], 'someip')
-const configFile = path.join(process.argv[2], 'someip', 'vsomeip.json')
+const dllPath = process.argv[2]
+const configFile = path.join(process.argv[3],'vsomeip.json')
 process.stdout.write(`DLL Load Path:${dllPath}\r\nConfigurate File:${configFile}\r\n`)
 
 process.env['VSOMEIP_CONFIGURATION'] = configFile;
