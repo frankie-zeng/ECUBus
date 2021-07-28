@@ -1,5 +1,5 @@
 {
-    "unicast": "192.168.225.114",
+    "unicast": "192.168.225.135",
     "netmask": "255.255.255.0",
     "logging": {
         "level": "debug",
@@ -8,7 +8,7 @@
             "enable": "true",
             "path": "C:/2020/workspace/vsomeip.log"
         },
-        "dlt": "true"
+        "dlt": "false"
     },
     "applications": [
         {
@@ -16,26 +16,18 @@
             "id": "0x5555"
         }
     ],
-    "clients": [
+    "services": [
         {
             "service": "0x1111",
             "instance": "0x2222",
-            "reliable": [
-                "41234"
-            ]
-        }
-    ],
-    "services": [
-        {
-            "service": "0x1234",
-            "instance": "0x2345",
             "reliable": {
                 "port": "30000",
                 "enable-magic-cookies": "false"
-            }
+            },
+            "unreliable" : "30510"
         }
     ],
-    "routing": "vsomeipd",
+    "routing": "client",
     "service-discovery": {
         "enable": "true",
         "multicast": "224.0.0.1",

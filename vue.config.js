@@ -28,6 +28,22 @@ module.exports = {
             "filter": [
               "**/*"
             ]
+          },
+          {
+            
+            "from": "public/someip",
+            "to": "resources/someip",
+            "filter": [
+              "**/*"
+            ]
+          },
+          {
+            "from": "src/someip/subsomeip.js",
+            "to": "resources/someip/subsomeip.js",
+          },
+          {
+            "from": "build/Release/SOMEIP.node",
+            "to": "resources/someip/SOMEIP.node"
           }
         ],
         "win": {  
@@ -104,7 +120,7 @@ module.exports = {
       //       .end()
       //   }
       // },
-      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js','src/uds/decode.js','src/uds/lpuds.js','src/uds/uds.js','src/uds/linuds.js','src/events/**']
+      mainProcessWatch: ['src/uds/canuds.js','src/crypto/mp.js','src/uds/ipuds.js','src/uds/decode.js','src/uds/lpuds.js','src/uds/uds.js','src/uds/linuds.js','src/events/**','src/someip/index.js']
     }
   },
   publicPath: './',

@@ -31,6 +31,7 @@ SOMEIP::SOMEIP(const Napi::CallbackInfo& info)
   this->core=new SomeipCore(appName.Utf8Value());
   this->rtm_=this->core->GetRtm();
   this->app_=this->core->GetApp();
+  this->started=false;
 }
 
 
@@ -110,6 +111,7 @@ void  SOMEIP::on_message_cbk(const std::shared_ptr<vsomeip::message> &_response)
         uint32_t payloadLen;
         uint8_t e2e;
         bool valCrc;
+        bool reliable;
     }msg_t;
 
     msg_t* tmpmsg = new msg_t;
@@ -124,6 +126,7 @@ void  SOMEIP::on_message_cbk(const std::shared_ptr<vsomeip::message> &_response)
     tmpmsg->code=(uint8_t)_response->get_return_code();
     tmpmsg->e2e=_response->get_check_result();
     tmpmsg->valCrc=_response->is_valid_crc();
+    tmpmsg->reliable=_response->is_reliable();
     std::shared_ptr<vsomeip::payload> pl = _response->get_payload();
     tmpmsg->payload = new uint8_t[pl->get_length()];
     tmpmsg->payloadLen = pl->get_length();
@@ -142,6 +145,7 @@ void  SOMEIP::on_message_cbk(const std::shared_ptr<vsomeip::message> &_response)
         objMsg.Set("code",msg->code);
         objMsg.Set("e2e",msg->e2e);
         objMsg.Set("valCrc",msg->valCrc);
+        objMsg.Set("reliable",msg->reliable);
         Napi::Buffer<uint8_t> bPayload=Napi::Buffer<uint8_t>::New(env,msg->payloadLen);
         memcpy(bPayload.Data(),msg->payload,msg->payloadLen);
         objMsg.Set("payload",bPayload);
@@ -178,7 +182,10 @@ Napi::Value SOMEIP::IsRouting(const Napi::CallbackInfo& info){
 }
 
 Napi::Value SOMEIP::StartApp(const Napi::CallbackInfo& info){
-    this->startThread=CreateThread(NULL, NULL, SOMEIP::StartAppThread, (LPVOID)this, NULL, NULL);
+    if(!this->started){
+        this->startThread=CreateThread(NULL, NULL, SOMEIP::StartAppThread, (LPVOID)this, NULL, NULL);
+        this->started=true;
+    }
     return Napi::Number::New(info.Env(),0);
 }
 
@@ -190,7 +197,7 @@ Napi::Value SOMEIP::StopApp(const Napi::CallbackInfo& info){
 Napi::Value SOMEIP::CreateApp(const Napi::CallbackInfo& info){
    
     if (!this->app_->init()) {
-        printf("Couldn't initialize application");
+        printf("Couldn't initialize application\r\n");
         return Napi::Number::New(info.Env(),-1);
     }
     this->app_->register_state_handler(
@@ -287,7 +294,7 @@ Napi::Value SOMEIP::Send(const Napi::CallbackInfo& info){
     pl->set_data(pl_data);
     rq->set_payload(pl);
     app_->send(rq);
-    printf("Sending: %s", payload.Data());
+    printf("Sending: %s\r\n", payload.Data());
     return Napi::Number::New(info.Env(),0);
 }
 
@@ -343,6 +350,29 @@ Napi::Value SOMEIP::StopOfferService(const Napi::CallbackInfo& info){
     return Napi::Number::New(info.Env(),0);
 }
 
+Napi::Value SOMEIP::Response(const Napi::CallbackInfo& info){
+    Napi::Object nMsg=info[0].As<Napi::Object>();
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::Buffer(info.Env(),info[1]);
+    std::shared_ptr<vsomeip::message> rq = rtm_->create_request(); 
+  
+    rq->set_service(nMsg.Get("service").ToNumber().Uint32Value());
+    rq->set_instance(nMsg.Get("instance").ToNumber().Uint32Value());
+    rq->set_method(nMsg.Get("method").ToNumber().Uint32Value());
+    rq->set_client(nMsg.Get("client").ToNumber().Uint32Value());
+    rq->set_session(nMsg.Get("session").ToNumber().Uint32Value());
+    rq->set_interface_version(nMsg.Get("interfaceV").ToNumber().Uint32Value());
+    rq->set_reliable(nMsg.Get("reliable").ToBoolean());
+
+    std::shared_ptr<vsomeip::message> resp = rtm_->create_response(rq);
+    // Create a payload which will be sent to the service
+    std::shared_ptr<vsomeip::payload> pl = rtm_->create_payload();
+    std::vector<vsomeip::byte_t> pl_data(payload.Data(), payload.Data()+payload.Length());
+    
+    pl->set_data(pl_data);
+    resp->set_payload(pl);
+    app_->send(resp);
+    return Napi::Number::New(info.Env(),0);
+}
 
 Napi::Object SOMEIP::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
@@ -370,6 +400,7 @@ Napi::Object SOMEIP::Init(Napi::Env env, Napi::Object exports) {
                       InstanceMethod("OfferService", &SOMEIP::OfferService),
                       InstanceMethod("StopOfferService", &SOMEIP::StopOfferService),
                       InstanceMethod("IsRouting", &SOMEIP::IsRouting),
+                      InstanceMethod("Response", &SOMEIP::Response),
                    });
 
     constructor = Napi::Persistent(func);

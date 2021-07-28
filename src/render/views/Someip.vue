@@ -2,7 +2,7 @@
 <template>
   <div>
     <el-row>
-      <el-col :span="12">
+      <el-col :span="11">
         <div>
           <el-page-header
             @back="goBack"
@@ -11,9 +11,54 @@
             title=""
           ></el-page-header>
         </div>
+        <div>
+          <el-form :inline="true" :model="formApp" size="mini">
+            <el-form-item label="APP Name:">
+              <el-input v-model="formApp.name" placeholder=""></el-input>
+            </el-form-item>
+            <el-form-item label="Rounter">
+              <el-checkbox v-model="formApp.route"></el-checkbox>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="createApp" :disabled="!started"
+                >Create</el-button
+              >
+            </el-form-item>
+          </el-form>
+        </div>
+        <el-card class="box-card">
+          <div>
+            <el-select
+              v-model="aApp"
+              placeholder="Choose App"
+              size="mini"
+              style="width: 100%"
+              @change="appChange"
+            >
+              <el-option
+                v-for="(item, index) in apps"
+                :key="item.name"
+                :label="item.name + (apps[index].route ? ' (router)' : '')"
+                :value="item.name"
+              >
+              </el-option>
+            </el-select>
+          </div>
+          <div>
+            <el-empty v-if="aApp == ''"></el-empty>
+            <div v-else>
+              <SPAPP
+                :name="aApp"
+                :route="appIsRoute(this.aApp)"
+                :terminal="terminal"
+                v-if="appShow"
+              />
+            </div>
+          </div>
+        </el-card>
       </el-col>
 
-      <el-col :span="12">
+      <el-col :span="12" :offset="1">
         <div class="control">
           <el-button
             type="primary"
@@ -66,24 +111,18 @@
             :options="codeMirrorOptions"
           />
         </div>
-        <div id="terminal" class="logWindow"></div>
+        <div style="position: relative">
+          <el-button
+            icon="el-icon-delete"
+            circle
+            size="mini"
+            class="logClose"
+            @click="clearLog"
+          ></el-button>
+          <div id="terminal" class="logWindow" :style="{ height: logH }"></div>
+        </div>
       </el-col>
     </el-row>
-
-    <!-- <div>
-      <el-tag
-        >Configurate file:{{ configFile }}
-        <el-button
-          icon="el-icon-folder-opened"
-          type="text"
-          size="mini"
-        ></el-button
-      ></el-tag>
-    </div>
-    <el-divider></el-divider>
-    <h2>Request Service</h2>
-    <el-divider></el-divider>
-    <h2>Offer Service</h2> -->
   </div>
 </template>
 
@@ -95,16 +134,22 @@ const { FitAddon } = require("xterm-addon-fit");
 const fitAddon = new FitAddon();
 const path = remote.require("path");
 const fs = remote.require("fs");
+const util = require("util");
+const isDevelopment = process.env.NODE_ENV !== 'production'
 // eslint-disable-next-line no-undef
-const configFile = path.join(__static, "someip", "vsomeip.json");
+const configFile = path.join(isDevelopment?__static:process.resourcesPath, "someip", "vsomeip.json");
+
+import SPAPP from "./../components/spapp.vue";
 export default {
   data() {
     return {
       configFile: configFile,
       terminal: "",
       started: false,
+      appShow: true,
       clean: true,
       firstCheck: true,
+      logH: window.innerHeight / 2 - 110 + "px",
       cm: "",
       configCode: "",
       codeMirrorOptions: {
@@ -112,18 +157,27 @@ export default {
         mode: "application/ld+json",
         lineNumbers: true,
         lint: true,
+        readOnly: false,
       },
+      formApp: {
+        name: "",
+        route: false,
+      },
+      apps: [],
+      aApp: "",
     };
   },
+  components: {
+    SPAPP,
+  },
   mounted() {
-    console.log(this.configFile);
     this.configCode = JSON.stringify(
       JSON.parse(fs.readFileSync(this.configFile).toString("ascii")),
       null,
       4
     );
     this.cm = this.$refs.editor.codemirror;
-    this.cm.setSize("100%", window.innerHeight - 500);
+    this.cm.setSize("100%", window.innerHeight / 2 - 100);
     // this.cm.doc.markClean()
     this.terminal = new Terminal({
       theme: {
@@ -131,6 +185,7 @@ export default {
         selection: "gray",
       },
       fontWeight: "bold",
+      fontSize: 12,
     });
     this.terminal.loadAddon(fitAddon);
     this.terminal.setOption("disableStdin", true);
@@ -146,38 +201,96 @@ export default {
       //   const text = util.format.apply(util, message.data);
       let msg;
       let text = Buffer.from(message.data).toString("ascii");
+      //text = util.format.apply(util, text);
+
       let usedTime = Date.parse(message.date) - this.startTime;
       if (usedTime < 0) {
         usedTime = 0;
       }
       if (message.level == "info") {
-        msg = `\x1B[1;;32m${text}\x1B[0m\r`;
+        msg = `\x1B[1;;32m${text}\x1B[0m`;
       } else if (message.level == "error") {
-        msg = `\x1B[1;;31m${text}\x1B[0m\r`;
-      } else {
-        msg = `\x1B[1;;30m${text}\x1B[0m\r`;
+        msg = `\x1B[1;;31m${text}\x1B[0m`;
+      } else if (message.level == "warning") {
+        msg = `\x1B[1;;33m${text}\x1B[0m`;
+      }else{
+        msg = `\x1B[1;;30m${text}\x1B[0m`;
       }
       this.terminal.write(msg);
     });
-    // ipcRenderer.send("someipStart");
-    // setTimeout(() => {
-    //   ipcRenderer.send("someipCreateApp", {
-    //     name: "vsomeipd",
-    //     route: true,
-    //   });
-    //   ipcRenderer.send("someipStartApp", "vsomeipd");
-    // }, 1000);
+    ipcRenderer.on('someip_start',()=>{
+      //recreate app       
+      for (let i in this.apps) {
+        let app = this.apps[i];
+        ipcRenderer.send("someipCreateApp", app);
+      }
+      if(this.aApp!=''){
+        this.appShow=false
+        this.$nextTick(()=>{
+          this.appShow=true
+        })
+      }  
+      
+    })
   },
   destroyed() {
     if (this.started) {
       ipcRenderer.send("someipStop");
     }
-
     window.removeEventListener("resize", this.resizeTerminal);
     ipcRenderer.removeAllListeners("someip_log");
   },
 
   methods: {
+    appChange() {
+      this.appShow = false;
+      this.$nextTick(() => {
+        this.appShow = true;
+      });
+    },
+    appIsRoute(name) {
+      for (let i in this.apps) {
+        if (name == this.apps[i].name) {
+          return this.apps[i];
+        }
+      }
+      return false;
+    },
+    clearLog() {
+      this.terminal.clear();
+    },
+    createApp() {
+      let name = this.formApp.name;
+      for (let i in this.apps) {
+        if (name == this.apps[i].name) {
+          this.$notify({
+            title: "Warining",
+            message: `APP ${name} has created`,
+            type: "warning",
+          });
+          return;
+        }
+      }
+      let res = ipcRenderer.sendSync("someipCreateApp", this.formApp);
+      if (res.error == 0) {
+        this.apps.push(JSON.parse(JSON.stringify(this.formApp)));
+        this.$notify({
+          title: "Success",
+          message: `APP ${name} create successfully`,
+          type: "success",
+        });
+        this.formApp = {
+          name: "",
+          route: false,
+        };
+      } else {
+        this.$notify({
+          title: "Error",
+          message: `Create APP ${name} Error:${res.error}, See Log`,
+          type: "error",
+        });
+      }
+    },
     saveConfig() {
       fs.writeFileSync(this.configFile, this.configCode);
     },
@@ -189,10 +302,13 @@ export default {
       this.clean = this.cm.doc.isClean();
     },
     resizeTerminal() {
-      this.cm.setSize("100%", window.innerHeight - 500);
-      if (window.innerWidth % 1 === 0 && window.innerHeight % 1 === 0) {
-        fitAddon.fit();
-      }
+      this.cm.setSize("100%", window.innerHeight / 2 - 100);
+      this.logH = window.innerHeight / 2 - 110 + "px";
+      this.$nextTick(() => {
+        if (window.innerWidth % 1 === 0 && window.innerHeight % 1 === 0) {
+          fitAddon.fit();
+        }
+      });
     },
     goBack() {
       this.$router.push("/");
@@ -201,16 +317,22 @@ export default {
       if (this.started) {
         ipcRenderer.send("someipStop");
         ipcRenderer.send("someipStart");
+        
       } else {
         ipcRenderer.send("someipStart");
         this.started = true;
       }
+      this.codeMirrorOptions.readOnly = true;
+      this.codeMirrorOptions.className = "readOnly";
     },
     stopSP() {
       if (this.started) {
         ipcRenderer.send("someipStop");
         this.started = false;
       }
+      this.apps = [];
+      this.aApp = "";
+      this.codeMirrorOptions.readOnly = false;
     },
   },
 };
@@ -224,5 +346,11 @@ export default {
 .config {
   margin-top: 10px;
   margin-bottom: 20px;
+}
+.logClose {
+  position: absolute;
+  right: 30px;
+  top: 20px;
+  z-index: 20;
 }
 </style>

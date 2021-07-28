@@ -27,7 +27,7 @@ class SOMEIP : public Napi::ObjectWrap<SOMEIP>{
   Napi::Value SOMEIP::OfferService(const Napi::CallbackInfo& info);
   Napi::Value SOMEIP::StopOfferService(const Napi::CallbackInfo& info);
   Napi::Value SOMEIP::IsRouting(const Napi::CallbackInfo& info);
-  
+  Napi::Value SOMEIP::Response(const Napi::CallbackInfo& info);
 
  private:
   static Napi::FunctionReference constructor;
@@ -45,6 +45,9 @@ class SOMEIP : public Napi::ObjectWrap<SOMEIP>{
   
   std::map<uint16_t,std::map<uint16_t, Napi::ThreadSafeFunction> > avlFn;
   std::string appName;
+
+  bool started;
+
   void stop();
   void on_state_cbk(vsomeip::state_type_e _state);
   void on_availability_cbk(vsomeip::service_t _service,vsomeip::instance_t _instance, bool _is_available);
