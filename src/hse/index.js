@@ -62,6 +62,202 @@ class HSE extends HSEnode.HSE{
             'KEY50':[4,13],
         }
     }
+    getErrorStrLegacy(code){
+        let str
+        switch(code){
+            case 0x55A5AA33:
+                str='HSE service successfully executed with no error.'
+                break;
+            case 0x55a5aa35:
+                str='HSE signals that a verification request fails.'
+                break;
+            case 0x55a5aa55:
+                str='The address parameters are invalid.'
+                break;
+            case 0x55A5AA56:
+                str='The HSE request parameters are invalid.'
+                break;
+            case 0xAA55A569:
+                str='The operation or feature not supported.'
+                break;
+            case 0xAA55A536:
+                str='The operation is not allowed because of some restrictions (in attributes, life-cycle dependent operations, key-management, etc.)'
+                break;
+            case 0xAA55A563:
+                str='There is no enough space to perform service (e.g. format key store)'
+                break;
+            case 0xaa55a599:
+                str='The service request failed because read access was denied.'
+                break;
+            case 0xaa55a5b1:
+                str='The service request failed because write access was denied.'
+                break;
+            case 0xAA55A5C1:
+                str='The service request that uses streaming mode failed (e.g. UPDATES and FINISH steps do not use the same HSE interface ID and channel ID as START step)'
+                break;
+            case 0xA5AA5571:
+                str='This error code is returned if a key is locked due to failed boot measurement or an active debugger.'
+                break;
+            case 0xA5AA5527:
+                str=```
+                The key usage flags (provided using the key handle) don't allow to perform the requested crypto operation
+                (the key flags don't match the crypto operation; e.g. the key is configured to be used for decryption, and
+                the host requested an encryption). In SHE, the key ID provided is either invalid or non-usable due to some
+                flag restrictions.
+                ```
+                break;
+            case 0xA5AA5517:
+                str='Specified key slot is empty.'
+                break;
+            case 0xA5AA5537:
+                str='Key slot to be loaded is protected with WRITE PROTECTION restriction flag.'
+                break;
+            case 0xA5AA5573:
+                str='Used only in the context of SHE specification: specified key slot cannot be updated due to errors in verification of the parameters.'
+                break;
+            case 0x55A5AA36:
+                str='Detect physical errors, flipped bits etc., during memory read or write operations.'
+                break;
+            case 0x55A5C461:
+                str='The service can not be canceled.'
+                break;
+            case 0x55A5C596:
+                str='The service has been canceled.'
+                break;
+            case 0x55A5C565:
+                str=```
+                This error code is returned if an error not covered by the error codes above is detected inside HSE. For
+                HSE-B, it can be returned if flash programming and erase operaton was in progress at the time of giving
+                the command.
+                ```
+                break;
+            case 0x55a5c633:
+                str='The monotonic counter overflows.'
+                break;
+            case 0x55A5C635:
+                str='Generic extension failure at runtime.'
+                break;
+            case 0xA5AAD623:
+                str='HSE did not perform SHE based secure Boot.'
+                break;
+            case 0xA5AAD63A:
+                str='Received SHE_BOOT_OK or SHE_BOOT_FAILURE more then one time.'
+                break;
+            case 0xDD33DD33:
+                str='Invalid (malformed) IP packet.'
+                break;
+            case 0xDD3333DD:
+                str='Valid packet but replay detected.'
+                break;
+            case 0xDD3333A5:
+                str='Valid packet but frame late in sequence.'
+                break;
+            case 0xDD33A53D:
+                str='Sequence number overflow.'
+                break;
+            case 0xDD33A55A:
+                str='Decap CE DROP (ECN issue) error.'
+                break;
+            case 0xDD33A3D5:
+                str='Packet decrypted but TTL exceeded.'
+                break;
+            case 0xDD33D5D5:
+                str='Valid Dummy Payload (type 59)'
+                break;
+            case 0xDD335DD5:
+                str='Operation successful, but IPsec additions cause overflow of IP header length field.'
+                break;
+            case 0xDD335D3A:
+                str='IPsec padding check error found.'
+                break;
+            default:
+                str=''
+        }
+        return str
+    }
+    getErrorStr(code){
+        let str
+        switch(code){
+            case 0x55A5AA33:
+                str='HSE service successfully executed with no error.'
+                break;
+            case 0x55A5A164:
+                str='HSE signals that a verification request fails.'
+                break;
+            case 0x55A5A26A:
+                str='The address parameters are invalid.'
+                break;
+            case 0x55A5A399:
+                str='The HSE request parameters are invalid.'
+                break;
+            case 0xAA55A11E:
+                str='The operation or feature not supported.'
+                break;
+            case 0xAA55A21C:
+                str='The operation is not allowed because of some restrictions (in attributes, life-cycle dependent operations, key-management, etc.)'
+                break;
+            case 0xAA55A371:
+                str='There is no enough space to perform service (e.g. format key store)'
+                break;
+            case 0xAA55A427:
+                str='The service request failed because read access was denied.'
+                break;
+            case 0xAA55A517:
+                str='The service request failed because write access was denied.'
+                break;
+            case 0xAA55A6B1:
+                str='The service request that uses streaming mode failed (e.g. UPDATES and FINISH steps do not use the same HSE interface ID and channel ID as START step)'
+                break;
+            case 0xA5AA51B2:
+                str='This error code is returned if a key is locked due to failed boot measurement or an active debugger.'
+                break;
+            case 0xA5AA52B4:
+                str=```
+                The key usage flags (provided using the key handle) don't allow to perform the requested crypto operation
+                (the key flags don't match the crypto operation; e.g. the key is configured to be used for decryption, and
+                the host requested an encryption). In SHE, the key ID provided is either invalid or non-usable due to some
+                flag restrictions.
+                ```
+                break;
+            case 0xA5AA5317:
+                str='Specified key slot is empty.'
+                break;
+            case 0xA5AA5436:
+                str='Key slot to be loaded is protected with WRITE PROTECTION restriction flag.'
+                break;
+            case 0xA5AA5563:
+                str='Used only in the context of SHE specification: specified key slot cannot be updated due to errors in verification of the parameters.'
+                break;
+            case 0x33D6D136:
+                str='Detect physical errors, flipped bits etc., during memory read or write operations.'
+                break;
+            case 0x33D6D261:
+                str='The service can not be canceled.'
+                break;
+            case 0x33D6D396:
+                str='The service has been canceled.'
+                break;
+            case 0x33D6D4F1:
+                str=```
+                This error code is returned if an error not covered by the error codes above is detected inside HSE. For
+                HSE-B, it can be returned if flash programming and erase operaton was in progress at the time of giving
+                the command.
+                ```
+                break;
+            case 0x33D6D533:
+                str='The monotonic counter overflows.'
+                break;
+            case 0x33D6D623:
+                str='HSE did not perform SHE based secure Boot.'
+                break;
+            case 0x33D7D83A:
+                str='Received SHE_BOOT_OK or SHE_BOOT_FAILURE more then one time.'
+                break;
+            default:
+                str=''
+        }
+        return str
+    }
     getSSLVersion(){
         return this.getVersion();
     }

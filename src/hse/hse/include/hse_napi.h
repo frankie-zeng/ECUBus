@@ -28,6 +28,8 @@ class HSE : public Napi::ObjectWrap<HSE>{
   Napi::Value HSE::smrInstallWithData(const Napi::CallbackInfo& info);
   Napi::Value HSE::crInstall(const Napi::CallbackInfo& info);
   Napi::Value HSE::smrVerify(const Napi::CallbackInfo& info);
+  Napi::Value HSE::FWUpdateLegacy(const Napi::CallbackInfo& info);
+  Napi::Value HSE::FWUpdate(const Napi::CallbackInfo& info);
 };
 
 #endif

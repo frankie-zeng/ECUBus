@@ -219,16 +219,20 @@
             ></el-button>
           </template>
         </el-table-column>
-        <el-table-column prop="desc" label="Description" align="center" width="200" show-overflow-tooltip>
+        <el-table-column
+          prop="desc"
+          label="Description"
+          align="center"
+          width="200"
+          show-overflow-tooltip
+        >
           <template slot-scope="scope">
             <div v-if="scope.row.type == 'uds'">
-              {{scope.row.desc}}
+              {{ scope.row.desc }}
             </div>
-            <div
-              v-else-if="scope.row.subtable && scope.row.type == 'group'"
-            >
+            <div v-else-if="scope.row.subtable && scope.row.type == 'group'">
               <div v-for="(item, key) in scope.row.subtable" :key="key">
-                {{item.desc}}
+                {{ item.desc }}
               </div>
             </div>
             <div v-else>NULL</div>
@@ -282,7 +286,7 @@
               size="mini"
               icon="el-icon-copy-document"
               circle
-              @click="copyService(index,scope.row)"
+              @click="copyService(index, scope.row)"
               :disabled="running"
             ></el-button>
           </template>
@@ -366,16 +370,25 @@ export default {
   props: ["mode"],
   methods: {
     update() {
-      if (this.$store.state[this.mode + "Table"].length > 0) {
-        this.schs = this.$store.state[this.mode + "Table"];
+      // if (this.$store.state[this.mode + "Table"].length > 0) {
+      //   this.schs = this.$store.state[this.mode + "Table"];
+      // }
+      //clear all schs first
+      let len=this.schs.length
+      for(let i=len-1;i>=0;i--){
+        this.deleteSch(i);
+      }
+      for(let i=0;i<this.$store.state[this.mode + "Table"].length;i++){
+        this.addSch()
+        this.$set(this.schs,i,this.$store.state[this.mode + "Table"][i])
       }
     },
     sortableEnd(val) {
       var fromIndex = 0;
       var toIndex = 0;
       for (var j = 0; j < this.$refs.srvTable.length; j++) {
-        let node = this.$refs.srvTable[j].$el.childNodes[2].childNodes[0]
-          .childNodes[1]; //tbody
+        let node =
+          this.$refs.srvTable[j].$el.childNodes[2].childNodes[0].childNodes[1]; //tbody
         if (node.isEqualNode(val.from)) {
           fromIndex = j;
         }
@@ -509,17 +522,33 @@ export default {
         }
       );
     },
-    copyService(schIndex,val){
-      let copyVal=JSON.parse(JSON.stringify(val))
-      copyVal.date=new Date().getTime();
-      this.schs[schIndex].services.push(copyVal)
+    copyService(schIndex, val) {
+      this.$confirm(
+        `Copy service ${schIndex}-${val.service.name}?`,
+        "Copy",
+        {
+          confirmButtonText: "Yes",
+          cancelButtonText: "No",
+          type: "info",
+        }
+      )
+        .then(() => {
+          let copyVal = JSON.parse(JSON.stringify(val));
+          copyVal.date = new Date().getTime();
+          this.schs[schIndex].services.push(copyVal);
+        })
+        .catch(() => {});
     },
     deleteService(schIndex, srcIndex) {
-      this.$confirm(`Delete service ${srcIndex}-${this.schs[schIndex].services[srcIndex].service.name} !`, "Delete", {
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
-        type: "warning",
-      })
+      this.$confirm(
+        `Delete service ${srcIndex}-${this.schs[schIndex].services[srcIndex].service.name}?`,
+        "Delete",
+        {
+          confirmButtonText: "Yes",
+          cancelButtonText: "No",
+          type: "warning",
+        }
+      )
         .then(() => {
           this.schs[schIndex].services.splice(srcIndex, 1);
         })

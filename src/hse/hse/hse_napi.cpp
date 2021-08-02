@@ -206,6 +206,8 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     InstanceMethod("smrInstallWithoutData", &HSE::smrInstallWithoutData),
                     InstanceMethod("smrVerify", &HSE::smrVerify),
                     InstanceMethod("crInstall", &HSE::crInstall),
+                    InstanceMethod("FWUpdateLegacy",&HSE::FWUpdateLegacy),
+                    InstanceMethod("FWUpdate",&HSE::FWUpdate)
                    });
 
   constructor = Napi::Persistent(func);
@@ -665,8 +667,8 @@ Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
     uint32_t nvmLen= nvm.Length();
     uint32_t ramLen= ram.Length();
     
-    hseKeyGroupCfgEntry_t* nvmCat = new hseKeyGroupCfgEntry_t[nvmLen];
-    hseKeyGroupCfgEntry_t* ramCat = new hseKeyGroupCfgEntry_t[ramLen];
+    hseKeyGroupCfgEntry_t* nvmCat = new hseKeyGroupCfgEntry_t[nvmLen+1];
+    hseKeyGroupCfgEntry_t* ramCat = new hseKeyGroupCfgEntry_t[ramLen+1];
 
     for(uint32_t i=0;i<nvmLen;i++){
         Napi::Value v=nvm[i];
@@ -678,6 +680,13 @@ Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
         nvmCat[i].hseReserved[0]=0;
         nvmCat[i].hseReserved[1]=0;
     } 
+    nvmCat[nvmLen].groupOwner=0;
+    nvmCat[nvmLen].keyType=0;
+    nvmCat[nvmLen].maxKeyBitLen=0;
+    nvmCat[nvmLen].muMask=0;
+    nvmCat[nvmLen].numOfKeySlots=0;
+    nvmCat[nvmLen].hseReserved[0]=0;
+    nvmCat[nvmLen].hseReserved[1]=0;
     for(uint32_t i=0;i<ramLen;i++){
         Napi::Value v=ram[i];
         ramCat[i].groupOwner=v.ToObject().Get("groupOwner").ToNumber().Uint32Value();
@@ -688,17 +697,24 @@ Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
         ramCat[i].hseReserved[0]=0;
         ramCat[i].hseReserved[1]=0;
     } 
+    ramCat[ramLen].groupOwner=0;
+    ramCat[ramLen].keyType=0;
+    ramCat[ramLen].maxKeyBitLen=0;
+    ramCat[ramLen].muMask=0;
+    ramCat[ramLen].numOfKeySlots=0;
+    ramCat[ramLen].hseReserved[0]=0;
+    ramCat[ramLen].hseReserved[1]=0;
 
-    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*nvmLen+sizeof(hseKeyGroupCfgEntry_t)*ramLen);
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*(nvmLen+1)+sizeof(hseKeyGroupCfgEntry_t)*(ramLen+1));
     uint8_t* data=payload.Data();
     service.srvId=HSE_SRV_ID_FORMAT_KEY_CATALOGS;
     service.hseSrv.formatKeyCatalogsReq.pNvmKeyCatalogCfg= (HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-    service.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg= (HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*nvmLen);
+    service.hseSrv.formatKeyCatalogsReq.pRamKeyCatalogCfg= (HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyGroupCfgEntry_t)*(nvmLen+1));
     memcpy(data,&service,sizeof(hseSrvDescriptor_t));
     data+=sizeof(hseSrvDescriptor_t);
-    memcpy(data,nvmCat,sizeof(hseKeyGroupCfgEntry_t)*nvmLen);
-    data+=sizeof(hseKeyGroupCfgEntry_t)*nvmLen;
-    memcpy(data,ramCat,sizeof(hseKeyGroupCfgEntry_t)*ramLen);
+    memcpy(data,nvmCat,sizeof(hseKeyGroupCfgEntry_t)*(nvmLen+1));
+    data+=sizeof(hseKeyGroupCfgEntry_t)*(nvmLen+1);
+    memcpy(data,ramCat,sizeof(hseKeyGroupCfgEntry_t)*(ramLen+1));
     delete nvmCat;
     delete ramCat;
     
@@ -1048,6 +1064,49 @@ Napi::Value HSE::smrVerify(const Napi::CallbackInfo& info){
     return ret;
 }
 
+Napi::Value HSE::FWUpdateLegacy(const Napi::CallbackInfo& info){
+    hseSrvDescriptor_t service;
+    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
+    Napi::Object ret=Napi::Object::New(info.Env());
+
+    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
+    uint32_t addr=info[1].As<Napi::Number>().Uint32Value();
+
+    service.srvId=HSE_SRV_ID_FIRMWARE_UPDATE;
+    //address assign
+    service.hseSrv.firmwareUpdateLegacyReq.pInFwFile=(HOST_ADDR)addr;
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t));
+    //*real copy
+    uint8_t* data=payload.Data();
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
+    return ret;
+}
+
+Napi::Value HSE::FWUpdate(const Napi::CallbackInfo& info){
+    hseSrvDescriptor_t service;
+    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
+    Napi::Object ret=Napi::Object::New(info.Env());
+
+    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
+    uint32_t addr=info[1].As<Napi::Number>().Uint32Value();
+
+    service.srvId=HSE_SRV_ID_FIRMWARE_UPDATE;
+    //address assign
+    service.hseSrv.firmwareUpdateReq.accessMode=HSE_ACCESS_MODE_ONE_PASS;
+    service.hseSrv.firmwareUpdateReq.streamLength=0;
+    service.hseSrv.firmwareUpdateReq.pInFwFile=(HOST_ADDR)addr;
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t));
+    //*real copy
+    uint8_t* data=payload.Data();
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
+    return ret;
+}
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports=HSE::Init(env,exports);

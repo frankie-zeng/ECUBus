@@ -7,12 +7,12 @@ const hse = require('./../hse');
 /**
  * @class UDS
  */
-class UDS extends hse{
+class UDS {
     constructor(win) {
-        super()
         this.win = win
         this.map = {}
         this.keeyMap = {}
+        this.hse = new hse();
     }
     emit(channel, msg) {
         if (channel == 'udsError') {

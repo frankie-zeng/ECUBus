@@ -110,6 +110,23 @@ HOST_ADDR              pFwBufferLength;
  *                   - For HSE_B, not used.          
 */
 HOST_ADDR              pOutFwBuffer;
+}hseFirmwareUpdateLegacySrv_t;
+
+
+typedef struct
+{
+/** @brief  INPUT:   Specifies the access mode: ONE-PASS, START, UPDATE, FINISH.*/
+hseAccessMode_t          accessMode;
+uint8_t                  reserved[3];
+/** @brief  INPUT:   The length in bytes of a chunk. It is used only for STREAMING mode. It must be at least 64 bytes or multiple of 64 bytes;
+ *                   otherwise, an HSE error is returned.
+ *                   - START mode:  must be multiple of 64bytes.
+ *                   - UPDATE mode: must be multiple of 64bytes.
+ *                   - FINISH mode: can be any value.*/
+uint32_t                 streamLength;
+/** @brief  INPUT:   ONE-PASS  USAGE: The address of new version of HSE Firmware file to be updated into the HSE internal flash memory.<br>
+ *                   STREAMING USAGE: The address of chunk to be updated into the HSE internal flash memory. */
+HOST_ADDR                pInFwFile;
 }hseFirmwareUpdateSrv_t;
 
 /*==================================================================================================

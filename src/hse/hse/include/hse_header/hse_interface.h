@@ -406,6 +406,7 @@ typedef struct
         #endif
             hseCancelSrv_t                  cancelSrvReq;           /**< @brief Request to cancel a one-pass or streaming service on a specific channel */
         #ifdef HSE_SPT_OTA_FIRMWARE_UPDATE
+            hseFirmwareUpdateLegacySrv_t    firmwareUpdateLegacyReq;      /**< @brief Request to HSE firmware update. */
             hseFirmwareUpdateSrv_t          firmwareUpdateReq;      /**< @brief Request to HSE firmware update. */
         #endif
         /*--------System authorization services--------*/
