@@ -141,6 +141,38 @@ function insertItem(service, payload, func = (writeData, readData) => { return t
  */
 class hse {
     /**
+     * @description Generate HSE FW update service, for HSE 0.8.3
+     * @param {number} offset - Target ECU ram address
+     * @param {number} fwAddr - HSE frimware address in ECU.   
+     * @returns {HSERet} 
+    */
+    FWUpdateLegacy(offset,fwAddr){
+
+    }
+    /**
+     * @description Generate HSE FW update service, for HSE 0.10.x +
+     * @param {number} offset - Target ECU ram address
+     * @param {number} fwAddr - HSE frimware address in ECU.   
+     * @returns {HSERet} 
+    */
+    FWUpdate(offset,fwAddr){
+
+    }
+    /**
+     * @description Get HSE response error message, 0.8.3
+     * @returns {string} 
+     */
+    getErrorStrLegacy(code){
+        
+    }
+    /**
+     * @description Get HSE response error message, 0.10.x +
+     * @returns {string} 
+     */
+    getErrorStr(code){
+
+    }
+    /**
      * @returns {string} Get internal openssl verison.
      * @example this.getSSLVersion()
      */
