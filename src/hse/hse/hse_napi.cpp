@@ -34,10 +34,12 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_UINT32(HSE_ACCESS_MODE_START),
                     DECLARE_NAPI_UINT32(HSE_ACCESS_MODE_UPDATE),
                     DECLARE_NAPI_UINT32(HSE_ACCESS_MODE_FINISH),
+#ifdef HSE_0_8_3
                     DECLARE_NAPI_UINT32(HSE_SMR_VERIF_PRE_BOOT_MASK),
                     DECLARE_NAPI_UINT32(HSE_SMR_VERIF_PRE_BOOT_ALT_MASK),
                     DECLARE_NAPI_UINT32(HSE_SMR_VERIF_POST_BOOT_MASK),
                     DECLARE_NAPI_UINT32(HSE_SMR_VERIF_RUN_TIME_MASK),
+#endif
                     DECLARE_NAPI_UINT32(HSE_SMR_CFG_FLAG_INSTALL_AUTH),
                     DECLARE_NAPI_UINT32(HSE_HASH_ALGO_MD5),
                     DECLARE_NAPI_UINT32(HSE_HASH_ALGO_SHA_1),
@@ -100,7 +102,9 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_SHE),
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_AES),
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_HMAC),
+#ifdef HSE_0_8_3
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_TDES),
+#endif
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_SHARED_SECRET),
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_ECC_PAIR),
                     DECLARE_NAPI_UINT32(HSE_KEY_TYPE_ECC_PUB),
@@ -148,7 +152,9 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_UINT32(HSE_LC_OEM_PROD),
                     DECLARE_NAPI_UINT32(HSE_LC_IN_FIELD),
                     DECLARE_NAPI_UINT32(HSE_LC_PRE_FA),
+#ifdef HSE_0_8_3
                     DECLARE_NAPI_UINT32(HSE_LC_FA),
+#endif
                     DECLARE_NAPI_UINT32(HSE_LC_SIMULATED_OEM_PROD),
                     DECLARE_NAPI_UINT32(HSE_LC_SIMULATED_IN_FIELD),
                     DECLARE_NAPI_UINT32(HSE_IVT_NO_AUTH),
@@ -167,7 +173,12 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_UINT32(HSE_EXTEND_CUST_SECURITY_POLICY_ATTR_ID),
                     DECLARE_NAPI_UINT32(HSE_MU_CONFIG_ATTR_ID),
                     DECLARE_NAPI_UINT32(HSE_EXTEND_OEM_SECURITY_POLICY_ATTR_ID),
+#ifdef HSE_0_8_3
                     DECLARE_NAPI_UINT32(HSE_TAMPER_ENABLE_ATTR_ID),
+#endif
+#ifdef HSE_0_10_0
+                    DECLARE_NAPI_UINT32(HSE_PHYSICAL_TAMPER_ATTR_ID),
+#endif
                     DECLARE_NAPI_UINT32(HSE_FIRC_DIVIDER_CONFIG_ATTR_ID),
                     DECLARE_NAPI_UINT32(HSE_DEBUG_AUTH_MODE_PW),
                     DECLARE_NAPI_UINT32(HSE_DEBUG_AUTH_MODE_CR),
@@ -183,8 +194,10 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_NAME_UINT32("ATTR_SMR_CORE_STATUS_LEN",sizeof(hseAttrSmrCoreStatus_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_MU_INST_CONFIG_LEN",sizeof(hseAttrMUInstanceConfig_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_MU_CONFIG_LEN",sizeof(hseAttrMUConfig_t)),
+#ifdef HSE_0_8_3
                     DECLARE_NAPI_NAME_UINT32("ATTR_CMU_INST_CONFIG_LEN",sizeof(hseAttrCMUInstanceConfig_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_CMU_CONFIG_LEN",sizeof(hseAttrCMUConfig_t)),
+#endif
                     DECLARE_NAPI_NAME_UINT32("ATTR_EXTEND_CUST_SECURITY_POLICY_LEN",sizeof(hseAttrExtendCustSecurityPolicy_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_EXTEND_OEM_SECURITY_POLICY_LEN",sizeof(hseAttrExtendOemSecurityPolicy_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_ADKP_LEN",sizeof(hseAttrApplDebugKey_t)),
@@ -203,8 +216,11 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     InstanceMethod("smrInstallWithoutData", &HSE::smrInstallWithoutData),
                     InstanceMethod("smrVerify", &HSE::smrVerify),
                     InstanceMethod("crInstall", &HSE::crInstall),
-                    InstanceMethod("FWUpdateLegacy",&HSE::FWUpdateLegacy),
-                    InstanceMethod("FWUpdate",&HSE::FWUpdate)
+                    InstanceMethod("FWUpdate",&HSE::FWUpdate),
+                    InstanceMethod("FWUpdate",&HSE::FWUpdateLegacy),
+#ifdef HSE_0_10_0
+                    InstanceMethod("SBAFUpdate",&HSE::SBAFUpdate),
+#endif
                    });
 
   constructor = Napi::Persistent(func);
@@ -227,11 +243,15 @@ static Napi::Buffer<uint8_t> hseAuthScheme(Napi::Env env,hseAuthScheme_t* s,Napi
         s->macScheme.macAlgo=HSE_MAC_ALGO_CMAC;
         s->macScheme.sch.cmac.cipherAlgo=HSE_CIPHER_ALGO_AES;
         return Napi::Buffer<uint8_t>::New(env,0);
-    }else if(type.compare("cmac-tdes")==0){
+    }
+#ifdef HSE_0_8_3
+    else if(type.compare("cmac-tdes")==0){
         s->macScheme.macAlgo=HSE_MAC_ALGO_CMAC;
         s->macScheme.sch.cmac.cipherAlgo=HSE_CIPHER_ALGO_3DES;
         return Napi::Buffer<uint8_t>::New(env,0);
-    }else if(type.compare("gmac")==0){
+    }
+#endif
+    else if(type.compare("gmac")==0){
         s->macScheme.macAlgo=HSE_MAC_ALGO_GMAC;
         Napi::Buffer<uint8_t> iv=o.Get("iv").As<Napi::Buffer<uint8_t>>();
         s->macScheme.sch.gmac.ivLength=iv.Length();
@@ -526,23 +546,37 @@ Napi::Value HSE::smrInstallWithoutData(const Napi::CallbackInfo& info){
     }
     service.srvId=HSE_SRV_ID_SMR_ENTRY_INSTALL;
     service.hseSrv.smrEntryInstallReq.accessMode=genInfo.Get("accessMode").ToNumber().Uint32Value();
+#ifdef HSE_0_8_3
     if(genInfo.Has("streamId")){
         service.hseSrv.smrEntryInstallReq.streamId=genInfo.Get("streamId").ToNumber().Uint32Value();
     }
+#endif
     service.hseSrv.smrEntryInstallReq.entryIndex=genInfo.Get("entryIndex").ToNumber().Uint32Value();
     service.hseSrv.smrEntryInstallReq.pSmrData=genInfo.Get("pSmrData").ToNumber().Uint32Value();
     service.hseSrv.smrEntryInstallReq.smrDataLength=genInfo.Get("smrDataLength").ToNumber().Uint32Value();
     Napi::Buffer<uint8_t> tagBuf[2];
+    uint8_t tLen=0;
+#ifdef HSE_0_8_3
+    tLen=8;
+#endif
+#ifdef HSE_0_10_0
+    tLen=0;
+#endif
     for(int i=0;i<2;i++){
         Napi::Value v=tagInfo[i];
         tagBuf[i]=v.As<Napi::Buffer<uint8_t>>();
         tagLen[i]=tagBuf[i].Length();
+#ifdef HSE_0_8_3
         service.hseSrv.smrEntryInstallReq.pAuthTagLength[i]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+i*4);
+#endif
+#ifdef HSE_0_10_0
+        service.hseSrv.smrEntryInstallReq.authTagLength[i]=tagLen[i];
+#endif
     }
    
     //address assign
-    service.hseSrv.smrEntryInstallReq.pAuthTag[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8);
-    service.hseSrv.smrEntryInstallReq.pAuthTag[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]);
+    service.hseSrv.smrEntryInstallReq.pAuthTag[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen);
+    service.hseSrv.smrEntryInstallReq.pAuthTag[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]);
     service.hseSrv.smrEntryInstallReq.pSmrEntry=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
 
     //smr
@@ -550,25 +584,29 @@ Napi::Value HSE::smrInstallWithoutData(const Napi::CallbackInfo& info){
     smr.pSmrDest=(HOST_ADDR)NULL;
     smr.smrSize=(HOST_ADDR)smrEntry.Get("smrSize").ToNumber().Uint32Value();
     smr.configFlags=(HOST_ADDR)smrEntry.Get("configFlags").ToNumber().Uint32Value();
-    smr.verifMethod=(HOST_ADDR)smrEntry.Get("verifMethod").ToNumber().Uint32Value();
     smr.checkPeriod=smrEntry.Get("checkPeriod").ToNumber().Uint32Value();
+#ifdef HSE_0_8_3
+    smr.verifMethod=(HOST_ADDR)smrEntry.Get("verifMethod").ToNumber().Uint32Value();
     smr.keyHandle=smrEntry.Get("keyHandle").ToNumber().Uint32Value();
+#endif
     Napi::Array initTag = Napi::Array::Array(info.Env(),smrEntry.Get("pInstAuthTag"));
     Napi::Object scheme =  smrEntry.Get("authScheme").ToObject();
     for(int i=0;i<2;i++){
         Napi::Value v=initTag[i];
         smr.pInstAuthTag[i]=v.ToNumber().Uint32Value();
     }
-    Napi::Buffer<uint8_t> extBuf=hseAuthScheme(info.Env(),&smr.authScheme,scheme,offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]+tagLen[1]);
-    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]+tagLen[1]+extBuf.Length());
+    Napi::Buffer<uint8_t> extBuf=hseAuthScheme(info.Env(),&smr.authScheme,scheme,offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]+tagLen[1]);
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]+tagLen[1]+extBuf.Length());
     //*real copy
     uint8_t* data=payload.Data();
     memcpy(data,&service,sizeof(hseSrvDescriptor_t));
     data+=sizeof(hseSrvDescriptor_t);
     memcpy(data,&smr,sizeof(hseSmrEntry_t));
     data+=sizeof(hseSmrEntry_t);
+#ifdef HSE_0_8_3
     memcpy(data,tagLen,8);
     data+=8;
+#endif
     memcpy(data,tagBuf[0].Data(),tagLen[0]);
     data+=tagLen[0];
     memcpy(data,tagBuf[1].Data(),tagLen[1]);
@@ -605,42 +643,58 @@ Napi::Value HSE::smrInstallWithData(const Napi::CallbackInfo& info){
     }
     service.srvId=HSE_SRV_ID_SMR_ENTRY_INSTALL;
     service.hseSrv.smrEntryInstallReq.accessMode=genInfo.Get("accessMode").ToNumber().Uint32Value();
+#ifdef HSE_0_8_3
     if(genInfo.Has("streamId")){
         service.hseSrv.smrEntryInstallReq.streamId=genInfo.Get("streamId").ToNumber().Uint32Value();
     }
+#endif
     service.hseSrv.smrEntryInstallReq.entryIndex=genInfo.Get("entryIndex").ToNumber().Uint32Value();
     Napi::Buffer<uint8_t> smrData=genInfo.Get("smrData").As<Napi::Buffer<uint8_t>>();
     service.hseSrv.smrEntryInstallReq.smrDataLength=smrData.Length();
     Napi::Buffer<uint8_t> tagBuf[2];
+    uint8_t tLen=0;
+#ifdef HSE_0_8_3
+    tLen=8;
+#endif
+#ifdef HSE_0_10_0
+    tLen=0;
+#endif
     for(int i=0;i<2;i++){
         Napi::Value v=tagInfo[i];
         tagBuf[i]=v.As<Napi::Buffer<uint8_t>>();
         tagLen[i]=tagBuf[i].Length();
+#ifdef HSE_0_8_3
         service.hseSrv.smrEntryInstallReq.pAuthTagLength[i]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+i*4);
+#endif
+#ifdef HSE_0_10_0
+        service.hseSrv.smrEntryInstallReq.authTagLength[i]=tagLen[i];
+#endif
     }
    
     //address assign
-    service.hseSrv.smrEntryInstallReq.pAuthTag[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8);
-    service.hseSrv.smrEntryInstallReq.pAuthTag[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]);
+    service.hseSrv.smrEntryInstallReq.pAuthTag[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen);
+    service.hseSrv.smrEntryInstallReq.pAuthTag[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]);
     service.hseSrv.smrEntryInstallReq.pSmrEntry=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
     
-    service.hseSrv.smrEntryInstallReq.pSmrData=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]+tagLen[1]);
+    service.hseSrv.smrEntryInstallReq.pSmrData=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]+tagLen[1]);
     //smr
     smr.pSmrSrc=(HOST_ADDR)smrEntry.Get("pSmrSrc").ToNumber().Uint32Value();
     smr.pSmrDest=(HOST_ADDR)NULL;
     smr.smrSize=(HOST_ADDR)smrEntry.Get("smrSize").ToNumber().Uint32Value();
     smr.configFlags=(HOST_ADDR)smrEntry.Get("configFlags").ToNumber().Uint32Value();
-    smr.verifMethod=(HOST_ADDR)smrEntry.Get("verifMethod").ToNumber().Uint32Value();
     smr.checkPeriod=smrEntry.Get("checkPeriod").ToNumber().Uint32Value();
+#ifdef HSE_0_8_3
+    smr.verifMethod=(HOST_ADDR)smrEntry.Get("verifMethod").ToNumber().Uint32Value();
     smr.keyHandle=smrEntry.Get("keyHandle").ToNumber().Uint32Value();
+#endif
     Napi::Array initTag = Napi::Array::Array(info.Env(),smrEntry.Get("pInstAuthTag"));
     Napi::Object scheme =  smrEntry.Get("authScheme").ToObject();
     for(int i=0;i<2;i++){
         Napi::Value v=initTag[i];
         smr.pInstAuthTag[i]=v.ToNumber().Uint32Value();
     }
-    Napi::Buffer<uint8_t> extBuf=hseAuthScheme(info.Env(),&smr.authScheme,scheme,offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]+tagLen[1]+smrData.Length());
-    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+8+tagLen[0]+tagLen[1]+smrData.Length()+extBuf.Length());
+    Napi::Buffer<uint8_t> extBuf=hseAuthScheme(info.Env(),&smr.authScheme,scheme,offset+sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]+tagLen[1]+smrData.Length());
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseSmrEntry_t)+tLen+tagLen[0]+tagLen[1]+smrData.Length()+extBuf.Length());
     //*real copy
     uint8_t* data=payload.Data();
     memcpy(data,&service,sizeof(hseSrvDescriptor_t));
@@ -682,9 +736,11 @@ Napi::Value HSE::crInstall(const Napi::CallbackInfo& info){
     
     cr.coreId=crEntry.Get("coreId").ToNumber().Uint32Value();
     cr.crSanction=crEntry.Get("crSanction").ToNumber().Uint32Value();
+#ifdef HSE_0_8_3    
     cr.smrVerifMap=crEntry.Get("smrVerifMap").ToNumber().Uint32Value();
-    cr.pPassReset=crEntry.Get("pPassReset").ToNumber().Uint32Value();
     cr.altSmrVerifMap=crEntry.Get("altSmrVerifMap").ToNumber().Uint32Value();
+#endif
+    cr.pPassReset=crEntry.Get("pPassReset").ToNumber().Uint32Value();
     cr.pAltReset=crEntry.Get("pAltReset").ToNumber().Uint32Value();
     
     //address assign
@@ -744,6 +800,7 @@ Napi::Value HSE::FWUpdateLegacy(const Napi::CallbackInfo& info){
     return ret;
 }
 
+
 Napi::Value HSE::FWUpdate(const Napi::CallbackInfo& info){
     hseSrvDescriptor_t service;
     memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
@@ -757,6 +814,28 @@ Napi::Value HSE::FWUpdate(const Napi::CallbackInfo& info){
     service.hseSrv.firmwareUpdateReq.accessMode=HSE_ACCESS_MODE_ONE_PASS;
     service.hseSrv.firmwareUpdateReq.streamLength=0;
     service.hseSrv.firmwareUpdateReq.pInFwFile=(HOST_ADDR)addr;
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t));
+    //*real copy
+    uint8_t* data=payload.Data();
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
+    return ret;
+}
+
+Napi::Value HSE::SBAFUpdate(const Napi::CallbackInfo& info){
+    hseSrvDescriptor_t service;
+    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
+    Napi::Object ret=Napi::Object::New(info.Env());
+
+    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
+    uint32_t addr=info[1].As<Napi::Number>().Uint32Value();
+
+    service.srvId=HSE_SRV_ID_SBAF_UPDATE;
+    service.hseSrv.sbafUpdateReq.pInFwFile=(HOST_ADDR)addr;
+    service.hseSrv.sbafUpdateReq.accessMode=HSE_ACCESS_MODE_ONE_PASS;
+    service.hseSrv.sbafUpdateReq.streamLength=0;
     Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t));
     //*real copy
     uint8_t* data=payload.Data();

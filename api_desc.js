@@ -150,6 +150,15 @@ class hse {
 
     }
     /**
+     * @description Generate HSE SBAF update service, for HSE 0.10.x +
+     * @param {number} offset - Target ECU ram address
+     * @param {number} fwAddr - HSE frimware address in ECU.   
+     * @returns {HSERet} 
+    */
+    SBAFUpdate(offset,fwAddr){
+
+    }
+    /**
      * @description Generate HSE FW update service, for HSE 0.10.x +
      * @param {number} offset - Target ECU ram address
      * @param {number} fwAddr - HSE frimware address in ECU.   

@@ -8,7 +8,7 @@ const { aesCmac } = require('./lib/aes-cmac');
 const log = require('electron-log');
 
 class HSE extends HSEnode.HSE {
-    constructor(fPath, ePath = __static) {
+    constructor(fPath, ePath) {
         super()
         this.sheKey = {
             'MASTER_ECU_KEY': [0, 1],
@@ -264,7 +264,8 @@ class HSE extends HSEnode.HSE {
                 str = 'Received SHE_BOOT_OK or SHE_BOOT_FAILURE more then one time.'
                 break;
             default:
-                str = ''
+                str = this.getErrorStrLegacy(code)
+                break;
         }
         return str
     }
@@ -275,9 +276,6 @@ class HSE extends HSEnode.HSE {
             b.push(parseInt(a[i], 16))
         }
         return b
-    }
-    getSSLVersion() {
-        return this.getVersion();
     }
     GET_CATALOG_ID(keyHandle) {
         return ((keyHandle >> 16) & 0xff)

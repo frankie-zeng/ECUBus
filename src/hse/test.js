@@ -1,7 +1,5 @@
 const HSE=require('./index')
-const path=require('path')
-const { exit } = require('process')
-const hse = new HSE(__dirname,path.join(__dirname,'..','..','public'))
+const hse = new HSE(__dirname,__dirname)
 var keyInfo={
     keyFlags:hse.HSE_KF_USAGE_VERIFY,
     keyCounter:0,
