@@ -4,6 +4,9 @@ const fs = require('fs')
 const { payload2data, decodeTable } = require('./decode.js')
 const elelog = require('electron-log');
 const hse = require('./../hse');
+const {app} = require('electron');
+const path = require('path');
+const isDevelopment = process.env.NODE_ENV !== 'production'
 /**
  * @class UDS
  */
@@ -12,7 +15,7 @@ class UDS {
         this.win = win
         this.map = {}
         this.keeyMap = {}
-        this.hse = new hse();
+        this.hse = new hse(app.getPath("appData"),isDevelopment?path.join(__dirname,'..','src','hse'):process.resourcesPath);
     }
     emit(channel, msg) {
         if (channel == 'udsError') {

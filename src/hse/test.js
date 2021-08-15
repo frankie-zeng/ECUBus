@@ -1,0 +1,96 @@
+const HSE=require('./index')
+const path=require('path')
+const { exit } = require('process')
+const hse = new HSE(__dirname,path.join(__dirname,'..','..','public'))
+var keyInfo={
+    keyFlags:hse.HSE_KF_USAGE_VERIFY,
+    keyCounter:0,
+    smrFlags:hse.HSE_KF_SMR_0,
+    keyType:hse.HSE_KEY_TYPE_RSA_PUB
+}
+var rsaPubkey = `
+-----BEGIN PRIVATE KEY-----
+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
+2KNxFLS8RRS4AL0TJBn5VY8XwCAL1A==
+-----END PRIVATE KEY-----
+`;
+
+let ret=hse.importPrivKey(0,hse.GET_KEY_HANDLE(hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPubkey); 
+console.log(ret)
+rsaPubkey=
+`
+-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIMsBvwUPXylt9Sqo6rzmW9kRGAYjlcAUDiFOebd2PplToAoGCCqGSM49
+AwEHoUQDQgAEWgCJilmj/seeaIW5lFx5my8gr9c4VIgfkb6SqGsdFOw6ponkV1wH
+QCNqXIUEmR/f0++WhX42mASPpI2l85ASFg==
+-----END EC PRIVATE KEY-----
+`
+ret=hse.importPrivKey(0,hse.GET_KEY_HANDLE(hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPubkey); 
+console.log(ret)
+rsaPubkey=
+`
+-----BEGIN PRIVATE KEY-----
+MC4CAQAwBQYDK2VwBCIEIJUm9BuJyJ7mHSuu/1ASJ8ANg+9ob01bL1JtSrr5VsjI
+-----END PRIVATE KEY-----
+`
+ret=hse.importPrivKey(0,hse.GET_KEY_HANDLE(hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPubkey);
+console.log(ret)
+
+rsaPubkey=
+`
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9rWjXOufGTEg3bP8BE5xcNOhfUqe
+LM6qj6K32396GjximBW0jPM9VjPsx0JC7+V4mfO63n5jpvsiT8VPvTXTRA==
+-----END PUBLIC KEY-----
+`
+
+ret=hse.importPubKey(0,hse.GET_KEY_HANDLE(hse.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,rsaPubkey);
+console.log(ret)

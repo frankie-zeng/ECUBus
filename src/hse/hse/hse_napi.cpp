@@ -1,15 +1,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "hse_napi.h"
-#include <openssl/err.h>
-#include <openssl/crypto.h>
-#include <openssl/bio.h>
-#include <openssl/pem.h>
-#include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/bn.h>
-#include <openssl/ec.h>
-#include <openssl/objects.h>
 #include "hse_interface.h"
 
 //#define DEBUG
@@ -180,6 +171,14 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_UINT32(HSE_FIRC_DIVIDER_CONFIG_ATTR_ID),
                     DECLARE_NAPI_UINT32(HSE_DEBUG_AUTH_MODE_PW),
                     DECLARE_NAPI_UINT32(HSE_DEBUG_AUTH_MODE_CR),
+                    DECLARE_NAPI_UINT32(HSE_EC_SEC_SECP256R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_SEC_SECP384R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_BRAINPOOL_BRAINPOOLP256R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_BRAINPOOL_BRAINPOOLP320R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_BRAINPOOL_BRAINPOOLP384R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_BRAINPOOL_BRAINPOOLP512R1),
+                    DECLARE_NAPI_UINT32(HSE_EC_25519_ED25519),
+                    DECLARE_NAPI_UINT32(HSE_EC_25519_CURVE25519),
                     DECLARE_NAPI_NAME_UINT32("ATTR_FW_VERSION_LEN",sizeof(hseAttrFwVersion_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_SMR_CORE_STATUS_LEN",sizeof(hseAttrSmrCoreStatus_t)),
                     DECLARE_NAPI_NAME_UINT32("ATTR_MU_INST_CONFIG_LEN",sizeof(hseAttrMUInstanceConfig_t)),
@@ -196,10 +195,8 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
                     DECLARE_NAPI_NAME_UINT32("ATTR_DEBUG_MODE_LEN",sizeof(hseAttrDebugAuthMode_t)),
                     //DECLARE_NAPI_NAME_UINT32("ATTR_TAMPER_MODE_LEN",sizeof(hseAttrExternalTamperConfig_t)),
                     InstanceMethod("getVersion", &HSE::getVersion),
-                    InstanceMethod("importSymKey", &HSE::importSymKey),
                     InstanceMethod("importSubSheKey", &HSE::importSheKey),
-                    InstanceMethod("importPubKey", &HSE::importPubKey),
-                    InstanceMethod("importPrivKey", &HSE::importPrivKey),
+                    InstanceMethod("importKey", &HSE::importKey),
                     InstanceMethod("formatCatalog", &HSE::formatCatalog),
                     InstanceMethod("setAttr", &HSE::setAttr),
                     InstanceMethod("smrInstallWithData", &HSE::smrInstallWithData),
@@ -216,21 +213,8 @@ Napi::Object HSE::Init(Napi::Env env, Napi::Object exports) {
   exports.Set("HSE", func);
   return exports;
 }
-// #ifdef DEBUG
-// static int openssl_mem_leak_cb(const char* str,size_t len,void* u){
-//     char* buf=new char[len+1];
-//     memcpy(buf,str,len);
-//     buf[len]=0;
-//     printf("%s\r\n",buf);
-//     delete buf;
-// }
-// #endif
 
-static char* getErrorMsg(unsigned long err){
-    char* buf=new char[512];
-    ERR_error_string_n(err,buf,512);
-    return buf;
-}
+
 
 static Napi::Buffer<uint8_t> hseAuthScheme(Napi::Env env,hseAuthScheme_t* s,Napi::Object o,uint32_t alloffset){
 
@@ -281,12 +265,10 @@ static Napi::Buffer<uint8_t> hseAuthScheme(Napi::Env env,hseAuthScheme_t* s,Napi
 
     return Napi::Buffer<uint8_t>::New(env,0);
 }
-
+#if 0
 static hseEccCurveId_t getCurveId(int id){
     hseEccCurveId_t eccCurveId;
-#ifdef DEBUG
-    printf("curve nid:%d\r\n",id);
-#endif
+
     switch(id){
         case NID_secp384r1:
             eccCurveId=HSE_EC_SEC_SECP384R1;
@@ -315,12 +297,10 @@ static hseEccCurveId_t getCurveId(int id){
     }
     return eccCurveId;
 }
+#endif
+
 HSE::HSE(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<HSE>(info) {
-
-#ifdef DEBUG
-    CRYPTO_set_mem_debug(1);
-#endif
     return;
 }
 
@@ -328,7 +308,7 @@ Napi::Value HSE::getVersion(const Napi::CallbackInfo& info){
     return Napi::String::New(info.Env(),"OpenSSL 1.1.1j  16 Feb 2021");
 }
 
-Napi::Value HSE::importPrivKey(const Napi::CallbackInfo& info){
+Napi::Value HSE::importKey(const Napi::CallbackInfo& info){
     hseSrvDescriptor_t service;
     hseKeyInfo_t keyInfo;
 
@@ -340,322 +320,53 @@ Napi::Value HSE::importPrivKey(const Napi::CallbackInfo& info){
     hseKeyHandle_t keyHandle=info[1].As<Napi::Number>().Uint32Value();
     Napi::Object i=info[2].As<Napi::Object>();
     
-    keyInfo.keyFlags=i.Get("keyFlags").ToNumber().Uint32Value();
-    keyInfo.keyCounter=i.Get("keyCounter").ToNumber().Uint32Value();
-    keyInfo.smrFlags=i.Get("smrFlags").ToNumber().Uint32Value();
-    keyInfo.keyType=i.Get("keyType").ToNumber().Uint32Value();
-
-    if(i.Has("keyBitLen")){
-        keyInfo.keyBitLen=i.Get("keyBitLen").ToNumber().Uint32Value();
-    }else{
-        keyInfo.keyBitLen=0;
-    }
-    std::string key=info[3].As<Napi::String>();
-    BIO *keyMem = BIO_new_mem_buf(key.c_str(), -1);
-    EVP_PKEY* evpKey;
-    evpKey=PEM_read_bio_PrivateKey(keyMem,NULL,NULL,NULL);
-    if(evpKey!=NULL){
-        if(keyInfo.keyBitLen==0){
-            keyInfo.keyBitLen=EVP_PKEY_bits(evpKey);
-        }
-#ifdef DEBUG
-        printf("key bit len %d\r\n",keyInfo.keyBitLen);
-#endif
-        if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_RSA){
-            RSA* rsaKey=EVP_PKEY_get1_RSA(evpKey);
-            keyInfo.specific.pubExponentSize=BN_num_bytes(RSA_get0_e(rsaKey));
-            int nSize=BN_num_bytes(RSA_get0_n(rsaKey));
-            int eSize=BN_num_bytes(RSA_get0_e(rsaKey));
-            int dSize=BN_num_bytes(RSA_get0_d(rsaKey));
-#ifdef DEBUG
-            printf("RSA private key n:%d,e:%d,d:%d\r\n",nSize,eSize,dSize);
-#endif
-            Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+nSize+eSize+dSize);
-            uint8_t* data=payload.Data();
-            service.srvId=HSE_SRV_ID_IMPORT_KEY;
-            service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-            service.hseSrv.importKeyReq.keyLen[0]=nSize;
-            service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-            service.hseSrv.importKeyReq.keyLen[1]=eSize;
-            service.hseSrv.importKeyReq.pKey[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+nSize);
-            service.hseSrv.importKeyReq.keyLen[2]=dSize;
-            service.hseSrv.importKeyReq.pKey[2]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+nSize+eSize);
-            service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-            memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-            data+=sizeof(hseSrvDescriptor_t);
-            memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-            data+=sizeof(hseKeyInfo_t);
-            BN_bn2bin(RSA_get0_n(rsaKey),data);
-            data+=nSize;
-            BN_bn2bin(RSA_get0_e(rsaKey),data);
-            data+=eSize;
-            BN_bn2bin(RSA_get0_d(rsaKey),data);
-            ret.Set("err",0);
-            ret.Set("data",payload);
-            ret.Set("msg","successful");
-            RSA_free(rsaKey);
-
-        }else if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_EC){
-            EC_KEY* ec=EVP_PKEY_get1_EC_KEY(evpKey);
-            const EC_GROUP* group=EC_KEY_get0_group(ec);
-            int curveId=EC_GROUP_get_curve_name(group);
-            keyInfo.specific.eccCurveId=getCurveId(curveId);
-            if(keyInfo.specific.eccCurveId!=HSE_EC_CURVE_NONE){
-                const BIGNUM* ecPrv=EC_KEY_get0_private_key(ec);
-                int dSize=BN_num_bytes(ecPrv);
-                const EC_POINT* ecPubPoint=EC_KEY_get0_public_key(ec);
-                uint8_t* pubValue;
-                //need remove first byte 0x04
-                size_t pubSize=EC_POINT_point2buf(group,ecPubPoint,POINT_CONVERSION_UNCOMPRESSED,&pubValue,NULL)-1;
-                Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+dSize+pubSize);
-                uint8_t* data=payload.Data();
-                service.srvId=HSE_SRV_ID_IMPORT_KEY;
-                service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-                service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-                service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-                service.hseSrv.importKeyReq.keyLen[0]=pubSize;
-                service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-                service.hseSrv.importKeyReq.keyLen[2]=dSize;
-                service.hseSrv.importKeyReq.pKey[2]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+pubSize);
-                service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-                memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-                data+=sizeof(hseSrvDescriptor_t);
-                memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-                data+=sizeof(hseKeyInfo_t);
-                memcpy(data,pubValue+1,pubSize);
-                OPENSSL_free(pubValue);
-                data+=pubSize;
-                BN_bn2bin(ecPrv,data);
-                ret.Set("err",0);
-                ret.Set("data",payload);
-                ret.Set("msg","successful");
-               
-            }else{
-                ret.Set("err",-1);
-                ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-                ret.Set("msg","EC unsupport curve id");
-            }
-            EC_KEY_free(ec);
-
-        }else if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_ED25519){
-            //the get value from api is 253;
-            keyInfo.keyBitLen=256;
-            DSA* dsa=EVP_PKEY_get1_DSA(evpKey);
-            keyInfo.specific.eccCurveId=HSE_EC_25519_ED25519;
-            uint8_t buf[32];
-            size_t len=32;
-            /*ed25519 is little endian*/
-            EVP_PKEY_get_raw_public_key(evpKey,buf,&len);
-            BIGNUM* pubKey=BN_lebin2bn(buf,len,NULL);
-            EVP_PKEY_get_raw_private_key(evpKey,buf,&len);
-            BIGNUM* prvKey=BN_lebin2bn(buf,len,NULL);
-            // for(int i=0;i<8;i++){
-            //     printf("0x%x:0x%x,0x%x,0x%x\r\n",buf[i*4+0],buf[i*4+1],buf[i*4+2],buf[i*4+3]);
-            // }
-            Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+64);
-            uint8_t* data=payload.Data();
-            service.srvId=HSE_SRV_ID_IMPORT_KEY;
-            service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-            service.hseSrv.importKeyReq.keyLen[0]=32;
-            service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-            service.hseSrv.importKeyReq.keyLen[2]=32;
-            service.hseSrv.importKeyReq.pKey[2]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+32);
-            service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-            memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-            data+=sizeof(hseSrvDescriptor_t);
-            memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-            data+=sizeof(hseKeyInfo_t);
-            BN_bn2bin(pubKey,data);
-            data+=32;
-            BN_bn2bin(prvKey,data);
-            BN_free(pubKey);
-            BN_free(prvKey);
-            ret.Set("err",0);
-            ret.Set("data",payload);
-            ret.Set("msg","successful");
-        }else{
-            //TODO
-#ifdef DEBUG
-            printf("pem type:%d\r\n",EVP_PKEY_base_id(evpKey));
-#endif
-            ret.Set("err",-1);
-            ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-            ret.Set("msg","unsupport pem key type");
-        }
-        EVP_PKEY_free(evpKey);
-    }else{
-        unsigned long err=ERR_get_error();
-        ret.Set("err",err);
-        ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-        char* errMsg=getErrorMsg(err);
-        ret.Set("msg",errMsg);
-        delete errMsg;
-    }
-    BIO_free(keyMem);
-    // CRYPTO_mem_leaks_cb(openssl_mem_leak_cb,NULL);
-    return ret;
-}
-Napi::Value HSE::importPubKey(const Napi::CallbackInfo& info){
-    hseSrvDescriptor_t service;
-    hseKeyInfo_t keyInfo;
-
-    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
-    memset((void*)&keyInfo,0,sizeof(hseKeyInfo_t));
-    Napi::Object ret=Napi::Object::New(info.Env());
-
-    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
-    hseKeyHandle_t keyHandle=info[1].As<Napi::Number>().Uint32Value();
-    Napi::Object i=info[2].As<Napi::Object>();
+    Napi::Buffer<uint8_t> key0=info[3].As<Napi::Buffer<uint8_t>>();
+    Napi::Buffer<uint8_t> key1=info[4].As<Napi::Buffer<uint8_t>>();
+    Napi::Buffer<uint8_t> key2=info[5].As<Napi::Buffer<uint8_t>>();
     
+    //printf("key0:%d,key1:%d,key2:%d\r\n",key0.Length(),key1.Length(),key2.Length());
     keyInfo.keyFlags=i.Get("keyFlags").ToNumber().Uint32Value();
     keyInfo.keyCounter=i.Get("keyCounter").ToNumber().Uint32Value();
     keyInfo.smrFlags=i.Get("smrFlags").ToNumber().Uint32Value();
     keyInfo.keyType=i.Get("keyType").ToNumber().Uint32Value();
-
-    if(i.Has("keyBitLen")){
-        keyInfo.keyBitLen=i.Get("keyBitLen").ToNumber().Uint32Value();
-    }else{
-        keyInfo.keyBitLen=0;
+    keyInfo.keyBitLen=i.Get("keyBitLen").ToNumber().Uint32Value();
+    if(keyInfo.keyType==HSE_KEY_TYPE_ECC_PAIR||keyInfo.keyType==HSE_KEY_TYPE_ECC_PUB||keyInfo.keyType==HSE_KEY_TYPE_ECC_PUB_EXT){
+        keyInfo.specific.eccCurveId=i.Get("curveId").ToNumber().Uint32Value();
     }
-
-    std::string key=info[3].As<Napi::String>();
-    BIO *keyMem = BIO_new_mem_buf(key.c_str(), -1);
-    EVP_PKEY* evpKey;
-    evpKey=PEM_read_bio_PUBKEY(keyMem,NULL,NULL,NULL);
-    if(evpKey!=NULL){
-        if(keyInfo.keyBitLen==0){
-            keyInfo.keyBitLen=EVP_PKEY_bits(evpKey);
-        }
-#ifdef DEBUG
-        printf("key bit len %d\r\n",keyInfo.keyBitLen);
-#endif
-        if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_RSA){
-            RSA* rsaKey=EVP_PKEY_get1_RSA(evpKey);
-            keyInfo.specific.pubExponentSize=BN_num_bytes(RSA_get0_e(rsaKey));
-            int nSize=BN_num_bytes(RSA_get0_n(rsaKey));
-            int eSize=BN_num_bytes(RSA_get0_e(rsaKey));
-#ifdef DEBUG
-            printf("RSA pub key n:%d,e:%d\r\n",nSize,eSize);
-#endif
-            Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+nSize+eSize);
-            uint8_t* data=payload.Data();
-            service.srvId=HSE_SRV_ID_IMPORT_KEY;
-            service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-            service.hseSrv.importKeyReq.keyLen[0]=nSize;
-            service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-            service.hseSrv.importKeyReq.keyLen[1]=eSize;
-            service.hseSrv.importKeyReq.pKey[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+nSize);
-            service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-            memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-            data+=sizeof(hseSrvDescriptor_t);
-            memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-            data+=sizeof(hseKeyInfo_t);
-            BN_bn2bin(RSA_get0_n(rsaKey),data);
-            data+=nSize;
-            BN_bn2bin(RSA_get0_e(rsaKey),data);
-            ret.Set("err",0);
-            ret.Set("data",payload);
-            ret.Set("msg","successful");
-            RSA_free(rsaKey);
-
-        }else if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_EC){
-            EC_KEY* ec=EVP_PKEY_get1_EC_KEY(evpKey);
-            const EC_GROUP* group=EC_KEY_get0_group(ec);
-            int curveId=EC_GROUP_get_curve_name(group);
-            keyInfo.specific.eccCurveId=getCurveId(curveId);
-            if(keyInfo.specific.eccCurveId!=HSE_EC_CURVE_NONE){
-                const EC_POINT* ecPubPoint=EC_KEY_get0_public_key(ec);
-                uint8_t* pubValue;
-                //need remove first byte 0x04
-                size_t pubSize=EC_POINT_point2buf(group,ecPubPoint,POINT_CONVERSION_UNCOMPRESSED,&pubValue,NULL)-1;
-                Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+pubSize);
-                uint8_t* data=payload.Data();
-                service.srvId=HSE_SRV_ID_IMPORT_KEY;
-                service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-                service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-                service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-                service.hseSrv.importKeyReq.keyLen[0]=pubSize;
-                service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-                service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-                memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-                data+=sizeof(hseSrvDescriptor_t);
-                memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-                data+=sizeof(hseKeyInfo_t);
-                memcpy(data,pubValue+1,pubSize);
-                OPENSSL_free(pubValue);
-                ret.Set("err",0);
-                ret.Set("data",payload);
-                ret.Set("msg","successful");
-               
-            }else{
-                ret.Set("err",-1);
-                ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-                ret.Set("msg","EC unsupport curve id");
-            }
-            EC_KEY_free(ec);
-
-        }else if(EVP_PKEY_base_id(evpKey)==EVP_PKEY_ED25519){
-            //the get value from api is 253;
-            keyInfo.keyBitLen=256;
-            DSA* dsa=EVP_PKEY_get1_DSA(evpKey);
-            keyInfo.specific.eccCurveId=HSE_EC_25519_ED25519;
-            uint8_t buf[32];
-            size_t len=32;
-            /*ed25519 is little endian*/
-            EVP_PKEY_get_raw_public_key(evpKey,buf,&len);
-            BIGNUM* pubKey=BN_lebin2bn(buf,len,NULL);
-            Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+32);
-            uint8_t* data=payload.Data();
-            service.srvId=HSE_SRV_ID_IMPORT_KEY;
-            service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-            service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-            service.hseSrv.importKeyReq.keyLen[0]=32;
-            service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-            service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-            memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-            data+=sizeof(hseSrvDescriptor_t);
-            memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-            data+=sizeof(hseKeyInfo_t);
-            BN_bn2bin(pubKey,data);
-            data+=32;
-            BN_free(pubKey);
-            ret.Set("err",0);
-            ret.Set("data",payload);
-            ret.Set("msg","successful");
-        }else{
-            //TODO
-#ifdef DEBUG
-            printf("pem type:%d\r\n",EVP_PKEY_base_id(evpKey));
-#endif
-            ret.Set("err",-1);
-            ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-            ret.Set("msg","unsupport pem key type");
-        }
-        EVP_PKEY_free(evpKey);
-    }else{
-        unsigned long err=ERR_get_error();
-        ret.Set("err",err);
-        ret.Set("data",Napi::Buffer<uint8_t>::New(info.Env(),0));
-        char* errMsg=getErrorMsg(err);
-        ret.Set("msg",errMsg);
-        delete errMsg;
+    if(keyInfo.keyType==HSE_KEY_TYPE_RSA_PAIR||keyInfo.keyType==HSE_KEY_TYPE_RSA_PUB||keyInfo.keyType==HSE_KEY_TYPE_RSA_PUB_EXT){
+        keyInfo.specific.pubExponentSize=key1.Length();
     }
-    BIO_free(keyMem);
-    // CRYPTO_mem_leaks_cb(openssl_mem_leak_cb,NULL);
+    
+    
+    
+    
+    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+key0.Length()+key1.Length()+key2.Length());
+    uint8_t* data=payload.Data();
+    service.srvId=HSE_SRV_ID_IMPORT_KEY;
+    service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
+    service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
+    service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
+    service.hseSrv.importKeyReq.keyLen[0]=key0.Length();
+    service.hseSrv.importKeyReq.pKey[0]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
+    service.hseSrv.importKeyReq.keyLen[1]=key1.Length();
+    service.hseSrv.importKeyReq.pKey[1]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+key0.Length());
+    service.hseSrv.importKeyReq.keyLen[2]=key2.Length();
+    service.hseSrv.importKeyReq.pKey[2]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+key0.Length()+key1.Length());
+    service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
+    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
+    data+=sizeof(hseSrvDescriptor_t);
+    memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
+    data+=sizeof(hseKeyInfo_t);
+    memcpy(data,key0.Data(),key0.Length());
+    data+=key0.Length();
+    memcpy(data,key1.Data(),key1.Length());
+    data+=key1.Length();
+    memcpy(data,key2.Data(),key2.Length());
+    ret.Set("err",0);
+    ret.Set("data",payload);
+    ret.Set("msg","successful");
     return ret;
 }
-
-
-
-
-
 Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
     hseSrvDescriptor_t service;
     memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
@@ -717,58 +428,6 @@ Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info){
     memcpy(data,ramCat,sizeof(hseKeyGroupCfgEntry_t)*(ramLen+1));
     delete nvmCat;
     delete ramCat;
-    
-    ret.Set("err",0);
-    ret.Set("data",payload);
-    ret.Set("msg","successful");
-    
-    return ret;
-}
-
-Napi::Value HSE::importSymKey(const Napi::CallbackInfo& info){
-    hseSrvDescriptor_t service;
-    hseKeyInfo_t keyInfo;
-
-    memset((void*)&service,0,sizeof(hseSrvDescriptor_t));
-    memset((void*)&keyInfo,0,sizeof(hseKeyInfo_t));
-    Napi::Object ret=Napi::Object::New(info.Env());
-
-    uint32_t offset=info[0].As<Napi::Number>().Uint32Value();
-    hseKeyHandle_t keyHandle=info[1].As<Napi::Number>().Uint32Value();
-    Napi::Object i=info[2].As<Napi::Object>();
-    
-    keyInfo.keyFlags=i.Get("keyFlags").ToNumber().Uint32Value();
-    keyInfo.keyCounter=i.Get("keyCounter").ToNumber().Uint32Value();
-    keyInfo.smrFlags=i.Get("smrFlags").ToNumber().Uint32Value();
-    keyInfo.keyType=i.Get("keyType").ToNumber().Uint32Value();
-    if(i.Has("keyBitLen")){
-        keyInfo.keyBitLen=i.Get("keyBitLen").ToNumber().Uint32Value();
-    }else{
-        keyInfo.keyBitLen=0;
-    }
-
-    Napi::Buffer<uint8_t> key=info[3].As<Napi::Buffer<uint8_t>>();
-    if(keyInfo.keyBitLen==0){
-        keyInfo.keyBitLen=key.Length()*8;
-    }
-    
-  
-    Napi::Buffer<uint8_t> payload=Napi::Buffer<uint8_t>::New(info.Env(),sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t)+key.Length());
-    uint8_t* data=payload.Data();
-    service.srvId=HSE_SRV_ID_IMPORT_KEY;
-    service.hseSrv.importKeyReq.cipher.cipherKeyHandle= HSE_INVALID_KEY_HANDLE;
-    service.hseSrv.importKeyReq.keyContainer.authKeyHandle= HSE_INVALID_KEY_HANDLE;
-    service.hseSrv.importKeyReq.pKeyInfo=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t));
-    service.hseSrv.importKeyReq.keyLen[2]=key.Length();
-    
-    service.hseSrv.importKeyReq.pKey[2]=(HOST_ADDR)(offset+sizeof(hseSrvDescriptor_t)+sizeof(hseKeyInfo_t));
-    service.hseSrv.importKeyReq.targetKeyHandle=(hseKeyHandle_t)keyHandle;
-    memcpy(data,&service,sizeof(hseSrvDescriptor_t));
-    data+=sizeof(hseSrvDescriptor_t);
-    memcpy(data,&keyInfo,sizeof(hseKeyInfo_t));
-    data+=sizeof(hseKeyInfo_t);
-    memcpy(data,key.Data(),key.Length());
-
     
     ret.Set("err",0);
     ret.Set("data",payload);

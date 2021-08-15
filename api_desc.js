@@ -365,7 +365,7 @@ class hse {
      * @param {number} offset 
      * @param {number} keyHandle 
      * @param {KeyInfo} keyInfo 
-     * @param {Buffer} key 
+     * @param {string} hexkey 
      * @example 
      * var keyInfo={
      *       keyFlags:this.HSE_KF_USAGE_ENCRYPT,
@@ -373,7 +373,7 @@ class hse {
      *      smrFlags:this.HSE_KF_SMR_0,
      *       keyType:this.HSE_KEY_TYPE_AES
      *   }
-     *   var symkey = Buffer.from('000102030405060708090a0b0c0d0e0f','hex')
+     *   var symkey = '000102030405060708090a0b0c0d0e0f';
      *   this.importSymKey(0x20000000,this.GET_KEY_HANDLE(this.HSE_KEY_CATALOG_ID_NVM,0,0),keyInfo,symkey)
      */
     importSymKey(offset, keyHandle, keyInfo, key) {

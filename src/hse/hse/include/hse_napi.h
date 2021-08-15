@@ -18,10 +18,8 @@ class HSE : public Napi::ObjectWrap<HSE>{
   static Napi::FunctionReference constructor;
 
   Napi::Value HSE::getVersion(const Napi::CallbackInfo& info);
-  Napi::Value HSE::importSymKey(const Napi::CallbackInfo& info);
   Napi::Value HSE::importSheKey(const Napi::CallbackInfo& info);
-  Napi::Value HSE::importPubKey(const Napi::CallbackInfo& info);
-  Napi::Value HSE::importPrivKey(const Napi::CallbackInfo& info);
+  Napi::Value HSE::importKey(const Napi::CallbackInfo& info);
   Napi::Value HSE::formatCatalog(const Napi::CallbackInfo& info);
   Napi::Value HSE::setAttr(const Napi::CallbackInfo& info);
   Napi::Value HSE::smrInstallWithoutData(const Napi::CallbackInfo& info);

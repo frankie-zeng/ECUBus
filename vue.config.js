@@ -44,6 +44,10 @@ module.exports = {
           {
             "from": "build/Release/SOMEIP.node",
             "to": "resources/someip/SOMEIP.node"
+          },
+          {
+            "from": "src/hse/openssl.exe",
+            "to": "resources/openssl.exe"
           }
         ],
         "win": {  
