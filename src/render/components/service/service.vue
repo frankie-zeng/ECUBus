@@ -112,7 +112,6 @@
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
         <template slot="title"> User function </template>
-
         <el-row>
           <el-col :span="12">
             <el-button
@@ -124,7 +123,7 @@
             <div class="fn">function preLoad(writeData) {</div>
             <codemirror
               v-model="jsPreFn"
-              @blur="jsCheck(jsPreFn)"
+             
               ref="cmEditorPre"
               v-if="showCode"
               :options="cmOptions"
@@ -147,7 +146,6 @@
             <div class="fn">function afterLoad(writeData,readData) {</div>
             <codemirror
               v-model="jsFn"
-              @blur="jsCheck(jsFn)"
               ref="cmEditorAfter"
               v-if="showCode"
               :options="cmOptions"
@@ -155,14 +153,6 @@
             <div class="fn">}</div>
           </el-col>
         </el-row>
-        <div id="JSLINT_" v-if="jsError != ''">
-          <fieldset id="JSLINT_WARNINGS" class="none">
-            <legend>Warnings</legend>
-            <div id="JSLINT_WARNINGS_LIST">
-              <p v-html="jsError"></p>
-            </div>
-          </fieldset>
-        </div>
       </el-collapse-item>
     </el-collapse>
 
@@ -187,8 +177,16 @@
 
 <script>
 const { ipcRenderer } = require("electron");
-import jslint from "./../../JSLint/jslint.js";
-import report from "./../../JSLint/report.js";
+import { JSHINT } from "jshint-esnext";
+window.JSHINT = JSHINT;
+import "codemirror/lib/codemirror.css";
+import "codemirror/mode/javascript/javascript.js";
+import "codemirror/theme/eclipse.css";
+import "./lint.css";
+import "codemirror/addon/lint/lint.js";
+import "codemirror/addon/lint/javascript-lint.js";
+// import "codemirror/addon/hint/show-hint.js";
+// import "codemirror/addon/hint/show-hint.css";
 //import "codemirror/mode/javascript/javascript.js";
 export default {
   data() {
@@ -200,6 +198,15 @@ export default {
       desc: "",
       activeNames: ["1"],
       cmOptions: {
+        theme: "eclipse",
+        mode: "javascript",
+        lineNumbers: true,
+        gutters: ["CodeMirror-lint-markers"],
+        lint: {
+          esnext: true,
+          experimental: ["asyncawait"],
+        },
+        styleSelectedText: true,
         extraKeys: {
           F11: function (cm) {
             cm.setOption("fullScreen", !cm.getOption("fullScreen"));
@@ -246,7 +253,6 @@ export default {
       },
       rules: {},
       error: "",
-      jsError: "",
     };
   },
   mounted() {
@@ -369,26 +375,6 @@ export default {
         this.showCode = false;
       }
     },
-    jsCheck(val) {
-      var option = {
-        white: true,
-        bitwise: true,
-        convert: true,
-        for: true,
-        single: true,
-        this: true,
-        node: true,
-      };
-      /* workaroud unused arg */
-      var result = jslint(
-        "function check(writeData=[],readData=[]){\r\nif((writeData.length===0)&&(readData.length===0)){\r\nreturn true;\r\n}\r\n" +
-          val +
-          "\r\n}\r\nmodule.exports=check;",
-        option,
-        undefined
-      );
-      this.jsError = report.error(result);
-    },
     uploadFIle(name) {
       var val = {
         name: ipcRenderer.sendSync("saveFilePath"),
@@ -479,6 +465,7 @@ export default {
 </script>
 
 <style>
+
 .btn1 {
   position: absolute;
   z-index: 2;
@@ -503,6 +490,12 @@ export default {
   height: auto;
   z-index: 9;
 }
+
+.hint {
+  z-index: 2000;
+  background-color: red;
+}
+
 .fn {
   margin: 5px;
   font-size: 16px;

@@ -7,7 +7,7 @@ import './render/plugins/element.js'
 import VueCodemirror from "vue-codemirror";
 import "codemirror/lib/codemirror.css";
 import "codemirror/mode/javascript/javascript.js"
-import "codemirror/theme/abcdef.css"
+import "codemirror/theme/eclipse.css";
 import CodeMirror from 'codemirror'
 CodeMirror.defineOption("fullScreen", false, function(cm, val, old){
   if (old == CodeMirror.Init) old = false;
@@ -45,7 +45,7 @@ Vue.use(VueCodemirror, {
     indentUnit: 4,
     mode: "javascript",
     lineNumbers: true,
-    theme: 'abcdef'
+    theme: 'eclipse'
     // more CodeMirror options...
   },
 } )
