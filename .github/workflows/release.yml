@@ -30,9 +30,7 @@ jobs:
         npm install
     - run: npm run lint
     - name: Generate helper docs
-      run: |
-        ./node_modules/.bin/jsdoc api_desc.js -c conf.json -d ./public/api_helper -t ./jsdoc-template
-
+      run: npm run generate-docs 
     - run: npm run electron:build
       env:
         CI: true
