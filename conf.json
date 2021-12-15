@@ -1,10 +1,25 @@
 {
     "templates": {
-        "referenceTitle": "ECU-Bus Script API",
+        "referenceTitle": "ECU-BUS Script API",
         "disableSort": false,
         "collapse": true,
         "default":{
             "outputSourceFiles" : false
         }
+    },
+    "docdash": {
+        "static": true,
+        "sort": true,
+        "disqus": "",
+		"meta": {
+			"title": "ECU-BUS Script API",
+			"description": "ECU-BUS Script API",
+			"keyword": "ECU-BUS"
+		},
+        "search": true,
+        "collapse": true,
+        "typedefs": true,
+        "removeQuotes": "none",
+        "scripts": []
     }
 }

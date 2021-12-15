@@ -82,10 +82,10 @@ function createApiHelper () {
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     // eslint-disable-next-line no-undef
-    apiwin.loadURL(`${__static}/api_helper/global.html`)
+    apiwin.loadURL(`${__static}/api_helper/index.html`)
   } else {
     // Load the index.html when not in development
-    apiwin.loadURL(path.join(process.resourcesPath,'api_helper','global.html'))
+    apiwin.loadURL(path.join(process.resourcesPath,'api_helper','index.html'))
   }
   
   apiwin.once('ready-to-show', () => {
