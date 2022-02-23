@@ -53,6 +53,6 @@ ipcMain.on('downloadFilePath', (event, arg) => {
 
 
 ipcMain.on('readCertDer', (event, arg) => {
-  var pem=fs.readFileSync(arg)
+  var pem=fs.readFileSync(arg,'utf-8')
   event.returnValue = pem
 })

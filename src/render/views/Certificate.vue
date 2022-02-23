@@ -290,6 +290,11 @@ export default {
         }
 
         
+      }else{
+        this.$notify.error({
+          title: 'Error',
+          message: 'File format error'
+        });
       }
     },
     toTree(obj) {
