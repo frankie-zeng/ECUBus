@@ -15,7 +15,8 @@ class LINUDS extends UDS {
     super(win)
     this.linapi = new PLIN.LINAPI(dllPath)
     this.device = 0
-    this.debug("LIN dll verion"+this.linapi.GetVersion())
+    this.linVer=this.linapi.GetVersion();
+    this.debug("LIN dll verion"+this.linVer);
     this.udsTimer = setTimeout(() => { }, 0)
     this.recvTimer = setInterval(() => {
 
@@ -59,6 +60,9 @@ class LINUDS extends UDS {
         err: res,
         msg: this.linapi.GetErrorText(res)
       }
+    })
+    ipcMain.on('linDllVersion', (event) => {
+      event.returnValue = this.linVer
     })
     ipcMain.on('linudsExcute', (event, arg) => {
       this.UDSstart(arg.udsTable)

@@ -1,5 +1,6 @@
 <template>
   <div class="connect">
+   
     <el-row style="margin:0px">
       <el-col :span="11">
         <div class="title">Device:</div>
@@ -97,6 +98,7 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-tag type="info" style="width:100%;margin-top:10px">{{linDllVersion}}</el-tag>
   </div>
 </template>
 <script>
@@ -114,6 +116,7 @@ export default {
         p2: "50",
         p2Opt: "50",
       },
+      linDllVersion:'',
       device: 1,
       deviceList: [
         {
@@ -138,6 +141,9 @@ export default {
       ],
 
     };
+  },
+  mounted(){
+    this.linDllVersion= ipcRenderer.sendSync("linDllVersion");
   },
   computed: {
     addrTable: function() {

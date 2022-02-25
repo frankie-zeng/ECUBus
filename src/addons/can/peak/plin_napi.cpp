@@ -85,11 +85,12 @@ Napi::Value LINAPI::Unload(const Napi::CallbackInfo& info){
 //dll api
 Napi::Value LINAPI::GetVersion(const Napi::CallbackInfo& info){
 
-    fpGetVersion realCall=(fpGetVersion)GetProcAddress(this->hDLL,"LIN_GetVersion");
-    TLINVersion version;
-    TLINError res=realCall(&version);
-    char buf[256];
-    sprintf(buf,"Major:%d,Minor:%d,Revision:%d,Build:%d",version.Major,version.Minor,version.Revision,version.Build);
+    fpGetVersion realCall=(fpGetVersion)GetProcAddress(this->hDLL,"LIN_GetVersionInfo");
+    //TLINVersion version;
+    char buf[1024];
+    TLINError res=realCall(buf,1024);
+   
+    //sprintf(buf,"Major:%d,Minor:%d,Revision:%d,Build:%d",version.Major,version.Minor,version.Revision,version.Build);
     return Napi::String::New(info.Env(),buf);
 }
 
