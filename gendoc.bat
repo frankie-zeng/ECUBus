@@ -1,1 +1,1 @@
-./node_modules/.bin/jsdoc api_desc.js node_modules/hse_cfg_js/hse/index.js node_modules/hse_cfg_js/hse/node.js -c conf.json -d ./public/api_helper -t node_modules/docdash README.md
+./node_modules/.bin/jsdoc api_desc.js -c conf.json -d ./public/api_helper -t node_modules/docdash README.md
