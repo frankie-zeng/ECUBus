@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const { payload2data, decodeTable } = require('./decode.js')
 const elelog = require('electron-log');
-const { HSE } = require('hse_cfg_js');
+// const { HSE } = require('hse_cfg_js');
 const isDevelopment = process.env.NODE_ENV !== 'production'
 /**
  * @class UDS
@@ -18,7 +18,7 @@ class UDS {
         if (!isDevelopment) {
             loadPath = path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', 'hse_cfg_js', 'load')
         }
-        this.hse = new HSE(loadPath);
+        // this.hse = new HSE(loadPath);
     }
     emit(channel, msg) {
         if (channel == 'udsError') {

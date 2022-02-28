@@ -7,9 +7,9 @@ function resolve (dir) {
 module.exports = {
   pluginOptions: {
     configureWebpack: {
-      externals: {
-        hse_cfg_js: 'require("hse_cfg_js")'
-      }
+      // externals: {
+      //   hse_cfg_js: 'require("hse_cfg_js")'
+      // }
     },
     electronBuilder: {
       nodeIntegration: true,
