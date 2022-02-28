@@ -15,8 +15,8 @@ class LINUDS extends UDS {
     super(win)
     this.linapi = new PLIN.LINAPI(dllPath)
     this.device = 0
-    this.linVer=this.linapi.GetVersion();
-    this.debug("LIN dll verion"+this.linVer);
+    this.linVer = this.linapi.GetVersion();
+    this.debug("LIN dll verion" + this.linVer);
     this.udsTimer = setTimeout(() => { }, 0)
     this.recvTimer = setInterval(() => {
 
@@ -359,7 +359,10 @@ class LINUDS extends UDS {
               }
             }
           } else if (val.ErrorFlags != 0) {
-            this.errorEnd(sprintf("Lin read error,0x%X", val.ErrorFlags))
+
+            if ((val.ErrorFlags & 0xe0) != 0) {
+              this.errorEnd(sprintf("Lin read error,0x%X", val.ErrorFlags))
+            }
           }
         }
 

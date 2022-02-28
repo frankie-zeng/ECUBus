@@ -40,6 +40,8 @@ Napi::Object LINAPI::Init(Napi::Env env, Napi::Object exports) {
                    InstanceMethod("ResumeSchedule",&LINAPI::ResumeSchedule),
                    InstanceMethod("CalculateChecksum",&LINAPI::CalculateChecksum),
                    InstanceMethod("GetVersion",&LINAPI::GetVersion),
+                   InstanceMethod("GetAvailableHardware",&LINAPI::GetAvailableHardware),
+                   
 #endif
                    });
 
@@ -101,6 +103,19 @@ Napi::Value LINAPI::RegisterClient(const Napi::CallbackInfo& info){
     return Napi::Number::New(info.Env(),res);
 }
 
+Napi::Value LINAPI::GetAvailableHardware(const Napi::CallbackInfo& info)
+{
+    HLINHW buf[128];
+    int count;
+    fpGetAvailableHardware realCall=(fpGetAvailableHardware)GetProcAddress(this->hDLL,"LIN_GetAvailableHardware");
+    TLINError res=realCall(buf,sizeof(buf),&count);
+    if(res==errOK&&count>0){
+        return Napi::Number::New(info.Env(),buf[0]);
+    }else{
+        return Napi::Number::New(info.Env(),-1);
+    }
+
+}
 Napi::Value LINAPI::RemoveClient(const Napi::CallbackInfo& info){
 
     fpRemoveClient realCall=(fpRemoveClient)GetProcAddress(this->hDLL,"LIN_RemoveClient");
@@ -351,9 +366,13 @@ Napi::Value LINAPI::SetSchedule(const Napi::CallbackInfo& info){
         pslot[i].Delay= v.Get("Delay").ToNumber().Uint32Value();
         pslot[i].CountResolve= v.Get("CountResolve").ToNumber().Uint32Value();
         Napi::Array frameId=Napi::Array(info.Env(), v.Get("FrameId"));
-        for(unsigned int j=0;j<frameId.Length();j++){
+        unsigned int j;
+        for(j=0;j<frameId.Length();j++){
             Napi::Value tv = frameId[j];
             pslot[i].FrameId[j] = tv.ToNumber().Uint32Value();
+        }
+        for(;j<8;j++){
+            pslot[i].FrameId[j] = 0;
         }
     }
 
