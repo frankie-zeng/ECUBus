@@ -111,48 +111,54 @@
     <span style="color: red; margin-right: 5px">{{ error }}</span>
     <el-collapse v-model="activeNames" @change="colChange">
       <el-collapse-item name="1">
-        <template slot="title"> User function </template>
-        <el-row>
-          <el-col :span="12">
-            <el-button
-              type="text"
-              icon="el-icon-full-screen"
-              class="btn1"
-              @click="fullScreen(0)"
-            ></el-button>
-            <div class="fn">function preLoad(writeData) {</div>
-            <codemirror
-              v-model="jsPreFn"
-             
-              ref="cmEditorPre"
-              v-if="showCode"
-              :options="cmOptions"
-            />
-            <div class="fn">}</div>
-          </el-col>
-          <el-col :span="12">
-            <el-button
-              type="text"
-              icon="el-icon-full-screen"
-              class="btn2"
-              @click="fullScreen(1)"
-            ></el-button>
-            <el-button
-              type="text"
-              @click="openApi"
-              class="btn3"
-              icon="el-icon-question"
-            ></el-button>
-            <div class="fn">function afterLoad(writeData,readData) {</div>
-            <codemirror
-              v-model="jsFn"
-              ref="cmEditorAfter"
-              v-if="showCode"
-              :options="cmOptions"
-            />
-            <div class="fn">}</div>
-          </el-col>
-        </el-row>
+        <template slot="title"> User function (preLoad) </template>
+        <div>
+          <el-button
+            type="text"
+            icon="el-icon-full-screen"
+            class="btn2"
+            @click="fullScreen(0)"
+          ></el-button>
+           <el-button
+            type="text"
+            @click="openApi"
+            class="btn3"
+            icon="el-icon-question"
+          ></el-button>
+          <div class="fn">function preLoad(writeData) {</div>
+          <codemirror
+            v-model="jsPreFn"
+            ref="cmEditorPre"
+            v-if="showCode"
+            :options="cmOptions"
+          />
+          <div class="fn">}</div>
+        </div>
+      </el-collapse-item>
+      <el-collapse-item name="2">
+        <template slot="title"> User function (afterLoad) </template>
+        <div>
+          <el-button
+            type="text"
+            icon="el-icon-full-screen"
+            class="btn2"
+            @click="fullScreen(1)"
+          ></el-button>
+          <el-button
+            type="text"
+            @click="openApi"
+            class="btn3"
+            icon="el-icon-question"
+          ></el-button>
+          <div class="fn">function afterLoad(writeData,readData) {</div>
+          <codemirror
+            v-model="jsFn"
+            ref="cmEditorAfter"
+            v-if="showCode"
+            :options="cmOptions"
+          />
+          <div class="fn">}</div>
+        </div>
       </el-collapse-item>
     </el-collapse>
 
@@ -191,12 +197,12 @@ import "codemirror/addon/lint/javascript-lint.js";
 export default {
   data() {
     return {
-      codeMirror:[],
+      codeMirror: [],
       jsFn: "return true;",
       jsPreFn: "",
       showCode: true,
       desc: "",
-      activeNames: ["1"],
+      activeNames: ["2"],
       cmOptions: {
         theme: "eclipse",
         mode: "javascript",
@@ -346,8 +352,8 @@ export default {
     },
   },
   methods: {
-    updateCodeMirror(){
-      this.codemirror=[]
+    updateCodeMirror() {
+      this.codemirror = [];
       this.codemirror.push(this.$refs.cmEditorPre.codemirror);
       this.codemirror.push(this.$refs.cmEditorAfter.codemirror);
     },
@@ -360,7 +366,7 @@ export default {
       }
     },
     colChange(val) {
-      if (val == "1") {
+      if (val == "1" || val == "2") {
         this.showCode = false;
         this.$nextTick(() => {
           this.showCode = true;
@@ -431,9 +437,8 @@ export default {
             }
           }
           this.error = "";
-          item[this.config.input[i].name] = this.inputData[
-            this.config.input[i].name
-          ];
+          item[this.config.input[i].name] =
+            this.inputData[this.config.input[i].name];
         } else if (this.config.input[i].type === "subfunction") {
           item.subFunction = parseInt(this.inputData.subFunction);
           if (this.inputData.suppress) {
@@ -442,9 +447,8 @@ export default {
             item.suppress = false;
           }
         } else {
-          item[this.config.input[i].name] = this.inputData[
-            this.config.input[i].name
-          ];
+          item[this.config.input[i].name] =
+            this.inputData[this.config.input[i].name];
         }
         data.payload.push(item);
       }
@@ -465,21 +469,20 @@ export default {
 </script>
 
 <style>
-
 .btn1 {
   position: absolute;
   z-index: 2;
-  right: 50%;
+  right: 50px;
 }
 .btn2 {
   position: absolute;
   z-index: 2;
-  right: 0px;
+  right: 30px;
 }
 .btn3 {
   position: absolute;
   z-index: 2;
-  right: 20px;
+  right: 50px;
 }
 .CodeMirror-fullscreen {
   position: fixed;
