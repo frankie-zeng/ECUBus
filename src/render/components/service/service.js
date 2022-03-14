@@ -510,7 +510,7 @@ module.exports={
 
           type: 'input',
           rule: [
-            { required: true, pattern: "^([0-9a-fA-F]{2})?$", message: 'Please Input HEX Format', trigger: 'change' },
+            { required: true, pattern: "^([0-9a-fA-F]{2}){2}$", message: 'Please Input HEX Format', trigger: 'change' },
           ]
         },
         {

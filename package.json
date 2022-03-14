@@ -2,7 +2,7 @@
   "name": "ECUBus",
   "author": "Frankie Zeng <frankie.zeng@nxp.com>",
   "description": "ECUBus",
-  "version": "0.2.22",
+  "version": "0.2.23",
   "private": false,
   "repository": {
     "type": "git",
