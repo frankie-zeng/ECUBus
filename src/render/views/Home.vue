@@ -166,8 +166,8 @@ export default {
   float: right;
 }
 .card .name {
-  font-size: 28px;
-  color: #409EFF;
+  font-size: 24px;
+  color: #303133;
 }
 .card .tip {
   font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;

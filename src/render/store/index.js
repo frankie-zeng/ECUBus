@@ -25,6 +25,15 @@ export default new Vuex.Store({
     lpTable: [],
     linTable: [],
     running: false,
+    udsProject:{
+      name:'',
+      path:'',
+      can:{},
+      eth:{},
+      lin:{},
+      table:{},
+      version:''
+    }
 
   },
   mutations: {
@@ -34,6 +43,9 @@ export default new Vuex.Store({
         addr:'',
         services:[]
       })
+    },
+    setUdsProject(state,mode){
+      Vue.set(state.udsProject,mode.key,mode.val);
     },
     logLevel(state,level){
       state.logLevel=level
