@@ -72,7 +72,7 @@ export default {
       this.$refs.serviceTable.update();
     },
     goBack() {
-      this.$router.push("/");
+      this.$router.push("/uds");
     },
   },
 };

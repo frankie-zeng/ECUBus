@@ -103,7 +103,7 @@ export default {
       }).join(",");
     },
     goBack() {
-      this.$router.push("/");
+      this.$router.push("/uds");
     },
     scrollBottom() {
       this.$nextTick(() => {
