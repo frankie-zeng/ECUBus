@@ -162,7 +162,6 @@ export default {
     },
     // eslint-disable-next-line no-unused-vars
     fileChange(file, fileList) {
-      console.log(fileList, this.project);
       this.$store.commit("setUdsProject", {
         key: "fileList",
         val: fileList,
