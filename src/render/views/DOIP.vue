@@ -5,6 +5,7 @@
         <DOIPConnect />
       </div>
     </el-dialog>
+   
     <el-row style="margin: 0px">
       <el-col :span="12">
         <el-page-header
@@ -23,10 +24,11 @@
         ></el-button>
       </el-col>
     </el-row>
+     <!-- <udsProject mode="doip" @imported="importCb"/> -->
     <div style="margin: 10px">
-      <el-row style="text-align: right">
+      <!-- <el-row style="text-align: right">
         <IE mode="doip" @imported="importCb" />
-      </el-row>
+      </el-row> -->
       <serviceTable mode="doip" ref="serviceTable" />
       <Excute mode="doip" />
     </div>
@@ -36,8 +38,8 @@
 import DOIPConnect from "./../components/connect/DOIPConnect.vue";
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
-import IE from "./../components/importexport/importexport.vue";
-
+// import IE from "./../components/importexport/importexport.vue";
+// import udsProject from "./../components/udsProject.vue";
 // const { ipcRenderer } = require('electron')
 
 export default {
@@ -45,7 +47,7 @@ export default {
     DOIPConnect,
     Excute,
     serviceTable,
-    IE,
+    // udsProject
   },
   data: function () {
     return {

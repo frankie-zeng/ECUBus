@@ -25,9 +25,9 @@
       </el-col>
     </el-row>
     <div style="margin: 10px">
-      <el-row style="text-align: right">
+      <!-- <el-row style="text-align: right">
         <IE mode="can" @imported="importCb" />
-      </el-row>
+      </el-row> -->
       <serviceTable mode="can" ref="serviceTable" />
     </div>
     <Excute mode="can" />
@@ -37,14 +37,14 @@
 import PConnect from "./../components/connect/PCANConnect.vue";
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
-import IE from "./../components/importexport/importexport.vue";
+// import IE from "./../components/importexport/importexport.vue";
 
 export default {
   components: {
     PConnect,
     Excute,
     serviceTable,
-    IE,
+    // IE,
   },
   data: function () {
     return {

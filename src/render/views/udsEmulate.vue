@@ -9,9 +9,9 @@
       </el-col>
     </el-row>
     <div style="margin: 10px">
-      <el-row style="text-align:right">
+      <!-- <el-row style="text-align:right">
         <IE mode="lp" @imported="importCb"/>
-      </el-row>
+      </el-row> -->
       <el-row>
         <el-col :span="16">
            <serviceTable mode="lp" ref="serviceTable"/>
@@ -57,7 +57,7 @@
 <script>
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
-import IE from "./../components/importexport/importexport.vue";
+// import IE from "./../components/importexport/importexport.vue";
 
 const { ipcRenderer } = require("electron");
 
@@ -65,7 +65,7 @@ export default {
   components: {
     Excute,
     serviceTable,
-    IE,
+    // IE,
   },
   data: function() {
     return {

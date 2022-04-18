@@ -383,7 +383,7 @@ export default {
     },
     uploadFIle(name) {
       var val = {
-        name: ipcRenderer.sendSync("saveFilePath"),
+        name: ipcRenderer.sendSync("saveFilePath",),
         size: 0,
       };
       this.inputData[name] = val;

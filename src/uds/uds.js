@@ -2,6 +2,7 @@
 'use strict';
 const fs = require('fs')
 const path = require('path')
+const process = require('process')
 const { payload2data, decodeTable } = require('./decode.js')
 const elelog = require('electron-log');
 // const { HSE } = require('hse_cfg_js');
@@ -101,6 +102,7 @@ class UDS {
         })
     }
     UDSstart(udsTable) {
+        process.chdir(global.udsProjectPath)
         this.udsTable = udsTable
         this.allLen = udsTable.length
         this.subTable = []

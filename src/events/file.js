@@ -1,7 +1,8 @@
 /* eslint-disable no-unused-vars */
 const { ipcMain, dialog } = require('electron')
 const fs = require('fs')
-
+const nodepath = require('path')
+let udsProjectPath
 
 ipcMain.on('readFile', (event, arg) => {
   var file = dialog.showOpenDialogSync({
@@ -10,16 +11,25 @@ ipcMain.on('readFile', (event, arg) => {
     ],
   })
   if (Array.isArray(file)) {
-    event.returnValue = fs.readFileSync(file[0],'utf8')
+    event.returnValue = fs.readFileSync(file[0], 'utf8')
   } else {
     event.returnValue = ''
   }
 })
+
+ipcMain.on('udsProjectPath', (event, arg) => {
+  udsProjectPath = arg
+  global.udsProjectPath = arg
+})
+
+
 ipcMain.on('saveFile', (event, arg) => {
   var file = dialog.showSaveDialogSync({
     filters: [
       { name: 'JSON', extensions: ['json'] },
     ],
+    defaultPath: udsProjectPath
+
   })
   if (typeof file === "string") {
     fs.writeFileSync(file, arg)
@@ -29,20 +39,24 @@ ipcMain.on('saveFile', (event, arg) => {
 
 ipcMain.on('saveFilePath', (event, arg) => {
   var path = ''
-  var file = dialog.showSaveDialogSync()
+  var file = dialog.showSaveDialogSync({
+    defaultPath: udsProjectPath
+  })
   if (typeof file === "string") {
-    path = file
+    path = nodepath.relative(udsProjectPath, file)
   }
   event.returnValue = path
 })
 
 
 ipcMain.on('downloadFilePath', (event, arg) => {
-  var file = dialog.showOpenDialogSync()
+  var file = dialog.showOpenDialogSync({
+    defaultPath: udsProjectPath
+  })
   var size = 0
   var path = ''
   if (Array.isArray(file)) {
-    path = file[0]
+    path = nodepath.relative(udsProjectPath, file[0])
     size = fs.statSync(file[0]).size
   }
   event.returnValue = {
@@ -53,6 +67,6 @@ ipcMain.on('downloadFilePath', (event, arg) => {
 
 
 ipcMain.on('readCertDer', (event, arg) => {
-  var pem=fs.readFileSync(arg,'utf-8')
+  var pem = fs.readFileSync(arg, 'utf-8')
   event.returnValue = pem
 })

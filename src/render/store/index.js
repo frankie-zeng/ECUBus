@@ -27,13 +27,14 @@ export default new Vuex.Store({
     running: false,
     udsProject:{
       name:'',
-      path:'',
-      can:{},
-      eth:{},
-      lin:{},
-      table:{},
+      can:[],
+      eth:[],
+      lin:[],
+      simulate:[],
+      fileList:[],
       version:''
-    }
+    },
+    udsProjectPath:''
 
   },
   mutations: {
@@ -46,6 +47,9 @@ export default new Vuex.Store({
     },
     setUdsProject(state,mode){
       Vue.set(state.udsProject,mode.key,mode.val);
+    },
+    setUdsProjectPath(state,mode){
+      state.udsProjectPath=mode
     },
     logLevel(state,level){
       state.logLevel=level
@@ -110,18 +114,22 @@ export default new Vuex.Store({
     /*can table*/
     canTableLoad(state, data) {
       Vue.set(state,"canTable",data);
+      Vue.set(state.udsProject,"can",data);
     },
     /*lin table*/
     linTableLoad(state, data) {
       Vue.set(state,"linTable",data);
+      Vue.set(state.udsProject,"lin",data);
     },
     /*doip table*/
     doipTableLoad(state, data) {
       Vue.set(state,"doipTable",data);
+      Vue.set(state.udsProject,"eth",data);
     },
     /*loopback table*/
     lpTableLoad(state, data) {
       Vue.set(state,"lpTable",data);
+      Vue.set(state.udsProject,"simulate",data);
     },
   },
   actions: {

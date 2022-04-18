@@ -25,9 +25,9 @@
       </el-col>
     </el-row>
     <div style="margin: 10px">
-      <el-row style="text-align: right">
+      <!-- <el-row style="text-align: right">
         <IE mode="lin" @imported="importCb" />
-      </el-row>
+      </el-row> -->
       <serviceTable mode="lin" ref="serviceTable" />
     </div>
     <Excute mode="lin" />
@@ -37,14 +37,14 @@
 import PLINConnect from "./../components/connect/PLINConnect.vue";
 import Excute from "./../components/excute.vue";
 import serviceTable from "./../components/service/serviceTable.vue";
-import IE from "./../components/importexport/importexport.vue";
+// import IE from "./../components/importexport/importexport.vue";
 
 export default {
   components: {
     PLINConnect,
     Excute,
     serviceTable,
-    IE,
+    // IE,
   },
   data: function () {
     return {
