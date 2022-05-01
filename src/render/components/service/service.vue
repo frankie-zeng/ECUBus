@@ -366,7 +366,7 @@ export default {
       }
     },
     colChange(val) {
-      if (val == "1" || val == "2") {
+      if (val.length > 0) {
         this.showCode = false;
         this.$nextTick(() => {
           this.showCode = true;
