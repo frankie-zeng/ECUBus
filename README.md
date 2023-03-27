@@ -1,7 +1,10 @@
 ![Release CI](https://github.com/frankie-zeng/ECUBus/workflows/Release%20CI/badge.svg)
 ![Build CI](https://github.com/frankie-zeng/ECUBus/workflows/Build%20CI/badge.svg)
 # **ECU-BUS** 
-<img src="./src/render/assets/logo.png" width="50%">
+<img width="250" alt="logo" src="https://user-images.githubusercontent.com/43364599/227956243-93baef8a-e343-4123-914d-f8591a37d750.png">
+
+![2](https://user-images.githubusercontent.com/43364599/227956355-130a51fa-c9dd-440d-82a5-e557f7a3adfa.png)
+
 
 # Roadmap Update
 ## 工具重构
