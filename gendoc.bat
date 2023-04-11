@@ -1,1 +1,0 @@
-./node_modules/.bin/jsdoc api_desc.js -c conf.json -d ./public/api_helper -t node_modules/docdash README.md
