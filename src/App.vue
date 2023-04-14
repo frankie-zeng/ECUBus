@@ -1,19 +1,8 @@
 <template>
-  <div class="main">
-    <el-container>
-      <el-header :height="headerH + 'px'" />
-      <el-container>
-        <!-- <el-aside width="200px">Aside</el-aside> -->
-        <el-container>
-          <el-main style="margin:0px;padding: 0px!important;overflow: hidden !important;;">
-            <div class="rounter">
-              <router-view />
-            </div>
-          </el-main>
-        </el-container>
-      </el-container>
-      <el-footer :height="logH + 'px'" />
-    </el-container>
+  <div>
+    <div class="rounter">
+      <router-view />
+    </div>
   </div>
 </template>
 
@@ -24,34 +13,20 @@ import { ref, onMounted, onBeforeUnmount, provide,onUnmounted} from "vue";
 
 /*Window Resize handle*/
 const winH = ref( window.innerHeight);
-const collapseWidth=ref(64)
-const mainW = ref(window.innerWidth-collapseWidth.value)
-const logH = ref(200);
-const headerH = ref(42);
-const mainH = ref(window.innerHeight - logH.value - headerH.value);
+const winW = ref( window.innerWidth);
 
 
-function collapseChanage(val:boolean){
-  if(!val){
-    collapseWidth.value=150
-  }else{
-    collapseWidth.value=64
-  }
-  mainW.value = window.innerWidth-collapseWidth.value;
-}
+
 
 function resizeHandler() {
-  mainW.value = window.innerWidth-collapseWidth.value;
+
   winH.value = window.innerHeight;
-  mainH.value = winH.value - logH.value - headerH.value;
+  winW.value = window.innerWidth;
 }
-function logResizeHandler(val: number) {
-  logH.value = val;
-  resizeHandler();
-}
-provide('mainW', mainW)
-provide('mainH', mainH)
-provide('logH', logH)
+
+provide('winH', winH)
+provide('winW', winW)
+
 onMounted(() => {
   resizeHandler();
   window.addEventListener("resize", resizeHandler);
@@ -84,13 +59,9 @@ body {
 }
 
 
-.main {
-  height: v-bind(winH + "px");
-}
-
 .rounter {
-  height: v-bind(mainH + "px");
-  width: v-bind(mainW+'px');
+  height: v-bind( winH+ "px");
+  width: v-bind(winW+'px');
 }
 
 element.style {
