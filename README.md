@@ -5,6 +5,12 @@
 
 ![2](https://user-images.githubusercontent.com/43364599/227956355-130a51fa-c9dd-440d-82a5-e557f7a3adfa.png)
 
+# Real use case with NXP S32K1/S32K3 UDS bootloader
+https://community.nxp.com/t5/S32K-Knowledge-Base/Unified-bootloader-Demo/ta-p/1423099
+
+# Video 
+ECU-BUS(NXP UDS bootloader) - 曾福的视频 - 知乎
+https://www.zhihu.com/zvideo/1284963912635142144
 
 # Roadmap Update
 ## 工具重构
