@@ -293,6 +293,7 @@ async function preserveErrorStack<T>(fn: () => T | Promise<T>): Promise<T> {
  */
 
 export function test(name: string, fn: () => void | Promise<void>) {
+  markRunNode('test', name)
   selfTest(name, async (t) => {
     const tracked = keyForTestContext(t, name)
     return sharedTestPrintStore().run(tracked, async () => {
@@ -339,6 +340,7 @@ export function test(name: string, fn: () => void | Promise<void>) {
 }
 
 test.skip = function (name: string, fn: () => void | Promise<void>) {
+  markRunNode('test', name)
   selfTest(name, (t) => {
     keyForTestContext(t, name)
     const currentTestCnt = testCnt
@@ -623,6 +625,7 @@ const selfTest = process.env.ONLY == 'true' ? nodeTest.only : nodeTest
  * ```
  */
 export function describe(name: string, fn: () => void | Promise<void>) {
+  markRunNode('suite', name)
   selfDescribe(name, async (t) => {
     return preserveErrorStack(fn)
   })
@@ -704,18 +707,42 @@ const serviceMap = new Map<string, ServiceItem>()
 global.cmdId = 0
 
 /**
- * User `console.log` text, held until the reporter emits that case's result.
- * The reporter lags behind the cases, so posting a print immediately dumps
- * every case's output onto the first line. State lives on globalThis because
- * the test bundle and the reporter are separate copies of this module.
+ * User `console.log` text for the running case.
+ *
+ * Node emits `test:dequeue` when a case starts and only emits `test:pass` /
+ * `test:fail` when that case is finalized, so holding prints until the result
+ * hides them for the whole case. The reporter reads the dequeue a turn after
+ * the case's synchronous prefix, so a print posted from `console.log` itself
+ * arrives before the UI has opened that case. Buffer only until that
+ * dequeue is forwarded, then stream later writes as they happen.
+ *
+ * State lives on globalThis because the test bundle and the reporter are
+ * separate copies of this module. `nodes` is the registration order of
+ * `describe()` / `test()`; dequeue events follow that same preorder, including
+ * suites, which have no print key.
  */
+interface TestRunNode {
+  kind: 'test' | 'suite'
+  name: string
+}
+
 interface TestPrintBuf {
   keys: string[]
   prints: Map<string, string[]>
   nameOcc: Map<string, number>
   cursor: number
   contexts: WeakMap<object, string>
+  /** Cases whose `test:dequeue` has already been forwarded to the UI. */
+  live: Set<string>
+  nodes: TestRunNode[]
+  nodeCursor: number
+  /** Live lines waiting out the short coalesce window. */
+  pending: string[]
+  liveTimer?: ReturnType<typeof setTimeout>
 }
+
+/** Coalesce a burst of live lines without holding them until the case ends. */
+const testPrintFlushMs = 40
 
 function testPrintBuf(): TestPrintBuf {
   const host = globalThis as { __ecubusTestPrints?: TestPrintBuf }
@@ -725,10 +752,18 @@ function testPrintBuf(): TestPrintBuf {
       prints: new Map(),
       nameOcc: new Map(),
       cursor: 0,
-      contexts: new WeakMap()
+      contexts: new WeakMap(),
+      live: new Set(),
+      nodes: [],
+      nodeCursor: 0,
+      pending: []
     }
   }
   return host.__ecubusTestPrints
+}
+
+function markRunNode(kind: TestRunNode['kind'], name: string) {
+  testPrintBuf().nodes.push({ kind, name })
 }
 
 function sharedTestPrintStore() {
@@ -751,15 +786,8 @@ function keyForTestContext(ctx: object, name: string) {
   return key
 }
 
-function emitTrackedPrints(name: string) {
-  const buf = testPrintBuf()
-  const key = buf.keys[buf.cursor]
-  if (!key || !key.startsWith(`${name}\0`)) return
-  buf.cursor++
-  const lines = buf.prints.get(key)
-  buf.prints.delete(key)
-  if (!lines?.length) return
-  for (const message of lines) {
+function emitPrintMessages(messages: string[]) {
+  for (const message of messages) {
     workerEmit({
       event: 'test',
       id: global.cmdId,
@@ -770,6 +798,62 @@ function emitTrackedPrints(name: string) {
     })
     global.cmdId++
   }
+}
+
+function flushLivePrints() {
+  const buf = testPrintBuf()
+  if (buf.liveTimer) {
+    clearTimeout(buf.liveTimer)
+    buf.liveTimer = undefined
+  }
+  const pending = buf.pending
+  if (!pending.length) return
+  buf.pending = []
+  emitPrintMessages(pending)
+}
+
+function enqueueLivePrint(message: string) {
+  const buf = testPrintBuf()
+  buf.pending.push(message)
+  if (buf.liveTimer) return
+  const timer = setTimeout(() => {
+    buf.liveTimer = undefined
+    flushLivePrints()
+  }, testPrintFlushMs)
+  timer.unref?.()
+  buf.liveTimer = timer
+}
+
+/**
+ * `test:dequeue` for this case has been sent. Release lines captured in the
+ * synchronous prefix so they follow the START line instead of preceding it.
+ * Suites share the dequeue stream but have no print buffer.
+ */
+function releasePrintsForDequeuedTest(name: string) {
+  const buf = testPrintBuf()
+  const node = buf.nodes[buf.nodeCursor]
+  if (!node || node.name !== name) return
+  buf.nodeCursor++
+  if (node.kind !== 'test') return
+  const key = buf.keys[buf.cursor]
+  if (!key || buf.live.has(key) || !key.startsWith(`${name}\0`)) return
+  buf.live.add(key)
+  const lines = buf.prints.get(key)
+  buf.prints.delete(key)
+  if (lines?.length) emitPrintMessages(lines)
+}
+
+/** Emit any lines still held for this case, then let the result event through. */
+function finishTrackedPrints(name: string) {
+  flushLivePrints()
+  const buf = testPrintBuf()
+  const key = buf.keys[buf.cursor]
+  if (!key || !key.startsWith(`${name}\0`)) return
+  buf.live.delete(key)
+  buf.cursor++
+  const lines = buf.prints.get(key)
+  buf.prints.delete(key)
+  if (lines?.length) emitPrintMessages(lines)
 }
 
 /**
@@ -793,20 +877,14 @@ if (!consoleHookState.__ecubusTestConsoleHooked) {
     if (visible && process.env.MODE === 'test' && process.env.ONLY !== 'true') {
       const buf = testPrintBuf()
       const key = sharedTestPrintStore().getStore()
-      if (key) {
+      if (key && buf.live.has(key)) {
+        enqueueLivePrint(visible)
+      } else if (key) {
         const lines = buf.prints.get(key)
         if (lines) lines.push(visible)
         else buf.prints.set(key, [visible])
       } else {
-        workerEmit({
-          event: 'test',
-          id: global.cmdId,
-          data: {
-            type: 'test:stdout',
-            data: { message: visible }
-          }
-        })
-        global.cmdId++
+        emitPrintMessages([visible])
       }
     }
     originalConsoleLog(...args)
@@ -3105,18 +3183,23 @@ type TestEventGenerator = Parameters<typeof dot>[0]
 // eslint-disable-next-line require-yield
 export async function* reporter(source: TestEventGenerator) {
   for await (const event of source) {
+    if (event.type === 'test:dequeue') {
+      workerEmit({
+        event: 'test',
+        id: global.cmdId,
+        data: event
+      })
+      global.cmdId++
+      releasePrintsForDequeuedTest(event.data.name)
+      continue
+    }
     if (
       (event.type === 'test:pass' || event.type === 'test:fail') &&
       event.data.details?.type !== 'suite'
     ) {
-      emitTrackedPrints(event.data.name)
+      finishTrackedPrints(event.data.name)
     }
-    if (
-      event.type === 'test:start' ||
-      event.type === 'test:pass' ||
-      event.type === 'test:fail' ||
-      event.type === 'test:dequeue'
-    ) {
+    if (event.type === 'test:start' || event.type === 'test:pass' || event.type === 'test:fail') {
       workerEmit({
         event: 'test',
         id: global.cmdId,
