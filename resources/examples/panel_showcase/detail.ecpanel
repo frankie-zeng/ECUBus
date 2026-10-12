@@ -93,7 +93,7 @@
         "readOnly": false,
         "options": [],
         "numberValueType": "physical",
-        "numberDecimals": 1,
+        "numberDecimals": 0,
         "binding": {
           "kind": "signal",
           "node": {
@@ -135,7 +135,7 @@
         "readOnly": false,
         "options": [],
         "numberValueType": "physical",
-        "numberDecimals": 1,
+        "numberDecimals": 0,
         "binding": {
           "kind": "signal",
           "node": {
@@ -177,7 +177,7 @@
         "readOnly": false,
         "options": [],
         "numberValueType": "physical",
-        "numberDecimals": 1,
+        "numberDecimals": 0,
         "binding": {
           "kind": "signal",
           "node": {
