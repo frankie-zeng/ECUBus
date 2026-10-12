@@ -916,6 +916,7 @@
       /></el-select>
     </footer>
     <el-dialog
+      v-if="bindingKind"
       :model-value="!!bindingKind"
       :title="bindingKind ? t(bindingKind) : ''"
       width="min(800px, 90vw)"
