@@ -32,7 +32,7 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
 
 - 🆓 Open-source and free to use
 - 🚀 Modern, intuitive user interface
-- 💻 Cross-platform support (Windows, Linux, MacOS) - [Install](./docs/about/install.md)
+- 💻 Cross-platform support (Windows, Linux, MacOS) - [Install](https://app.whyengineer.com/docs/about/install.html)
 - 🔌 Multi-hardware support
   - **[EcuBus-LinCable](https://app.whyengineer.com/docs/um/hardware/lincable.html)**: LIN (Support Lin conformance test), [PWM](https://app.whyengineer.com/docs/um/pwm/pwm.html)
   - **PEAK**: CAN, CAN-FD, LIN
@@ -44,13 +44,13 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
   - **GS_USB (CANDLE)**: CAN, CAN-FD [Detail](https://app.whyengineer.com/docs/um/can/can.html#gs-usb)
 - 🛠️ Comprehensive diagnostic capabilities
   - **Diagnostic Protocols**: CAN/CAN-FD, DoIP, LIN
-- 🌐 **SOME/IP**: SOME/IP protocol support - [Details](./docs/um/someip/index.md)
-- 📝 **Scripting**: Advanced TypeScript-based automation - [Details](./docs/um/script.md)
-- 🧪 **Test**: HIL Test Framework - [Details](./docs/um/test/test.md)
-- 📊 **Database Support**: LIN LDF (edit & export), CAN DBC (view) - [Details](./docs/um/database.md)
-- 📈 **Data Visualization**: Real-time signal graphing and analysis - [Details](./docs/um/graph/graph.md)
-- ⌨️ **Command Line**: Full-featured CLI for automation and integration - [Details](./docs/um/cli.md)
-- 🎨 **Panel**: Drag-and-drop interface builder for custom UI - [Details](./docs/um/panel/index.md)
+- 🌐 **SOME/IP**: SOME/IP protocol support - [Details](https://app.whyengineer.com/docs/um/someip/index.html)
+- 📝 **Scripting**: Advanced TypeScript-based automation - [Details](https://app.whyengineer.com/docs/um/script/script.html)
+- 🧪 **Test**: HIL Test Framework - [Details](https://app.whyengineer.com/docs/um/test/test.html)
+- 📊 **Database Support**: LIN LDF (edit & export), CAN DBC (view) - [Details](https://app.whyengineer.com/docs/um/database/database.html)
+- 📈 **Data Visualization**: Real-time signal graphing and analysis - [Details](https://app.whyengineer.com/docs/um/graph/graph.html)
+- ⌨️ **Command Line**: Full-featured CLI for automation and integration - [Details](https://app.whyengineer.com/docs/um/cli/cli.html)
+- 🎨 **Panel**: Drag-and-drop interface builder for custom UI - [Details](https://app.whyengineer.com/docs/um/panel/index.html)
 
 [Read the Docs to Learn More.](https://app.whyengineer.com)
 
@@ -63,13 +63,13 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
     <tbody>
     <tr>
       <td style="width: 33.33%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
       <td style="width: 33.33%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
       <td style="width: 33.33%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
     </tr>
     </tbody>
@@ -85,13 +85,13 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
         </a>
       </td>
       <td style="width: 25%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
       <td style="width: 25%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
       <td style="width: 25%; text-align: center; padding: 20px; border: 1px solid #eee;">
-        <a href="./docs/about/sponsor">Become a Sponsor</a>
+        <a href="https://app.whyengineer.com/docs/about/sponsor.html">Become a Sponsor</a>
       </td>
     </tr>
     </tbody>
@@ -100,7 +100,7 @@ EcuBus-Pro is an open-source alternative to commercial automotive diagnostic too
 
 ---
 
-Consider [becoming a sponsor](./docs/about/sponsor) to support ongoing development. Sponsors receive prominent logo placement with website links. 🙏
+Consider [becoming a sponsor](https://app.whyengineer.com/docs/about/sponsor.html) to support ongoing development. Sponsors receive prominent logo placement with website links. 🙏
 
 
 ## Contributors
@@ -109,10 +109,10 @@ Thanks to all the contributors who have helped shape EcuBus-Pro:
 
 <a href="https://github.com/ecubus/EcuBus-Pro/graphs/contributors" target="_blank"><img src="https://contrib.rocks/image?repo=ecubus/EcuBus-Pro"></a>
 
-We welcome contributions! Please review our [contribution guidelines](./.github/contributing.md) before getting started.
+We welcome contributions! Please review our [contribution guidelines](https://github.com/ecubus/EcuBus-Pro/blob/master/.github/contributing.md) before getting started.
 
 ## License
 
-[Apache License 2.0](./license.txt)
+[Apache License 2.0](https://github.com/ecubus/EcuBus-Pro/blob/master/license.txt)
 
 
