@@ -15,7 +15,6 @@ const state = vi.hoisted(() => ({
   view: undefined as PanelDocument | undefined
 }))
 vi.mock('@r/stores/data', () => ({ useDataStore: () => state }))
-vi.mock('@r/stores/project', () => ({ useProjectStore: () => ({ projectInfo: { path: '' } }) }))
 vi.mock('element-plus', () => ({ ElMessage: { error: vi.fn(), success: vi.fn() } }))
 vi.mock('../../src/renderer/src/views/uds/panel/free/FreePanelEditor.vue', () => ({
   default: {
@@ -48,11 +47,7 @@ async function render(editIndex: string, preview = false) {
 
 const fileInvoke = vi.fn()
 beforeEach(() => {
-  fileInvoke
-    .mockReset()
-    .mockImplementation(async (channel: string) =>
-      channel === 'ipc-show-save-dialog' ? { canceled: false, filePath: 'main.ecpanel' } : undefined
-    )
+  fileInvoke.mockReset()
   vi.stubGlobal('window', {
     path,
     electron: {
@@ -69,22 +64,20 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('panel persistence entry points', () => {
-  it('keeps the saved document unchanged when an external file write fails', async () => {
-    const original = createDocument()
-    state.panels.external = {
-      id: 'external',
-      name: 'External',
-      rule: [],
-      options: {},
-      document: original,
-      filePath: 'main.ecpanel'
-    }
-    const invoke = vi.fn().mockRejectedValue(new Error('Write failed'))
-    vi.stubGlobal('window', { electron: { ipcRenderer: { invoke } } })
-    state.save = { name: 'External', document: { ...original, width: 1200 } }
-    await render('external')
-    await vi.waitFor(() => expect(invoke).toHaveBeenCalled())
-    expect(state.panels.external.document).toEqual(original)
+  it('saves the document into the project without writing files or opening dialogs', async () => {
+    const original = { id: 'main', name: 'Main', rule: [], options: {}, document: createDocument() }
+    state.panels.main = original
+    state.save = { name: 'Main', document: { ...original.document, width: 1200 } }
+    await render('main')
+    await vi.waitFor(() => expect(state.panels.main.document?.width).toBe(1200))
+    expect(Object.keys(state.panels.main).sort()).toEqual([
+      'document',
+      'id',
+      'name',
+      'options',
+      'rule'
+    ])
+    expect(fileInvoke).not.toHaveBeenCalled()
   })
   it('restores a newly saved document using the persisted editor and runtime window ids', async () => {
     const document = createDocument()
@@ -118,30 +111,17 @@ describe('panel persistence entry points', () => {
     await vi.waitFor(() => expect(state.panels['stable-id']?.name).toBe('Renamed'))
     expect(Object.keys(state.panels)).toEqual(['stable-id'])
     expect(state.panels['stable-id'].name).toBe('Renamed')
-    expect(fileInvoke.mock.calls.filter((c) => c[0] === 'ipc-show-save-dialog')).toHaveLength(1)
+    expect(fileInvoke).not.toHaveBeenCalled()
   })
 
-  it('prompts on the first save of an automatically converted embedded panel', async () => {
+  it('keeps legacy rules when saving an automatically converted embedded panel', async () => {
     const document = createDocument()
     state.panels.old = { id: 'old', name: 'Old', document, rule: [{ type: 'TText' }], options: {} }
-    state.save = { name: 'Old', document }
+    state.save = { name: 'Old', document: { ...document, width: 1200 } }
     await render('old')
-    await vi.waitFor(() => expect(state.panels.old.filePath).toBe('main.ecpanel'))
-    expect(fileInvoke).toHaveBeenCalledWith('ipc-show-save-dialog', expect.any(Object))
+    await vi.waitFor(() => expect(state.panels.old.document?.width).toBe(1200))
     expect(state.panels.old.rule).toEqual([{ type: 'TText' }])
-  })
-
-  it('does not create a new panel or replace converted content when the save dialog is cancelled', async () => {
-    fileInvoke.mockResolvedValue({ canceled: true })
-    state.save = { name: 'New', document: createDocument() }
-    await render('new')
-    expect(state.panels.new).toBeUndefined()
-    const original = { id: 'old', name: 'Old', document: createDocument(), rule: [], options: {} }
-    state.panels.old = original
-    state.save = { name: 'Old', document: { ...original.document, width: 1200 } }
-    await render('old')
-    expect(state.panels.old).toEqual(original)
-    expect(fileInvoke.mock.calls.every((c) => c[0] === 'ipc-show-save-dialog')).toBe(true)
+    expect(fileInvoke).not.toHaveBeenCalled()
   })
 
   it('shows the migration report for legacy panels without rewriting them', async () => {

@@ -41,14 +41,13 @@ This example demonstrates a simple program execution panel in EcuBus-Pro, includ
 
 ## Example Panel
 
-The panel is stored in `panel.ecpanel`. The screenshot shows it running right after **Start** is pressed.
+The panel is stored in `panel.ecb`. The screenshot shows it running right after **Start** is pressed.
 
 ![Program panel](panel.png)
 
 ## Code Overview
 
-- **panel.ecb**: Stores the project, variables, and external panel reference.
-- **panel.ecpanel**: Stores the free-layout panel, LEDs, button, and message display.
+- **panel.ecb**: Stores the project, variables, and the free-layout panel with its LEDs, button, and message display.
 - **program.ts**: Handles the logic for starting, stopping, and simulating program failure.
 
 ```typescript

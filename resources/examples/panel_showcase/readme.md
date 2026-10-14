@@ -17,11 +17,10 @@ The main Panel has three pages:
 - Inputs / Actions: Hex/Text editor, byte editor, file/directory/save path selection, hexadecimal and binary input, and plain Button actions.
 - Appearance: six LED shapes, three Button shapes, four progress directions, an embedded image and an HTML + JavaScript control. Three Buttons toggle `DemoToggle` and six LEDs follow it; the Fill slider, four progress bars and the HTML control share `DemoFill`, so changing one updates the others, and the script lights the Fill ≥ 80 indicator when `DemoFill` ≥ 80. The HTML control also subscribes to the `PanelDemo.Speed` signal.
 
-`simulation.ts` is the simulated ECU: it periodically generates speed, temperature, load, state and counters, and receives Panel variables and CAN commands. `PanelDemo.dbc` is the demo DBC, `variables.json` lists the variables, and the `.ecpanel` files are standalone Panel files.
+`simulation.ts` is the simulated ECU: it periodically generates speed, temperature, load, state and counters, and receives Panel variables and CAN commands. `PanelDemo.dbc` is the demo DBC, `variables.json` lists the variables. Both panels are stored in the project file.
 
 Project: `PanelShowcase.ecb`  
-Main panel: `showcase.ecpanel`  
-Detail panel: `detail.ecpanel`  
+Panels: Panel Showcase, Telemetry Detail  
 Simulation script: `simulation.ts`
 
 Copy the whole folder before opening the project and keep the relative paths. Give each project its own folder: projects sharing a folder also share the generated `tsconfig.json` and variable types, which breaks script compilation. `DEMO.md` is the target of the file Button.

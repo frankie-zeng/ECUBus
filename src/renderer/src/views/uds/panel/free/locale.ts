@@ -3,13 +3,7 @@ import { onUnmounted, ref } from 'vue'
 
 const labels = {
   newPanel: ['新增 Panel', 'New Panel'],
-  importPanel: ['导入 Panel', 'Import Panel'],
-  savePanelAs: ['另存为 Panel', 'Save Panel As'],
-  panelFileFailed: ['Panel 文件读取失败', 'Failed to read Panel file'],
   legacyPanel: ['旧版 Panel', 'Legacy Panel'],
-  panelSaveFailed: ['Panel 文件保存失败', 'Failed to save Panel file'],
-  fileInUse: ['文件已被其他 Panel 使用', 'File used by another Panel'],
-  relinkPanel: ['重新选择文件', 'Relink file'],
   cancel: ['取消', 'Cancel'],
   migrationLayout: [
     '仅使用已保存内容；布局和样式重置。不支持的项目保留在原面板。',

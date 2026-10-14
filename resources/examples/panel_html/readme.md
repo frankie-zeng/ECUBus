@@ -27,13 +27,12 @@ Before periodic sending starts, Load is controlled by the slider. Once it starts
 
 | File | Content |
 | --- | --- |
-| HtmlControl.ecb | Variables, database, simulate channels and panel reference |
-| html.ecpanel | Standalone panel with embedded HTML/CSS and JavaScript |
+| HtmlControl.ecb | Variables, database, simulate channels and the panel with embedded HTML/CSS and JavaScript |
 | control.html | Editable HTML/CSS source |
 | control.js | Editable bridge API example |
 | ecu.ts | Simulated ECU script |
 | HtmlDemo.dbc | Status.Speed and Command.Target |
-| sync-panel.mjs | Copies both source files into html.ecpanel |
+| sync-panel.mjs | Copies both source files into the panel in HtmlControl.ecb |
 
 After editing `control.html` or `control.js`, run from the repository root:
 
@@ -41,7 +40,7 @@ After editing `control.html` or `control.js`, run from the repository root:
 node resources/examples/panel_html/sync-panel.mjs
 ```
 
-Then close and reopen the example project so the app reads the `.ecpanel` again. Close any window editing this panel before syncing so it does not save older content over the file later. At runtime only the content inside `.ecpanel` is used; the `.html` / `.js` source files are not loaded.
+Close the example project before syncing, then reopen it so the app reads the updated panel. At runtime only the content inside `HtmlControl.ecb` is used; the `.html` / `.js` source files are not loaded.
 
 ## API
 

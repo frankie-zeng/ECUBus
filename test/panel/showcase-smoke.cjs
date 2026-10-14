@@ -16,7 +16,7 @@ app.setPath('userData', path.join(artifacts, 'profile'))
 const projectFile = path.join(artifacts, 'panel.ecb')
 dialog.showSaveDialog = async (...args) => ({
   canceled: false,
-  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'Panel.ecpanel'))
+  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'output'))
 })
 const checks = []
 let started = false

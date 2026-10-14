@@ -48,9 +48,6 @@
         >{{ t('ungroup') }}</el-button
       >
       <span class="toolbar-fill"></span>
-      <el-button size="small" @click="emit('saveAs', name.trim(), cloneDocument(document))">{{
-        t('savePanelAs')
-      }}</el-button>
       <el-button size="small" :type="preview ? 'primary' : 'default'" @click="togglePreview">{{
         t(preview ? 'edit' : 'preview')
       }}</el-button>
@@ -1029,7 +1026,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   save: [name: string, document: PanelDocument]
   dirty: [value: boolean]
-  saveAs: [name: string, document: PanelDocument]
 }>()
 const t = usePanelLocale()
 const data = useDataStore()

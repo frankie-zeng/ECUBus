@@ -8,7 +8,6 @@ import { useRuntimeStore } from './runtime'
 import i18next from 'i18next'
 import { markRaw } from 'vue'
 import { upgradeLegacyPanels } from './panelCompatibility'
-import { loadPanelFiles, panelReferences } from './panelFiles'
 
 export interface ProjectInfo {
   name: string
@@ -173,7 +172,6 @@ export const useProjectStore = defineStore('project', {
           const info = window.path.parse(example)
           this.projectInfo.name = info.base
           this.projectInfo.path = info.dir
-          await loadPanelFiles(data, info.dir)
           this.open = true
           this.projectDirty = false
           await this.saveProject()
@@ -263,7 +261,6 @@ export const useProjectStore = defineStore('project', {
                   }
                 }
               })
-              await loadPanelFiles(data, parse.dir)
               this.project = rdata.project
               this.open = true
 
@@ -327,7 +324,6 @@ export const useProjectStore = defineStore('project', {
           project: this.project,
           data: projectData.getData()
         })
-        data.data.panels = panelReferences(data.data.panels, this.projectInfo.path)
 
         //sort
         const sortedPairsProject = sortBy(toPairs(data), 0)
