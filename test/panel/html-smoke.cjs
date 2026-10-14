@@ -16,7 +16,7 @@ app.setPath('userData', path.join(artifacts, 'profile'))
 const projectFile = path.join(artifacts, 'panel.ecb')
 dialog.showSaveDialog = async (...args) => ({
   canceled: false,
-  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'Panel.ecpanel'))
+  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'output'))
 })
 const checks = []
 const variableRequests = []
@@ -109,13 +109,15 @@ async function capture(win, name) {
 const example = path.resolve(__dirname, '../../resources/examples/panel_html')
 const demo = path.join(artifacts, 'demo')
 fs.cpSync(example, demo, { recursive: true })
-const panelFile = path.join(demo, 'html.ecpanel')
-const panelDocument = JSON.parse(fs.readFileSync(panelFile, 'utf8'))
-const htmlControl = panelDocument.document.controls.find((control) => control.id === 'html')
+const htmlProjectFile = path.join(demo, 'HtmlControl.ecb')
+const htmlProject = JSON.parse(fs.readFileSync(htmlProjectFile, 'utf8'))
+const htmlControl = htmlProject.data.panels['html-demo'].document.controls.find(
+  (control) => control.id === 'html'
+)
 htmlControl.htmlContent += '<script>window.inlineScriptRan = true;</script>'
 htmlControl.scriptContent =
   'window.separateScriptRan = window.inlineScriptRan === true;\n' + htmlControl.scriptContent
-fs.writeFileSync(panelFile, JSON.stringify(panelDocument))
+fs.writeFileSync(htmlProjectFile, JSON.stringify(htmlProject))
 
 async function waitHtml(frame, expression) {
   for (let i = 0; i < 100; i++) {

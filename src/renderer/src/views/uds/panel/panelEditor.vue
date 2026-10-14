@@ -1,9 +1,5 @@
 <template>
-  <div v-if="data.panels[id]?.fileError">
-    {{ t('panelFileFailed') }}: {{ data.panels[id].fileError }}
-    <el-button @click="relinkFile">{{ t('relinkPanel') }}</el-button>
-  </div>
-  <div v-else-if="migration" class="migration-report">
+  <div v-if="migration" class="migration-report">
     <p>{{ t('migrationLayout') }}</p>
     <p>
       {{ t('migrationConverted') }}: {{ migration.document.controls.length }} ·
@@ -30,7 +26,6 @@
     :dialog-target="`#win${editIndex}`"
     @dirty="layout.setWinModified(editIndex, $event)"
     @save="save"
-    @save-as="saveAs"
   />
 </template>
 <script setup lang="ts">
@@ -38,13 +33,6 @@ import { inject, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { v4 } from 'uuid'
 import { useDataStore } from '@r/stores/data'
-import { useProjectStore } from '@r/stores/project'
-import {
-  bindPanelFile,
-  panelUsingFile,
-  parsePanelFile,
-  serializePanelFile
-} from '@r/stores/panelFiles'
 import type { Layout } from '../layout'
 import type { PanelDocument } from 'src/preload/panel'
 import { cloneDocument, createDocument } from './free/model'
@@ -53,45 +41,31 @@ import { usePanelLocale } from './free/locale'
 import FreePanelEditor from './free/FreePanelEditor.vue'
 const props = defineProps<{ height: number; editIndex: string }>()
 const data = useDataStore()
-const project = useProjectStore()
 const layout = inject('layout') as Layout
 const t = usePanelLocale()
 const existing = data.panels[props.editIndex]
 const migration =
-  existing && !existing.document && !existing.filePath
-    ? migrateLegacyPanel(existing, data.vars)
-    : undefined
+  existing && !existing.document ? migrateLegacyPanel(existing, data.vars) : undefined
 const savedDocument = ref(existing?.document ? cloneDocument(existing.document) : createDocument())
 let nextNumber = 1
 while (Object.values(data.panels).some((panel) => panel.name === `Panel ${nextNumber}`))
   nextNumber++
 const savedName = ref(existing?.name || `Panel ${nextNumber}`)
 const id = existing?.id || (props.editIndex === 'panel' ? v4() : props.editIndex)
-async function createMigrationCopy() {
+function createMigrationCopy() {
   if (!migration?.document.controls.length) return
   const name = migrationCopyName(data.panels[props.editIndex].name, data.panels)
-  const document = cloneDocument(migration.document)
-  const filePath = await choosePanelFile(name)
-  if (!filePath) return
-  if (panelUsingFile(data.panels, filePath)) {
-    ElMessage.error(t('fileInUse'))
-    return
-  }
-  try {
-    await window.electron.ipcRenderer.invoke(
-      'ipc-fs-writeFile',
-      filePath,
-      serializePanelFile(name, document)
-    )
-  } catch {
-    ElMessage.error(t('panelSaveFailed'))
-    return
-  }
   const copyId = v4()
-  data.panels[copyId] = { id: copyId, name, filePath, document, rule: [], options: {} }
+  data.panels[copyId] = {
+    id: copyId,
+    name,
+    document: cloneDocument(migration.document),
+    rule: [],
+    options: {}
+  }
   layout.addWin('panel', copyId, { params: { 'edit-index': copyId } })
 }
-async function save(name: string, document: PanelDocument, filePath = data.panels[id]?.filePath) {
+function save(name: string, document: PanelDocument) {
   if (!name) {
     ElMessage.error(t('nameRequired'))
     return
@@ -100,31 +74,10 @@ async function save(name: string, document: PanelDocument, filePath = data.panel
     ElMessage.error(t('nameExists'))
     return
   }
-  if (!filePath) {
-    await saveAs(name, document)
-    return
-  }
-  if (panelUsingFile(data.panels, filePath, id)) {
-    ElMessage.error(t('fileInUse'))
-    return
-  }
-  if (filePath) {
-    try {
-      await window.electron.ipcRenderer.invoke(
-        'ipc-fs-writeFile',
-        filePath,
-        serializePanelFile(name, document)
-      )
-    } catch {
-      ElMessage.error(t('panelSaveFailed'))
-      return
-    }
-  }
   data.panels[id] = {
     ...data.panels[id],
     id,
     name,
-    filePath,
     document: cloneDocument(document),
     rule: data.panels[id]?.rule || [],
     options: data.panels[id]?.options || {}
@@ -135,58 +88,6 @@ async function save(name: string, document: PanelDocument, filePath = data.panel
   layout.changeWinName(props.editIndex, name)
   layout.changeWinName(`p${id}`, name)
   ElMessage.success(t('saved'))
-}
-const fileFilters = [{ name: 'EcuBus Panel', extensions: ['ecpanel'] }]
-async function choosePanelFile(name: string) {
-  const result = await window.electron.ipcRenderer.invoke('ipc-show-save-dialog', {
-    title: t('savePanelAs'),
-    filters: fileFilters,
-    defaultPath: window.path.join(
-      project.projectInfo.path,
-      `${name.replace(/[<>:"/\\|?*]/g, '_') || 'Panel'}.ecpanel`
-    )
-  })
-  return result.canceled ? undefined : (result.filePath as string | undefined)
-}
-async function saveAs(name: string, document: PanelDocument) {
-  const filePath = await choosePanelFile(name)
-  if (filePath) await save(name, document, filePath)
-}
-async function relinkFile() {
-  const result = await window.electron.ipcRenderer.invoke('ipc-show-open-dialog', {
-    title: t('importPanel'),
-    filters: fileFilters,
-    properties: ['openFile']
-  })
-  if (result.canceled || !result.filePaths?.[0]) return
-  const filePath = result.filePaths[0]
-  if (panelUsingFile(data.panels, filePath, id)) {
-    ElMessage.error(t('fileInUse'))
-    return
-  }
-  try {
-    const file = parsePanelFile(
-      await window.electron.ipcRenderer.invoke('ipc-fs-readFile', filePath, 'utf-8')
-    )
-    const document = bindPanelFile(file.document, data)
-    let name = file.name
-    let suffix = 2
-    while (Object.values(data.panels).some((panel) => panel.id !== id && panel.name === name))
-      name = `${file.name} (${suffix++})`
-    savedDocument.value = cloneDocument(document)
-    savedName.value = name
-    data.panels[id] = {
-      ...data.panels[id],
-      name,
-      document,
-      filePath,
-      fileError: undefined
-    }
-    layout.changeWinName(props.editIndex, name)
-    layout.changeWinName(`p${id}`, name)
-  } catch {
-    ElMessage.error(t('panelFileFailed'))
-  }
 }
 </script>
 <style scoped>

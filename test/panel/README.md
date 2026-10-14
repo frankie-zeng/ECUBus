@@ -103,7 +103,7 @@ node node_modules/vue-tsc/bin/vue-tsc.js --noEmit -p test/panel/tsconfig.json
 
 `numeric.spec.ts` 覆盖数值格式与严格解析、范围限制、单位/范围标签、报警恢复、同源原始值/物理值订阅和 CAN 物理值逆向换算。Electron 使用实际文本输入验证 Hex 数值通过变量 IPC 写入，并检查十进制/二进制显示及上下限报警背景恢复，生成 `numeric-formats.png`。这些检查不覆盖真实 CAN/LIN 设备通信。
 
-`external-file.spec.mts` 覆盖 `.ecpanel` 格式、跨工程绑定匹配与歧义处理、相对引用和缺失文件。工程文件测试验证真实磁盘保存/重开时仅保存引用、载入外部修改及保留丢失引用；编辑入口测试验证文件写入失败时不替换已保存内容。Electron 覆盖另存为、再次保存写回、重启载入和导入另一个文件，使用测试对话框结果和真实文件 IPC。
+面板文档保存在 `.ecb` 中。工程文件测试验证真实磁盘保存/重开后文档完整恢复；编辑入口测试验证保存只更新工程数据，不写文件、不弹对话框。Electron 覆盖编辑器保存、工程保存、重启载入，并确认 Panel 菜单不再提供导入。
 
 ## 新版示例与 HTML Control
 
@@ -111,7 +111,7 @@ node node_modules/vue-tsc/bin/vue-tsc.js --noEmit -p test/panel/tsconfig.json
 
 Windows 下使用 `node node_modules/electron/cli.js` 启动冒烟脚本，不直接运行 `electron.exe`。四个脚本的控制台日志同步写入各自临时目录的 `console.log`，结果保存在同目录的 `result.json`，不依赖启动终端的输出管道。临时目录为 `%TEMP%/ecubus-panel-electron-*`。`smoke-console.spec.ts` 验证输出管道断开时日志仍能保存。
 
-`examples.spec.mts` 检查六个旧示例转为 `.ecpanel` 后的控件数、绑定和按钮语义，以及 HTML 源文件与独立面板的一致性。旧面板原始数据保存在 `fixtures/` 中，用于继续验证旧版兼容。
+`examples.spec.mts` 检查六个旧示例转换后保存在 `.ecb` 中的控件数、绑定和按钮语义，以及 HTML 源文件与工程内面板的一致性。旧面板原始数据保存在 `fixtures/` 中，用于继续验证旧版兼容。
 
 独立 HTML 示例的 Electron 验证：
 

@@ -16,7 +16,7 @@ app.setPath('userData', path.join(artifacts, 'profile'))
 const projectFile = path.join(artifacts, 'panel.ecb')
 dialog.showSaveDialog = async (...args) => ({
   canceled: false,
-  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'Panel.ecpanel'))
+  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'output'))
 })
 const checks = []
 let started = false
@@ -114,9 +114,6 @@ app.on('browser-window-created', (_event, win) => {
         const config = JSON.parse(fs.readFileSync(source, 'utf8'))
         const [id, panel] = Object.entries(config.data.panels)[0]
         const target = path.join(artifacts, name.replaceAll('/', '-') + '.ecb')
-        const panelTarget = path.join(artifacts, path.basename(panel.filePath))
-        fs.copyFileSync(path.join(path.dirname(source), panel.filePath), panelTarget)
-        panel.filePath = path.basename(panelTarget)
         // The old Program example contains an unsupported legacy DBC unrelated to its variable-only panel.
         config.data.database.can = Object.fromEntries(
           Object.entries(config.data.database.can || {}).filter(
@@ -142,17 +139,11 @@ app.on('browser-window-created', (_event, win) => {
         )
         assert.equal(
           await win.webContents.executeJavaScript(
-            `panelTest.data.panels[${JSON.stringify(id)}].fileError || ''`
-          ),
-          ''
-        )
-        assert.equal(
-          await win.webContents.executeJavaScript(
             `document.querySelector(${JSON.stringify('#winp' + id + ' .runtime-status')}).textContent.includes('issues')`
           ),
           false
         )
-        const count = JSON.parse(fs.readFileSync(panelTarget, 'utf8')).document.controls.length
+        const count = panel.document.controls.length
         assert.equal(
           await win.webContents.executeJavaScript(
             `document.querySelectorAll(${JSON.stringify('#winp' + id + ' [data-control-id]')}).length`

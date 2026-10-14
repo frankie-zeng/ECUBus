@@ -27,13 +27,12 @@
 
 | 文件                              | 内容                                                            |
 | ------------------------------- | ------------------------------------------------------------- |
-| HtmlControl.ecb | 变量、数据库、模拟通道和面板引用                                              |
-| html.ecpanel    | 带有嵌入式 HTML/CSS 和 JavaScript 的独立面板                             |
+| HtmlControl.ecb | 变量、数据库、模拟通道，以及嵌入 HTML/CSS 和 JavaScript 的面板                                              |
 | control.html    | 可编辑的 HTML/CSS 源文件                                             |
 | control.js      | 可编辑的桥接 API 示例                                                 |
 | ecu.ts          | 模拟 ECU 脚本                                                     |
 | HtmlDemo.dbc    | Status.Speed 和 Command.Target |
-| sync-panel.mjs  | 将两个源文件复制到 html.ecpanel 中                      |
+| sync-panel.mjs  | 将两个源文件复制到 HtmlControl.ecb 的面板中                      |
 
 编辑 `control.html` 或 `control.js` 后，请从仓库根目录运行：
 
@@ -41,7 +40,7 @@
 node resources/examples/panel_html/sync-panel.mjs
 ```
 
-然后关闭并重新打开示例项目，以便应用再次读取 `.ecpanel`。同步之前，请关闭任何正在编辑此面板的窗口，以免之后将较旧的内容保存并覆盖该文件。运行时仅使用 `.ecpanel` 中的内容；不会加载 `.html` / `.js` 源文件。
+同步之前先关闭示例项目，同步后重新打开，应用才会读取更新后的面板。运行时仅使用 `HtmlControl.ecb` 中的内容；不会加载 `.html` / `.js` 源文件。
 
 ## API
 

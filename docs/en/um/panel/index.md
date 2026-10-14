@@ -4,7 +4,7 @@
 
 Create a Panel from the Panel menu, drag controls onto the canvas, and configure bindings in the property editor. Use groups, tabs, alignment, resizing and undo/redo to arrange the interface. Editor preview checks layout; start measurement in the runtime view to interact with variables and signals.
 
-Save the layout as an `.ecpanel` file. The `.ecb` project keeps its file reference, so share both files. Import an existing `.ecpanel` to reuse a layout; relink a missing file after moving it. Relinking uses the name stored in the selected file. Legacy embedded panels convert automatically when every item is supported; otherwise the editor shows a migration report and saves the converted controls as a new `.ecpanel` copy.
+Panels are saved in the `.ecb` project file: **Save** in the editor updates the project, and saving the project writes it to disk. Legacy panels convert automatically when every item is supported; otherwise the editor shows a migration report and adds the converted controls to the project as a new panel.
 
 Open `resources/examples/panel_showcase/PanelShowcase.ecb` for a demonstration using two simulate CAN channels. Bind a Slider, Number and Progress control to the same user variable to see them update together. Signal writes update database values; start the corresponding periodic message to transmit them onto the bus.
 

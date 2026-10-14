@@ -416,8 +416,7 @@ import soaConfigIcon from '@iconify/icons-material-symbols/linked-services'
 import { useGlobalStart, useRuntimeStore } from '@r/stores/runtime'
 import { usePluginStore } from '@r/stores/plugin'
 import osTraceIcon from '@iconify/icons-ph/crosshair-fill'
-import { CirclePlusFilled, Delete, Edit, ArrowDown, FolderOpened } from '@element-plus/icons-vue'
-import { bindPanelFile, panelUsingFile, parsePanelFile } from '@r/stores/panelFiles'
+import { CirclePlusFilled, Delete, Edit, ArrowDown } from '@element-plus/icons-vue'
 import { usePanelLocale } from './panel/free/locale'
 import type { EcuBusPlugin, PluginItemConfig, PluginTabConfig } from '../../../../preload/plugin'
 import i18next from 'i18next'
@@ -597,9 +596,6 @@ const PanelDropdown = {
             divided: Object.keys(dataBase.panels).length > 0
           },
           () => panelText('newPanel')
-        ),
-        h(ElDropdownItem, { command: 'import-panel', icon: FolderOpened }, () =>
-          panelText('importPanel')
         )
       ])
   }
@@ -1215,36 +1211,8 @@ function openGraph(command: string) {
     })
   }
 }
-async function openPanel(command: string) {
-  if (command === 'import-panel') {
-    const result = await window.electron.ipcRenderer.invoke('ipc-show-open-dialog', {
-      title: panelText('importPanel'),
-      filters: [{ name: 'EcuBus Panel', extensions: ['ecpanel'] }],
-      properties: ['openFile']
-    })
-    if (result.canceled || !result.filePaths?.[0]) return
-    const filePath = result.filePaths[0]
-    try {
-      const linked = panelUsingFile(dataBase.panels, filePath)
-      if (linked) {
-        editPanel(linked.id)
-        return
-      }
-      const file = parsePanelFile(
-        await window.electron.ipcRenderer.invoke('ipc-fs-readFile', filePath, 'utf-8')
-      )
-      const document = bindPanelFile(file.document, dataBase)
-      const id = v4()
-      let name = file.name
-      let suffix = 2
-      while (Object.values(dataBase.panels).some((p) => p.name === name))
-        name = `${file.name} (${suffix++})`
-      dataBase.panels[id] = { id, name, document, filePath, rule: [], options: {} }
-      editPanel(id)
-    } catch {
-      ElMessage.error(panelText('panelFileFailed'))
-    }
-  } else if (command == 'panel') {
+function openPanel(command: string) {
+  if (command == 'panel') {
     const id = v4()
     layoutMaster.addWin('panel', id, {
       params: {

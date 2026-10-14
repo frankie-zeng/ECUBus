@@ -16,7 +16,7 @@ app.setPath('userData', path.join(artifacts, 'profile'))
 const projectFile = path.join(artifacts, 'panel.ecb')
 dialog.showSaveDialog = async (...args) => ({
   canceled: false,
-  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'Panel.ecpanel'))
+  filePath: path.join(artifacts, path.basename(args.at(-1).defaultPath || 'output'))
 })
 const checks = []
 let started = false
@@ -364,19 +364,13 @@ app.on('browser-window-created', (_event, win) => {
           c.x = 32; c.y = 32 + i * 100; c.rememberValue = false;
           c.binding = {kind:'variable', node:{id:'level', name:'Level', type:'variable', enable:true, color:'', bindValue:{variableId:'level', variableType:'user', variableName:'Level', variableFullName:'Level', variableValueType:'number'}}};
         });
-        await window.electron.ipcRenderer.invoke('ipc-fs-writeFile',panelTest.data.panels['smoke-panel'].filePath,JSON.stringify({format:'ecubus-panel',version:1,name:panelTest.data.panels['smoke-panel'].name,document:panelTest.data.panels['smoke-panel'].document}));
         panelTest.project.projectInfo = ${JSON.stringify({ name: 'panel.ecb', path: artifacts })};
         await panelTest.project.saveProject();
       })()`)
       await waitFor(win, `!panelTest.project.projectDirty`)
       const saved = JSON.parse(fs.readFileSync(projectFile, 'utf8'))
-      assert.equal(saved.data.panels['smoke-panel'].document, undefined)
-      assert.equal(
-        JSON.parse(
-          fs.readFileSync(path.join(artifacts, saved.data.panels['smoke-panel'].filePath), 'utf8')
-        ).document.controls.length,
-        2
-      )
+      assert.equal(saved.data.panels['smoke-panel'].filePath, undefined)
+      assert.equal(saved.data.panels['smoke-panel'].document.controls.length, 2)
       assert.equal(saved.project.wins['smoke-panel'].options.params['edit-index'], 'smoke-panel')
       checks.push({ name: 'real-ipc-save', passed: true })
       await win.webContents.executeJavaScript(`panelTest.project.closeProject()`)
@@ -391,10 +385,6 @@ app.on('browser-window-created', (_event, win) => {
       await waitFor(win, `!!document.querySelector('.free-panel-editor')`)
       const restoredPanel = await win.webContents.executeJavaScript(
         `JSON.parse(JSON.stringify(panelTest.data.panels['smoke-panel']))`
-      )
-      assert.equal(
-        restoredPanel.filePath,
-        path.join(artifacts, saved.data.panels['smoke-panel'].filePath)
       )
       assert.equal(restoredPanel.document.controls.length, 2)
       assert(
@@ -544,8 +534,7 @@ app.on('browser-window-created', (_event, win) => {
       await waitFor(win, `!panelTest.project.projectDirty`)
       const migratedFile = JSON.parse(fs.readFileSync(projectFile, 'utf8'))
       assert.deepEqual(migratedFile.data.panels['legacy-smoke'], legacy)
-      assert.equal(migratedFile.data.panels[copy.id].document, undefined)
-      assert.equal(JSON.parse(fs.readFileSync(copy.filePath, 'utf8')).document.controls.length, 2)
+      assert.equal(migratedFile.data.panels[copy.id].document.controls.length, 2)
       checks.push({ name: 'legacy-migration-report-copy-and-persistence', passed: true })
       await win.webContents.executeJavaScript(`
         const base = JSON.parse(JSON.stringify(panelTest.data.panels['smoke-panel'].document.controls[0]));
@@ -920,8 +909,9 @@ app.on('browser-window-created', (_event, win) => {
       await win.webContents.executeJavaScript(`panelTest.project.saveProject()`)
       await waitFor(win, `!panelTest.project.projectDirty`)
       assert.equal(
-        JSON.parse(fs.readFileSync(projectFile, 'utf8')).data.panels.actions.document,
-        undefined
+        JSON.parse(fs.readFileSync(projectFile, 'utf8')).data.panels.actions.document.controls
+          .length,
+        9
       )
       checks.push({ name: 'actions-string-path-checkbox-radio', passed: true })
       await win.webContents.executeJavaScript(`panelTest.project.saveProject()`)
@@ -949,28 +939,15 @@ app.on('browser-window-created', (_event, win) => {
       await win.webContents.executeJavaScript(
         `document.querySelector(${JSON.stringify('#win' + autoId + ' .panel-toolbar button')}).click()`
       )
-      await waitFor(win, `!!panelTest.data.panels[${JSON.stringify(autoId)}].filePath`)
       await win.webContents.executeJavaScript(`panelTest.project.saveProject()`)
       await waitFor(win, `!panelTest.project.projectDirty`)
       const autoSaved = JSON.parse(fs.readFileSync(autoFile, 'utf8')).data.panels[autoId]
-      assert.equal(autoSaved.document, undefined)
-      const autoDocument = JSON.parse(
-        fs.readFileSync(path.join(artifacts, autoSaved.filePath), 'utf8')
-      ).document
-      assert.equal(autoDocument.controls[0].binding.node.bindValue.variableValueType, 'number')
+      assert.equal(autoSaved.filePath, undefined)
+      assert.equal(
+        autoSaved.document.controls[0].binding.node.bindValue.variableValueType,
+        'number'
+      )
       checks.push({ name: 'real-legacy-auto-upgrade-and-editor-save', passed: true })
-      const panelFile = path.join(artifacts, 'standalone.ecpanel')
-      const saveDialog = dialog.showSaveDialog
-      dialog.showSaveDialog = async () => ({ canceled: false, filePath: panelFile })
-      await win.webContents.executeJavaScript(
-        `Array.from(document.querySelectorAll(${JSON.stringify('#win' + autoId + ' .panel-toolbar button')})).find(b=>b.textContent.trim()==='Save Panel As').click()`
-      )
-      await waitFor(
-        win,
-        `panelTest.data.panels[${JSON.stringify(autoId)}].filePath===${JSON.stringify(panelFile)}`
-      )
-      dialog.showSaveDialog = saveDialog
-      assert.equal(JSON.parse(fs.readFileSync(panelFile, 'utf8')).format, 'ecubus-panel')
       await win.webContents.executeJavaScript(
         `Array.from(document.querySelectorAll(${JSON.stringify('#win' + autoId + ' .panel-palette button')})).find(b=>b.textContent.trim().endsWith('LED')).click();document.querySelector(${JSON.stringify('#win' + autoId + ' .panel-toolbar button')}).click()`
       )
@@ -978,12 +955,11 @@ app.on('browser-window-created', (_event, win) => {
         win,
         `panelTest.data.panels[${JSON.stringify(autoId)}].document.controls.length===2`
       )
-      assert.equal(JSON.parse(fs.readFileSync(panelFile, 'utf8')).document.controls.length, 2)
       await win.webContents.executeJavaScript(`panelTest.project.saveProject()`)
       await waitFor(win, `!panelTest.project.projectDirty`)
       const reference = JSON.parse(fs.readFileSync(autoFile, 'utf8')).data.panels[autoId]
-      assert.equal(reference.filePath, 'standalone.ecpanel')
-      assert.equal(reference.document, undefined)
+      assert.equal(reference.filePath, undefined)
+      assert.equal(reference.document.controls.length, 2)
       await win.webContents.executeJavaScript(`panelTest.project.closeProject()`)
       await waitFor(win, `!panelTest.project.open`)
       await new Promise((resolve) => {
@@ -998,39 +974,21 @@ app.on('browser-window-created', (_event, win) => {
         win,
         `panelTest.project.open && panelTest.data.panels[${JSON.stringify(autoId)}]?.document?.controls.length===2`
       )
-      await win.webContents.executeJavaScript(
-        `panelTest.getLayout().addWin('panel',${JSON.stringify(autoId)},{params:{'edit-index':${JSON.stringify(autoId)}}})`
-      )
-      await waitFor(
-        win,
-        `!!document.querySelector(${JSON.stringify('#win' + autoId + ' .panel-toolbar')})`
-      )
-      const importedFile = path.join(artifacts, 'imported.ecpanel')
-      fs.copyFileSync(panelFile, importedFile)
-      const openDialog = dialog.showOpenDialog
-      let importCalls = 0
-      dialog.showOpenDialog = async () => {
-        importCalls++
-        return { canceled: false, filePaths: [importedFile] }
-      }
+      checks.push({ name: 'panel-document-saved-in-project', passed: true })
       await win.webContents.executeJavaScript(
         `Array.from(document.querySelectorAll('.demo-tabs .el-dropdown .lr')).find(el=>el.textContent.trim()==='Panel').dispatchEvent(new MouseEvent('mouseenter',{bubbles:true}))`
       )
       await waitFor(
         win,
-        `Array.from(document.querySelectorAll('.el-dropdown-menu__item')).some(el=>el.textContent.trim()==='Import Panel' && el.getBoundingClientRect().height>0)`
+        `Array.from(document.querySelectorAll('.el-dropdown-menu__item')).some(el=>el.textContent.trim()==='New Panel' && el.getBoundingClientRect().height>0)`
+      )
+      assert.equal(
+        await win.webContents.executeJavaScript(
+          `Array.from(document.querySelectorAll('.el-dropdown-menu__item')).some(el=>el.textContent.trim()==='Import Panel')`
+        ),
+        false
       )
       await capture(win, 'panel-menu')
-      await win.webContents.executeJavaScript(
-        `Array.from(document.querySelectorAll('.el-dropdown-menu__item')).find(el=>el.textContent.trim()==='Import Panel').click()`
-      )
-      await waitFor(
-        win,
-        `Object.values(panelTest.data.panels).some(p=>p.filePath===${JSON.stringify(importedFile)} && p.document.controls.length===2)`
-      )
-      assert.equal(importCalls, 1)
-      dialog.showOpenDialog = openDialog
-      await capture(win, 'standalone-panel')
       const editorsBeforeNew = await win.webContents.executeJavaScript(
         `document.querySelectorAll('.free-panel-editor').length`
       )
@@ -1048,11 +1006,7 @@ app.on('browser-window-created', (_event, win) => {
         win,
         `document.querySelectorAll('.free-panel-editor').length===${editorsBeforeNew + 1}`
       )
-      checks.push({ name: 'panel-menu-new-and-import', passed: true })
-      checks.push({
-        name: 'standalone-panel-save-writeback-reference-reopen-and-import',
-        passed: true
-      })
+      checks.push({ name: 'panel-menu-new-without-import', passed: true })
       finish()
     } catch (error) {
       await capture(win, 'failure').catch(() => {})

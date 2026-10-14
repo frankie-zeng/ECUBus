@@ -1,6 +1,5 @@
 <template>
-  <div v-if="panel?.fileError">{{ t('panelFileFailed') }}: {{ panel.fileError }}</div>
-  <FreePanelView v-else-if="panel?.document" :document="panel.document" :height="height" />
+  <FreePanelView v-if="panel?.document" :document="panel.document" :height="height" />
   <div v-else>{{ t('legacyPanel') }}</div>
 </template>
 <script setup lang="ts">

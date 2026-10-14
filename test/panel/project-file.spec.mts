@@ -7,7 +7,6 @@ import { useDataStore } from '../../src/renderer/src/stores/data'
 import { useProjectStore } from '../../src/renderer/src/stores/project'
 import { createControl, createDocument } from '../../src/renderer/src/views/uds/panel/free/model'
 import { upgradeLegacyPanels } from '../../src/renderer/src/stores/panelCompatibility'
-import { serializePanelFile } from '../../src/renderer/src/stores/panelFiles'
 
 vi.mock('electron-log', () => ({ error: vi.fn(), info: vi.fn() }))
 
@@ -42,54 +41,6 @@ afterEach(async () => {
     if (error.code !== 'ENOENT') throw error
   })
   await rmdir(directory)
-})
-
-it('reopens external Panel references from disk and retains missing references without a stale fallback', async () => {
-  const external = path.join(directory, 'main.ecpanel')
-  vi.mocked(window.electron.ipcRenderer.invoke).mockImplementation(async (channel, ...args) => {
-    const target = args[0] as string
-    if (![file, external].includes(target)) throw new Error('Unexpected file access')
-    if (channel === 'ipc-fs-writeFile') return writeFile(target, args[1], 'utf8')
-    if (channel === 'ipc-fs-readFile') return readFile(target, 'utf8')
-    throw new Error('Unexpected IPC')
-  })
-  const data = useDataStore()
-  const project = useProjectStore()
-  project.router = { push: vi.fn() } as unknown as typeof project.router
-  project.open = true
-  project.projectInfo = { name: 'panel.ecb', path: directory }
-  const document = createDocument()
-  data.panels.main = {
-    id: 'main',
-    name: 'Main',
-    filePath: external,
-    document,
-    rule: [],
-    options: {}
-  }
-  try {
-    await writeFile(external, serializePanelFile('Main', document), 'utf8')
-    await project.saveProject()
-    const saved = JSON.parse(await readFile(file, 'utf8'))
-    expect(saved.data.panels.main.filePath).toBe('main.ecpanel')
-    expect(saved.data.panels.main.document).toBeUndefined()
-    await project.closeProject()
-    document.width = 1200
-    await writeFile(external, serializePanelFile('Main', document), 'utf8')
-    await project.openProjectByPath(file)
-    await vi.waitFor(() => expect(project.open).toBe(true))
-    expect(data.panels.main.document?.width).toBe(1200)
-    await project.closeProject()
-    await unlink(external)
-    await project.openProjectByPath(file)
-    await vi.waitFor(() => expect(project.open).toBe(true))
-    expect(data.panels.main.document).toBeUndefined()
-    expect(data.panels.main.fileError).toBe(external)
-    await project.saveProject()
-    expect(JSON.parse(await readFile(file, 'utf8')).data.panels.main.filePath).toBe('main.ecpanel')
-  } finally {
-    await unlink(external).catch(() => {})
-  }
 })
 
 it('upgrades an actual legacy sample on open without rewriting the file and preserves its original rules on save', async () => {
@@ -165,7 +116,7 @@ it('uses the same conversion for example projects', async () => {
   )
 })
 
-it('never writes panel documents into the project file', async () => {
+it('writes panel documents into the project file and restores them on reopen', async () => {
   const data = useDataStore()
   const project = useProjectStore()
   project.router = { push: vi.fn() } as unknown as typeof project.router
@@ -216,7 +167,6 @@ it('never writes panel documents into the project file', async () => {
     }
   }
   const expectedPanels = JSON.parse(JSON.stringify(data.panels))
-  delete expectedPanels.free.document
   const expectedWindows = JSON.parse(JSON.stringify(project.project.wins))
   await project.saveProject()
   expect(project.projectDirty).toBe(false)
