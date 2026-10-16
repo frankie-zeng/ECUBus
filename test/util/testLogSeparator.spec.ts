@@ -4,8 +4,11 @@ import {
   createTestLogSeparatorState,
   currentTestLogIndent,
   endTestLogEntry,
+  isTestLogFrameHidden,
+  isTestLogStdoutHidden,
   openTestLogFrames,
-  resetTestLogSeparator
+  resetTestLogSeparator,
+  restartTestLogIds
 } from '../../src/renderer/src/views/uds/testLogSeparator'
 
 function start(
@@ -94,6 +97,49 @@ describe('test log case grouping', () => {
     state.prefix = 'cfg'
     expect(start(state, 'CAN Test', 0).id).toBe('cfg:0')
     expect(start(state, 'pass case', 1).id).toBe('cfg:1')
+  })
+
+  it('restarts ids on the next run so a single-case filter still matches the tree', () => {
+    const state = createTestLogSeparatorState()
+    state.prefix = 'cfg'
+    const script = [
+      { name: 'live logs', nesting: 0 },
+      { name: 'case one', nesting: 1 },
+      { name: 'case two', nesting: 1 },
+      { name: 'case three', nesting: 1 }
+    ]
+
+    const play = () => {
+      const ids: string[] = []
+      const suite = start(state, script[0].name, script[0].nesting)
+      ids.push(suite.id)
+      for (const node of script.slice(1)) {
+        const begun = start(state, node.name, node.nesting)
+        ids.push(begun.id)
+        finish(state, node.name, node.nesting)
+      }
+      finish(state, script[0].name, script[0].nesting)
+      return ids
+    }
+
+    const treeIds = play()
+    expect(treeIds).toEqual(['cfg:0', 'cfg:1', 'cfg:2', 'cfg:3'])
+    const caseTwo = treeIds[2]
+
+    // The per-case play button keeps the terminal text, so it must restart ids
+    // itself. Leaving seq where the previous run stopped hides the next case.
+    const stale = play()
+    expect(stale.includes(caseTwo)).toBe(false)
+    expect(isTestLogFrameHidden([caseTwo], stale[2])).toBe(true)
+    expect(isTestLogStdoutHidden([caseTwo], [stale[0], stale[2]])).toBe(true)
+
+    restartTestLogIds(state)
+    expect(state.prefix).toBe('cfg')
+    const again = play()
+    expect(again).toEqual(treeIds)
+    expect(isTestLogFrameHidden([caseTwo], again[2])).toBe(false)
+    expect(isTestLogStdoutHidden([caseTwo], [again[0], again[2]])).toBe(false)
+    expect(isTestLogFrameHidden(undefined, again[2])).toBe(false)
   })
 
   it('resets grouping after the log is cleared', () => {
