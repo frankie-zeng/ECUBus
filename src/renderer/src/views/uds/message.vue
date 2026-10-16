@@ -54,8 +54,10 @@ import {
   currentTestLogIndent,
   endTestLogEntry,
   findOpenTestLogId,
+  isTestLogFrameHidden,
+  isTestLogStdoutHidden,
   openTestLogFrames,
-  resetTestLogSeparator
+  restartTestLogIds
 } from './testLogSeparator'
 interface LogData {
   time: string
@@ -270,13 +272,27 @@ function highlightTest(id: string | null) {
   })
 }
 
-function clearLog() {
+function abandonPendingWrites() {
   writeGeneration++
   writeChain = Promise.resolve()
+}
+
+function clearLog() {
+  abandonPendingWrites()
   disposeBlocks()
   terminal.value?.clear()
   logBuffer.length = 0
-  resetTestLogSeparator(testSeparator)
+  restartTestLogIds(testSeparator)
+}
+
+/**
+ * Next run keeps the text already on screen, but frame ids start over so they
+ * match the tree. A per-case play uses this instead of clearLog.
+ */
+function beginTestRun() {
+  abandonPendingWrites()
+  disposeBlocks()
+  restartTestLogIds(testSeparator)
 }
 
 const props = withDefaults(
@@ -310,6 +326,7 @@ function setTestLogPrefix(prefix: string) {
 
 defineExpose({
   clearLog,
+  beginTestRun,
   getData,
   highlightTest,
   setTestLogPrefix
@@ -520,7 +537,7 @@ function testLog({
     if (item.message.data.type == 'test:dequeue') {
       const payload = item.message.data.data
       const begun = beginTestLogEntry(testSeparator, payload)
-      const hidden = testId.value != undefined && !testId.value.includes(begun.id)
+      const hidden = isTestLogFrameHidden(testId.value, begun.id)
       if (hidden) continue
       writeToTerminal(
         time,
@@ -531,8 +548,7 @@ function testLog({
     } else if (item.message.data.type == 'test:pass') {
       const payload = item.message.data.data
       const openId = findOpenTestLogId(testSeparator, payload)
-      const hidden =
-        testId.value != undefined && (openId == undefined || !testId.value.includes(openId))
+      const hidden = isTestLogFrameHidden(testId.value, openId)
       if (!hidden) {
         if (payload.skip) {
           writeToTerminal(
@@ -561,8 +577,7 @@ function testLog({
     } else if (item.message.data.type == 'test:fail') {
       const payload = item.message.data.data
       const openId = findOpenTestLogId(testSeparator, payload)
-      const hidden =
-        testId.value != undefined && (openId == undefined || !testId.value.includes(openId))
+      const hidden = isTestLogFrameHidden(testId.value, openId)
       if (!hidden) {
         const errorMessage = payload.details.error.message
         writeToTerminal(
@@ -588,7 +603,7 @@ function testLog({
         .join('\n')
       if (!message) continue
       const openIds = openTestLogFrames(testSeparator).map((frame) => frame.id)
-      const hidden = testId.value != undefined && !openIds.some((id) => testId.value?.includes(id))
+      const hidden = isTestLogStdoutHidden(testId.value, openIds)
       if (hidden) continue
       writeToTerminal(time, 'print', 'info', message)
     } else if (item.message.data.type == 'test:diagnostic') {

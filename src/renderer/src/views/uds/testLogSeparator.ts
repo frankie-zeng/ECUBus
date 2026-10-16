@@ -78,6 +78,31 @@ export interface BeginTestLogResult {
   indent: number
 }
 
+/**
+ * Frame ids are `${prefix}:${seq}` and must match the tree built at discovery.
+ * `seq` is not cleared when a run finishes, so the next run — including a
+ * per-case play that keeps the terminal text — has to start again at 0.
+ * Otherwise the single-case filter hides every line until the user clears.
+ */
+export function restartTestLogIds(state: TestLogSeparatorState) {
+  const prefix = state.prefix
+  resetTestLogSeparator(state)
+  state.prefix = prefix
+}
+
+/** A single-case run only shows frames whose ids are in the selection. */
+export function isTestLogFrameHidden(
+  selectedIds: string[] | undefined,
+  frameId: string | undefined
+) {
+  return selectedIds != undefined && (frameId == undefined || !selectedIds.includes(frameId))
+}
+
+/** Stdout belongs to every open frame. Hide it when none of those frames was selected. */
+export function isTestLogStdoutHidden(selectedIds: string[] | undefined, openIds: string[]) {
+  return selectedIds != undefined && !openIds.some((id) => selectedIds.includes(id))
+}
+
 /** Record that a test or suite has started. Hidden entries must still be recorded. */
 export function beginTestLogEntry(
   state: TestLogSeparatorState,

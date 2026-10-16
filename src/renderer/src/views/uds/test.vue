@@ -446,6 +446,8 @@ function handleRun(data: TestTree, clearLog: boolean = true, singleId?: string) 
       runtime.testStates.activeTest = runNode
       if (clearLog) {
         traceRef.value.clearLog()
+      } else {
+        traceRef.value.beginTestRun()
       }
       traceRef.value?.setTestLogPrefix(configId)
       const cnt: number[] = []
