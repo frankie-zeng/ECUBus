@@ -398,13 +398,3 @@ export function XcpProgram(
 export function XcpProgramReset(handle: string): Promise<number[]> {
   return xcpCommand(handle, 'programReset')
 }
-
-/**
- * GET_SEED + UNLOCK using the GenerateKeyEx DLL configured on this connection.
- * The DLL is the same one UDS secure access uses. `resource` is the XCP
- * resource byte (CAL/PAG = 1, DAQ = 4, STIM = 8, PGM = 16).
- * @category XCP
- */
-export function XcpUnlockWithSeedKey(handle: string, resource: number): Promise<ResourceFlags> {
-  return xcpCommand(handle, 'unlockWithSeedKey', [resource])
-}

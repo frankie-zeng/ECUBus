@@ -116,46 +116,6 @@
         </el-form-item>
       </template>
 
-      <el-divider content-position="left">{{ i18next.t('uds.xcp.sections.a2l') }}</el-divider>
-      <el-form-item :label="i18next.t('uds.xcp.labels.a2l')">
-        <el-input v-model="data.a2lFile" clearable />
-        <div class="lr">
-          <el-button size="small" plain @click="pickA2l">
-            <Icon :icon="folderIcon" class="icon" />
-            {{ i18next.t('uds.xcp.actions.browse') }}
-          </el-button>
-        </div>
-      </el-form-item>
-      <el-table :data="data.a2lObjects" size="small" max-height="220" border>
-        <el-table-column prop="name" :label="i18next.t('uds.xcp.columns.name')" min-width="140" />
-        <el-table-column prop="kind" :label="i18next.t('uds.xcp.columns.kind')" width="120" />
-        <el-table-column :label="i18next.t('uds.xcp.columns.address')" width="110">
-          <template #default="{ row }">{{ hex(row.address) }}</template>
-        </el-table-column>
-        <el-table-column prop="extension" label="Ext" width="60" />
-        <el-table-column prop="size" :label="i18next.t('uds.xcp.columns.size')" width="70" />
-        <el-table-column prop="event" :label="i18next.t('uds.xcp.columns.event')" width="70" />
-      </el-table>
-
-      <el-divider content-position="left">{{ i18next.t('uds.xcp.sections.security') }}</el-divider>
-      <el-form-item :label="i18next.t('uds.xcp.labels.seedKey')">
-        <el-input v-model="data.seedKeyDll" clearable />
-        <div class="lr">
-          <el-button size="small" plain @click="pickDll">
-            <Icon :icon="folderIcon" class="icon" />
-            {{ i18next.t('uds.xcp.actions.browse') }}
-          </el-button>
-        </div>
-      </el-form-item>
-      <el-form-item :label="i18next.t('uds.xcp.labels.resource')">
-        <el-select v-model="resource">
-          <el-option label="CAL/PAG" :value="1" />
-          <el-option label="DAQ" :value="4" />
-          <el-option label="STIM" :value="8" />
-          <el-option label="PGM" :value="16" />
-        </el-select>
-      </el-form-item>
-
       <el-divider content-position="left">{{ i18next.t('uds.xcp.sections.daq') }}</el-divider>
       <el-form-item :label="i18next.t('uds.xcp.labels.daqEvent')" prop="daqEvent">
         <el-select v-model="data.daqEvent" clearable filterable>
@@ -176,9 +136,6 @@
       <el-button size="small" :loading="busy" @click="probe">
         {{ i18next.t('uds.xcp.actions.readEvents') }}
       </el-button>
-      <el-button size="small" :loading="busy" @click="unlock">
-        {{ i18next.t('uds.xcp.actions.unlock') }}
-      </el-button>
     </div>
     <el-alert v-if="resultText" type="success" :closable="false">
       <pre class="probe-detail">{{ resultText }}</pre>
@@ -190,16 +147,12 @@
 import { computed, onBeforeMount, onUnmounted, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Icon } from '@iconify/vue'
-import folderIcon from '@iconify/icons-ep/folder-opened'
 import { cloneDeep } from 'lodash'
 import i18next from 'i18next'
 import { useDataStore } from '@r/stores/data'
 import { useGlobalStart } from '@r/stores/runtime'
-import { parseA2lEvents, parseA2lObjects } from 'nodeCan/a2l'
 import {
   defaultXcpConnection,
-  mergeDaqEvents,
   validateXcpConnection,
   type XcpConnectionConfig,
   type XcpDaqEvent
@@ -212,7 +165,6 @@ const db = useDataStore()
 const globalStart = useGlobalStart()
 const ruleFormRef = ref<FormInstance>()
 const data = ref<XcpConnectionConfig>(defaultXcpConnection({ id: props.index, name: '' }))
-const resource = ref(1)
 const busy = ref(false)
 const resultText = ref('')
 let stopWatch: (() => void) | undefined
@@ -362,45 +314,8 @@ function save() {
     (item) => item.name === data.value.name && item.id !== data.value.id
   )
   if (errors.length || duplicate || !db.xcp?.[data.value.id]) return
-  db.xcp[data.value.id] = cloneDeep(data.value)
+  db.xcp[data.value.id] = defaultXcpConnection(cloneDeep(data.value))
   emit('change', data.value.id, data.value.name)
-}
-
-async function pickFile(extensions: string[], title: string): Promise<string | null> {
-  const picked = await window.electron.ipcRenderer.invoke('ipc-show-open-dialog', {
-    title,
-    properties: ['openFile'],
-    filters: [
-      { name: title, extensions },
-      { name: i18next.t('uds.xcp.dialogs.allFiles'), extensions: ['*'] }
-    ]
-  })
-  return picked.filePaths?.[0] ?? null
-}
-
-async function pickA2l() {
-  const file = await pickFile(['a2l'], i18next.t('uds.xcp.dialogs.a2lFile'))
-  if (!file) return
-  const text = await window.electron.ipcRenderer.invoke('ipc-fs-readFile', file, 'utf-8')
-  data.value.a2lFile = file
-  data.value.a2lObjects = parseA2lObjects(text)
-  const fromFile: XcpDaqEvent[] = parseA2lEvents(text).map((event) => ({
-    channel: event.channel,
-    name: event.name,
-    source: 'a2l'
-  }))
-  const fromObjects: XcpDaqEvent[] = data.value.a2lObjects
-    .filter((item) => item.event != null)
-    .map((item) => ({ channel: item.event as number, name: `event ${item.event}`, source: 'a2l' }))
-  data.value.daqEvents = mergeDaqEvents(
-    data.value.daqEvents.filter((event) => event.source === 'slave'),
-    [...fromFile, ...fromObjects]
-  )
-}
-
-async function pickDll() {
-  const file = await pickFile(['dll'], i18next.t('uds.xcp.dialogs.dllFile'))
-  if (file) data.value.seedKeyDll = file
 }
 
 function formatProbe(payload: {
@@ -442,10 +357,7 @@ async function probe() {
   resultText.value = ''
   try {
     const payload = await window.electron.ipcRenderer.invoke('ipc-xcp-probe', cloneDeep(data.value))
-    data.value.daqEvents = mergeDaqEvents(
-      data.value.daqEvents.filter((event) => event.source === 'a2l'),
-      payload.events
-    )
+    data.value.daqEvents = payload.events
     if (data.value.daqEvent == null && payload.events.length) {
       data.value.daqEvent = payload.events[0].channel
     }
@@ -457,34 +369,9 @@ async function probe() {
   }
 }
 
-async function unlock() {
-  if (!data.value.seedKeyDll) {
-    ElMessage.error(i18next.t('uds.xcp.errors.noDll'))
-    return
-  }
-  const errors = validateXcpConnection(data.value)
-  if (errors.length) {
-    ElMessage.error(errors[0])
-    return
-  }
-  busy.value = true
-  try {
-    const flags = await window.electron.ipcRenderer.invoke(
-      'ipc-xcp-unlock',
-      cloneDeep(data.value),
-      resource.value
-    )
-    resultText.value = `UNLOCK ${JSON.stringify(flags)}`
-  } catch (err) {
-    ElMessage.error(err instanceof Error ? err.message : String(err))
-  } finally {
-    busy.value = false
-  }
-}
-
 onBeforeMount(() => {
   const saved = db.xcp?.[props.index]
-  if (saved) data.value = cloneDeep(saved)
+  if (saved) data.value = defaultXcpConnection(cloneDeep(saved))
   if (data.value.transport === 'can' && data.value.device) {
     const known = canDevices.value.some((item) => item.name === data.value.device)
     if (!known) data.value.device = ''
@@ -498,12 +385,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.lr {
-  margin-top: 5px;
-}
-.icon {
-  margin-right: 5px;
-}
 .actions {
   display: flex;
   gap: 8px;

@@ -1,56 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { parseA2lEvents, parseA2lObjects } from 'src/main/share/a2l'
 import {
   defaultXcpConnection,
   mergeDaqEvents,
+  normalizeXcpProject,
   resolveXcpConnection,
   validateXcpConnection,
   type XcpConnectionConfig
 } from 'src/main/share/xcpConfig'
 import { XcpMaster, XcpTransport } from 'src/main/xcp/xcpMaster'
-import { unlockWithSeedKey } from 'src/main/xcp/xcpSeedKey'
-
-const A2L = `
-/begin MEASUREMENT counter ""
-  UBYTE 0 0 0 255
-  ECU_ADDRESS 0x1000
-  ECU_ADDRESS_EXTENSION 1
-  /begin IF_DATA XCP
-    /begin DAQ_EVENT VARIABLE
-      /begin AVAILABLE_EVENT_LIST
-        EVENT 1
-      /end AVAILABLE_EVENT_LIST
-    /end DAQ_EVENT
-  /end IF_DATA
-/end MEASUREMENT
-/begin CHARACTERISTIC gain ""
-  VALUE 0x80010000 UWORD 0 100
-/end CHARACTERISTIC
-/begin EVENT "mainloop" "mainloop" 0x1 DAQ 0xFF 0 0 0 CONSISTENCY EVENT /end EVENT
-`
 
 function saved(partial: Partial<XcpConnectionConfig> = {}): XcpConnectionConfig {
   return defaultXcpConnection({ id: '1', name: 'ecu', device: 'CAN1', ...partial })
 }
 
 describe('XCP project config', () => {
-  it('parses measurements, characteristics and events from an A2L', () => {
-    const objects = parseA2lObjects(A2L)
-    expect(objects.find((item) => item.name === 'counter')).toMatchObject({
-      kind: 'measurement',
-      address: 0x1000,
-      extension: 1,
-      size: 1,
-      event: 1
-    })
-    expect(objects.find((item) => item.name === 'gain')).toMatchObject({
-      kind: 'characteristic',
-      address: 0x80010000,
-      size: 2
-    })
-    expect(parseA2lEvents(A2L)).toEqual([{ name: 'mainloop', channel: 1 }])
-  })
-
   it('validates CAN and Ethernet fields and survives a project-file round trip', () => {
     expect(validateXcpConnection(saved())).toEqual([])
     const udp = saved({ transport: 'udp', ip: '127.0.0.1', port: 5555, timeout: 1500 })
@@ -87,9 +50,9 @@ describe('XCP project config', () => {
     expect(() => resolveXcpConnection('missing', {})).toThrow(/not found/)
   })
 
-  it('merges slave event names over A2L channels', () => {
+  it('keeps the latest slave event name for a channel', () => {
     const merged = mergeDaqEvents(
-      [{ channel: 0, name: 'tick', source: 'a2l' }],
+      [{ channel: 0, name: 'tick', source: 'slave' }],
       [
         { channel: 0, name: 'tick-live', source: 'slave', priority: 1 },
         { channel: 1, name: 'loop', source: 'slave' }
@@ -97,6 +60,33 @@ describe('XCP project config', () => {
     )
     expect(merged.map((item) => item.name)).toEqual(['tick-live', 'loop'])
     expect(merged[0].priority).toBe(1)
+  })
+
+  it('drops A2L and seed & key fields when an older project file is loaded', () => {
+    const loaded = normalizeXcpProject({
+      old: {
+        id: 'old',
+        name: 'ecu',
+        device: 'CAN1',
+        a2lFile: '/tmp/ecu.a2l',
+        a2lObjects: [{ name: 'counter', address: 1 }],
+        seedKeyDll: 'key.dll',
+        daqEvents: [
+          { channel: 0, name: 'from-file', source: 'a2l' },
+          { channel: 1, name: 'tick', source: 'slave' }
+        ],
+        daqEvent: 1
+      }
+    })
+    const cfg = loaded.old
+    expect(cfg).not.toHaveProperty('a2lFile')
+    expect(cfg).not.toHaveProperty('a2lObjects')
+    expect(cfg).not.toHaveProperty('seedKeyDll')
+    expect(cfg.daqEvents).toEqual([{ channel: 1, name: 'tick', source: 'slave' }])
+    expect(cfg.daqEvent).toBe(1)
+    expect(validateXcpConnection(cfg)).toEqual([])
+    const roundTrip = JSON.parse(JSON.stringify(cfg)) as XcpConnectionConfig
+    expect(Object.keys(roundTrip).sort()).toEqual(Object.keys(saved()).sort())
   })
 
   it('uses the configured timeout on every request', async () => {
@@ -116,25 +106,5 @@ describe('XCP project config', () => {
     const master = new XcpMaster(transport, 2500)
     await master.connect(0)
     expect(seen).toBe(2500)
-  })
-
-  it('computes an UNLOCK key with the seed & key provider', async () => {
-    const master = {
-      async getSeed(mode: number) {
-        if (mode === 0) return { length: 4, seed: [1, 2] }
-        return { length: 2, seed: [3, 4] }
-      },
-      async unlock(_length: number, key: number[] | Buffer) {
-        expect(Buffer.from(key as number[]).equals(Buffer.from([0xaa, 0xbb]))).toBe(true)
-        return { calpag: true, daq: false, stim: false, pgm: false }
-      }
-    }
-    const flags = await unlockWithSeedKey(master as unknown as XcpMaster, 1, {
-      generateKey(seed) {
-        expect(Array.from(seed)).toEqual([1, 2, 3, 4])
-        return Buffer.from([0xaa, 0xbb])
-      }
-    })
-    expect(flags.calpag).toBe(true)
   })
 })

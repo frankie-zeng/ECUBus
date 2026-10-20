@@ -4,7 +4,6 @@
 import { ipcMain } from 'electron'
 import { XcpMaster } from '../xcp/xcpMaster'
 import { openTransportFromConfig, readSlaveDaqEvents } from '../xcp/openConfig'
-import { unlockWithSeedKey, dllSeedKeyProvider } from '../xcp/xcpSeedKey'
 import { XcpConnectionConfig, XcpDaqEvent, validateXcpConnection } from '../share/xcpConfig'
 import { findOpenCanDevice } from './uds'
 
@@ -37,15 +36,5 @@ ipcMain.handle('ipc-xcp-probe', async (_event, raw: XcpConnectionConfig) => {
     }
     await master.disconnect().catch(() => undefined)
     return { connect, status, events }
-  })
-})
-
-ipcMain.handle('ipc-xcp-unlock', async (_event, raw: XcpConnectionConfig, resource: number) => {
-  if (!raw.seedKeyDll) throw new Error('seed & key DLL path is empty')
-  return withMaster(raw, async (master) => {
-    await master.connect(0)
-    const flags = await unlockWithSeedKey(master, resource, dllSeedKeyProvider(raw.seedKeyDll))
-    await master.disconnect().catch(() => undefined)
-    return flags
   })
 })

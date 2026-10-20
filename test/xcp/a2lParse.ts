@@ -1,7 +1,6 @@
 /**
- * Minimal ASAM A2L reader for XCP measurement and calibration objects.
- * Covers the XCPlite shapes: MEASUREMENT, CHARACTERISTIC, and
- * INSTANCE + TYPEDEF_STRUCTURE.
+ * Test-only ASAM A2L reader. XCPlite publishes measurement addresses in an A2L
+ * file next to the slave. The product does not parse A2L.
  */
 
 export interface A2lObject {

@@ -8,6 +8,7 @@ import { useRuntimeStore } from './runtime'
 import i18next from 'i18next'
 import { markRaw } from 'vue'
 import { upgradeLegacyPanels } from './panelCompatibility'
+import { normalizeXcpProject } from 'nodeCan/xcpConfig'
 
 export interface ProjectInfo {
   name: string
@@ -165,6 +166,7 @@ export const useProjectStore = defineStore('project', {
                 markRaw(rdata.data.database.can[key])
               }
             }
+            if (rdata.data?.xcp) rdata.data.xcp = normalizeXcpProject(rdata.data.xcp)
             assign(ss, rdata.data)
             upgradeLegacyPanels(ss)
           })
@@ -235,6 +237,7 @@ export const useProjectStore = defineStore('project', {
                   delete rdata.data.database.can
                 }
 
+                if (rdata.data?.xcp) rdata.data.xcp = normalizeXcpProject(rdata.data.xcp)
                 merge(ss, rdata.data)
                 upgradeLegacyPanels(ss)
 

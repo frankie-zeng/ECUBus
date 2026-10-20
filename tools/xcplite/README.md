@@ -7,11 +7,16 @@ transport and no public hook a CAN adapter can register, so this tree does not p
 Two ways the same `XcpMaster` reaches it:
 
 1. **UDP or TCP.** `XcpUdpTransport` / `XcpTcpTransport` talk to the stock examples and tests.
-2. **Simulate CAN-FD.** `XcpliteCanBridge` (test-only) is a second node on the in-process
-   simulate bus. It strips the 4-byte Ethernet header and puts each XCP packet in one CAN-FD
-   frame. CONNECT's `MAX_CTO` / `MAX_DTO` are clamped to 64 so the master never builds a
-   packet that cannot fit. This is the bus user scripts use through `xcpApi`. It is not the
-   TCP JSON-RPC simulate API from later branches.
+2. **Simulate CAN-FD over JSON-RPC.** The XCP master (and a GUI/worker script) stays on the
+   project simulate device. `XcpliteCanBridge` (test-only) does not open `SIMULATE_CAN` itself.
+   It connects to the TCP JSON-RPC listener that starts when that device is open
+   (`setProjectSimulateCount`, default `127.0.0.1:17320`) and joins a free handle with
+   `Can.Init` / `Can.SetControllerMode` / `Can.Write` / `Can.MainFunction_Read`. Each XCP
+   packet is one CAN-FD frame. CONNECT's `MAX_CTO` / `MAX_DTO` are clamped to 64.
+
+Addresses for the suite come from `test/xcp/a2lParse.ts`. That reader is test-only.
+The application does not parse A2L files or load a seed & key DLL. `XcpGetSeed` and
+`XcpUnlock` remain as plain protocol commands.
 
 Sources are fetched by `tools/xcplite/build.sh` (pinned commit, see the script) into
 `tools/xcplite/upstream/`, which is gitignored. They are not part of the Electron bundle.

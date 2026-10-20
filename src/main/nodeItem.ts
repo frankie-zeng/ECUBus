@@ -14,7 +14,6 @@ import UdsTester, {
 import { CAN_TP, CAN_TP_SOCKET, TpError as CanTpError } from './docan/cantp'
 import { XcpMaster, XcpTransport } from './xcp'
 import { openTransportFromConfig } from './xcp/openConfig'
-import { dllSeedKeyProvider, unlockWithSeedKey } from './xcp/xcpSeedKey'
 import { resolveXcpConnection, XcpConnectionConfig, XcpInlineAddr } from './share/xcpConfig'
 import { UdsLOG, VarLOG } from './log'
 import { applyBuffer, getRxPdu, getTxPdu, PwmBaseInfo, ServiceItem, UdsDevice } from './share/uds'
@@ -140,10 +139,7 @@ export class NodeClass {
   private cantp: CAN_TP[] = []
   private lintp: LIN_TP[] = []
   private cantpSocketMap: Map<string, { tp: CAN_TP; socket: CAN_TP_SOCKET }> = new Map()
-  private xcpMasterMap: Map<
-    string,
-    { master: XcpMaster; transport: XcpTransport; seedKeyDll?: string }
-  > = new Map()
+  private xcpMasterMap: Map<string, { master: XcpMaster; transport: XcpTransport }> = new Map()
   private linBaseId: string[] = []
   private canBaseId: string[] = []
   private ethBaseId: string[] = []
@@ -1139,7 +1135,7 @@ export class NodeClass {
       )
       const master = new XcpMaster(transport, cfg.timeout)
       const handle = `xcp-${Date.now()}-${Math.random().toString(36).slice(2)}`
-      this.xcpMasterMap.set(handle, { master, transport, seedKeyDll: cfg.seedKeyDll })
+      this.xcpMasterMap.set(handle, { master, transport })
       return handle
     }
 
@@ -1155,12 +1151,6 @@ export class NodeClass {
       const entry = this.xcpMasterMap.get(data.handle)
       if (!entry) throw new Error(`XCP handle '${data.handle}' not found`)
       const method = data.method as string
-      if (method === 'unlockWithSeedKey') {
-        if (!entry.seedKeyDll)
-          throw new Error('no seed & key DLL configured on this XCP connection')
-        const resource = Number(data.args?.[0] ?? 0x01)
-        return unlockWithSeedKey(entry.master, resource, dllSeedKeyProvider(entry.seedKeyDll))
-      }
       if (!XCP_ALLOWED_METHODS.has(method)) {
         throw new Error(`unknown or forbidden xcp command: ${method}`)
       }

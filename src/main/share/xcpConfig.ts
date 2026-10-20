@@ -1,7 +1,6 @@
 /**
  * XCP connection stored in the project file and opened by name from a script.
  */
-import type { A2lObject } from './a2l'
 
 export type XcpTransportKind = 'can' | 'udp' | 'tcp'
 
@@ -11,7 +10,8 @@ export interface XcpDaqEvent {
   timeCycle?: number
   timeUnit?: number
   priority?: number
-  source: 'a2l' | 'slave'
+  /** Filled from GET_DAQ_EVENT_INFO. */
+  source: 'slave'
 }
 
 export interface XcpConnectionConfig {
@@ -34,13 +34,10 @@ export interface XcpConnectionConfig {
   dlc: number
   ip: string
   port: number
-  a2lFile: string
-  a2lObjects: A2lObject[]
+  /** Event channels read from the slave with GET_DAQ_EVENT_INFO. */
   daqEvents: XcpDaqEvent[]
   /** Selected DAQ event channel. */
   daqEvent?: number
-  /** GenerateKeyEx DLL, same mechanism as UDS seed & key. */
-  seedKeyDll: string
 }
 
 /** Inline address a script can pass instead of a saved connection name. */
@@ -68,6 +65,36 @@ export interface XcpEthInline {
 
 export type XcpInlineAddr = XcpCanInline | XcpEthInline
 
+/** Keep slave events. Drop A2L-sourced events from older project files. */
+export function slaveDaqEvents(events: unknown): XcpDaqEvent[] {
+  if (!Array.isArray(events)) return []
+  const out: XcpDaqEvent[] = []
+  for (const event of events) {
+    if (!event || typeof event !== 'object') continue
+    const item = event as {
+      channel?: unknown
+      name?: unknown
+      source?: unknown
+      timeCycle?: unknown
+      timeUnit?: unknown
+      priority?: unknown
+    }
+    if (item.source === 'a2l') continue
+    if (typeof item.channel !== 'number' || !Number.isInteger(item.channel) || item.channel < 0) {
+      continue
+    }
+    out.push({
+      channel: item.channel,
+      name: typeof item.name === 'string' && item.name ? item.name : `event ${item.channel}`,
+      timeCycle: typeof item.timeCycle === 'number' ? item.timeCycle : undefined,
+      timeUnit: typeof item.timeUnit === 'number' ? item.timeUnit : undefined,
+      priority: typeof item.priority === 'number' ? item.priority : undefined,
+      source: 'slave'
+    })
+  }
+  return out
+}
+
 export function defaultXcpConnection(
   partial: Partial<XcpConnectionConfig> & { id: string; name: string }
 ): XcpConnectionConfig {
@@ -87,12 +114,29 @@ export function defaultXcpConnection(
     dlc: partial.dlc ?? 8,
     ip: partial.ip ?? '127.0.0.1',
     port: partial.port ?? 5555,
-    a2lFile: partial.a2lFile ?? '',
-    a2lObjects: partial.a2lObjects ?? [],
-    daqEvents: partial.daqEvents ?? [],
-    daqEvent: partial.daqEvent,
-    seedKeyDll: partial.seedKeyDll ?? ''
+    daqEvents: slaveDaqEvents(partial.daqEvents),
+    daqEvent:
+      partial.daqEvent != null && Number.isInteger(partial.daqEvent) && partial.daqEvent >= 0
+        ? partial.daqEvent
+        : undefined
   }
+}
+
+/**
+ * Rebuild saved connections so older project files that still carry A2L or
+ * seed & key fields load. Those fields are not kept.
+ */
+export function normalizeXcpProject(xcp: unknown): Record<string, XcpConnectionConfig> {
+  if (!xcp || typeof xcp !== 'object') return {}
+  const out: Record<string, XcpConnectionConfig> = {}
+  for (const [key, raw] of Object.entries(xcp as Record<string, unknown>)) {
+    if (!raw || typeof raw !== 'object') continue
+    const item = raw as Partial<XcpConnectionConfig> & { id?: string; name?: string }
+    const id = typeof item.id === 'string' && item.id ? item.id : key
+    const name = typeof item.name === 'string' && item.name ? item.name : id
+    out[key] = defaultXcpConnection({ ...item, id, name })
+  }
+  return out
 }
 
 function isIpv4OrHost(value: string): boolean {

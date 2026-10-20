@@ -1587,10 +1587,7 @@
         "deleteConfirm": "Are you sure to delete this XCP connection?",
         "warning": "Warning",
         "ok": "OK",
-        "cancel": "Cancel",
-        "a2lFile": "A2L file",
-        "dllFile": "Seed & key DLL",
-        "allFiles": "All Files"
+        "cancel": "Cancel"
       },
       "placeholders": {
         "selectDevice": "Select a CAN device"
@@ -1613,8 +1610,6 @@
         "general": "General",
         "can": "CAN",
         "ethernet": "Ethernet",
-        "a2l": "A2L",
-        "security": "Seed & key",
         "daq": "DAQ"
       },
       "labels": {
@@ -1627,26 +1622,11 @@
         "extended": "29-bit ID",
         "padding": "Padding",
         "paddingValue": "Padding value",
-        "a2l": "A2L file",
-        "seedKey": "Seed & key DLL",
-        "resource": "Resource",
         "daqEvent": "DAQ event"
       },
-      "columns": {
-        "name": "Name",
-        "kind": "Kind",
-        "address": "Address",
-        "size": "Size",
-        "event": "Event"
-      },
       "actions": {
-        "browse": "Browse",
         "connect": "Connect",
-        "readEvents": "Read events",
-        "unlock": "Unlock"
-      },
-      "errors": {
-        "noDll": "Choose a seed & key DLL first"
+        "readEvents": "Read events"
       }
     },
     "tester": {

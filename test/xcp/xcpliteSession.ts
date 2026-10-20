@@ -7,7 +7,7 @@ import path from 'path'
 import { XcpError } from 'src/main/xcp/xcpProtocol'
 import { XcpMaster } from 'src/main/xcp/xcpMaster'
 
-import { parseA2lObjects, type A2lObject } from 'src/main/share/a2l'
+import { parseA2lObjects, type A2lObject } from './a2lParse'
 
 export { parseA2lObjects, type A2lObject }
 
