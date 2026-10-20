@@ -869,19 +869,40 @@ export function parseGetVersionResponse(response: Buffer): GetVersionResponse {
   }
 }
 
-/** Parsed GET_ID response (header only; the identifier bytes follow via UPLOAD). @category XCP */
+/**
+ * Parsed GET_ID response.
+ *
+ * `mode` bit 0 clear means the bytes are read afterwards with UPLOAD (MTA already
+ * set). Bit 0 set means the bytes are inline, in {@link GetIdResponse.data}.
+ * @category XCP
+ */
 export interface GetIdResponse {
   mode: number
   length: number
+  /** Inline identification bytes when `mode` bit 0 is set. */
+  data?: number[]
 }
 
 /** Parse a GET_ID response packet. @category XCP */
 export function parseGetIdResponse(response: Buffer, byteOrder = ByteOrder.INTEL): GetIdResponse {
   const payload = checkResponse(response)
-  return {
-    mode: payload[0],
-    length: unpackUint(payload, 3, 4, byteOrder)
+  const mode = payload[0]
+  const length = unpackUint(payload, 3, 4, byteOrder)
+  const parsed: GetIdResponse = { mode, length }
+  // Mode bit 0: uncompressed identification is carried in this response,
+  // starting at byte 8 of the packet (payload offset 7).
+  if (mode & 0x01) {
+    const available = Math.max(0, payload.length - 7)
+    const n = Math.min(length, available)
+    parsed.data = Array.from(payload.subarray(7, 7 + n))
   }
+  return parsed
+}
+
+/** True for a command response (RES or ERR), false for DAQ / EVENT / SERV. @category XCP */
+export function isCtoResponse(packet: Buffer): boolean {
+  const pid = packet[0]
+  return pid === XcpResponse.RES || pid === XcpResponse.ERR
 }
 
 /** Parsed GET_SEED response. @category XCP */
@@ -941,8 +962,112 @@ export function parseStartStopDaqListResponse(response: Buffer): StartStopDaqLis
   return { firstPid: payload[0] }
 }
 
-/** Parse a GET_DAQ_CLOCK response packet into the receive timestamp. @category XCP */
+/**
+ * Parse a GET_DAQ_CLOCK response packet into the receive timestamp.
+ *
+ * Legacy responses store a 32-bit timestamp at payload offset 3. XCP 1.4 extended
+ * responses use the same offset for a 32-bit timestamp, or an 8-byte timestamp
+ * when the payload-format field (payload byte 2) has the 64-bit slave format
+ * (value 2). The full 64-bit value is returned when it is a safe integer;
+ * otherwise the low 32 bits are returned so callers still see a moving clock.
+ * @category XCP
+ */
 export function parseGetDaqClockResponse(response: Buffer, byteOrder = ByteOrder.INTEL): number {
   const payload = checkResponse(response)
+  const fmt = payload.length > 2 ? payload[2] & 0x03 : 0
+  if (fmt === 2 && payload.length >= 11) {
+    const lo = unpackUint(payload, 3, 4, byteOrder)
+    const hi = unpackUint(payload, 7, 4, byteOrder)
+    const full = hi * 0x100000000 + lo
+    return Number.isSafeInteger(full) ? full : lo
+  }
   return unpackUint(payload, 3, 4, byteOrder)
+}
+
+/** Parsed GET_DAQ_PROCESSOR_INFO response. @category XCP */
+export interface GetDaqProcessorInfoResponse {
+  properties: number
+  maxDaq: number
+  maxEvent: number
+  minDaq: number
+  keyByte: number
+}
+
+/** Parse a GET_DAQ_PROCESSOR_INFO response packet. @category XCP */
+export function parseGetDaqProcessorInfoResponse(
+  response: Buffer,
+  byteOrder = ByteOrder.INTEL
+): GetDaqProcessorInfoResponse {
+  const payload = checkResponse(response)
+  return {
+    properties: payload[0],
+    maxDaq: unpackUint(payload, 1, 2, byteOrder),
+    maxEvent: unpackUint(payload, 3, 2, byteOrder),
+    minDaq: payload[5],
+    keyByte: payload[6]
+  }
+}
+
+/** Parsed GET_DAQ_RESOLUTION_INFO response. @category XCP */
+export interface GetDaqResolutionInfoResponse {
+  granularityDaq: number
+  maxSizeDaq: number
+  granularityStim: number
+  maxSizeStim: number
+  timestampMode: number
+  timestampTicks: number
+}
+
+/** Parse a GET_DAQ_RESOLUTION_INFO response packet. @category XCP */
+export function parseGetDaqResolutionInfoResponse(
+  response: Buffer,
+  byteOrder = ByteOrder.INTEL
+): GetDaqResolutionInfoResponse {
+  const payload = checkResponse(response)
+  return {
+    granularityDaq: payload[0],
+    maxSizeDaq: payload[1],
+    granularityStim: payload[2],
+    maxSizeStim: payload[3],
+    timestampMode: payload[4],
+    timestampTicks: unpackUint(payload, 5, 2, byteOrder)
+  }
+}
+
+/** Parsed GET_DAQ_EVENT_INFO response. @category XCP */
+export interface GetDaqEventInfoResponse {
+  properties: number
+  maxDaqList: number
+  nameLength: number
+  timeCycle: number
+  timeUnit: number
+  priority: number
+}
+
+/** Parse a GET_DAQ_EVENT_INFO response packet. @category XCP */
+export function parseGetDaqEventInfoResponse(response: Buffer): GetDaqEventInfoResponse {
+  const payload = checkResponse(response)
+  return {
+    properties: payload[0],
+    maxDaqList: payload[1],
+    nameLength: payload[2],
+    timeCycle: payload[3],
+    timeUnit: payload[4],
+    priority: payload[5]
+  }
+}
+
+/** Parsed GET_PAG_PROCESSOR_INFO response. @category XCP */
+export interface GetPagProcessorInfoResponse {
+  maxSegments: number
+  properties: number
+}
+
+/** Parse a GET_PAG_PROCESSOR_INFO response packet. @category XCP */
+export function parseGetPagProcessorInfoResponse(response: Buffer): GetPagProcessorInfoResponse {
+  const payload = checkResponse(response)
+  return {
+    maxSegments: payload[0],
+    properties: payload[1]
+  }
 }

@@ -264,6 +264,71 @@ export function XcpGetDaqClock(handle: string): Promise<number> {
   return xcpCommand(handle, 'getDaqClock')
 }
 
+/** GET_DAQ_PROCESSOR_INFO: DAQ capabilities of the slave. @category XCP */
+export function XcpGetDaqProcessorInfo(handle: string): Promise<{
+  properties: number
+  maxDaq: number
+  maxEvent: number
+  minDaq: number
+  keyByte: number
+}> {
+  return xcpCommand(handle, 'getDaqProcessorInfo')
+}
+
+/** GET_DAQ_RESOLUTION_INFO: ODT granularity and timestamp format. @category XCP */
+export function XcpGetDaqResolutionInfo(handle: string): Promise<{
+  granularityDaq: number
+  maxSizeDaq: number
+  granularityStim: number
+  maxSizeStim: number
+  timestampMode: number
+  timestampTicks: number
+}> {
+  return xcpCommand(handle, 'getDaqResolutionInfo')
+}
+
+/** GET_DAQ_EVENT_INFO: properties of one event channel. @category XCP */
+export function XcpGetDaqEventInfo(
+  handle: string,
+  eventChannelNumber: number
+): Promise<{
+  properties: number
+  maxDaqList: number
+  nameLength: number
+  timeCycle: number
+  timeUnit: number
+  priority: number
+}> {
+  return xcpCommand(handle, 'getDaqEventInfo', [eventChannelNumber])
+}
+
+/** GET_PAG_PROCESSOR_INFO: calibration segment count and paging properties. @category XCP */
+export function XcpGetPagProcessorInfo(
+  handle: string
+): Promise<{ maxSegments: number; properties: number }> {
+  return xcpCommand(handle, 'getPagProcessorInfo')
+}
+
+/**
+ * GET_ID plus the identification bytes (inline or via UPLOAD).
+ * @category XCP
+ */
+export function XcpReadId(
+  handle: string,
+  type: number
+): Promise<{ mode: number; length: number; data: number[] }> {
+  return xcpCommand(handle, 'readId', [type])
+}
+
+/**
+ * Read one asynchronous DAQ, EVENT or SERV packet.
+ * Resolves `null` when `timeout` elapses.
+ * @category XCP
+ */
+export function XcpReadIndication(handle: string, timeout = 1000): Promise<number[] | null> {
+  return xcpCommand(handle, 'readIndication', [timeout])
+}
+
 /** FREE_DAQ: free the dynamic DAQ list configuration. @category XCP */
 export function XcpFreeDaq(handle: string): Promise<number[]> {
   return xcpCommand(handle, 'freeDaq')

@@ -30,6 +30,11 @@ export interface XcpTransport {
    * Send a request without waiting for a response (block-transfer intermediate packets).
    */
   send(request: Buffer): Promise<void>
+  /**
+   * Wait for one asynchronous packet (DAQ, EVENT or SERV).
+   * Resolves `null` when `timeout` elapses with nothing queued.
+   */
+  readIndication?(timeout?: number): Promise<Buffer | null>
   /** Release any resources held by the transport. */
   close(): void
 }
@@ -77,6 +82,31 @@ export class XcpMaster {
 
   private get bo(): ByteOrder {
     return this.slaveProperties.byteOrder
+  }
+
+  /** Bytes per address element from the CONNECT address granularity. */
+  private elementSize(): number {
+    switch (this.slaveProperties.addressGranularity) {
+      case P.AddressGranularity.WORD:
+        return 2
+      case P.AddressGranularity.DWORD:
+        return 4
+      default:
+        return 1
+    }
+  }
+
+  /**
+   * Keep only the bytes the command asked for.
+   * CAN and CAN-FD frames are padded up to the DLC, so the raw response is
+   * longer than the XCP payload.
+   */
+  private trimUpload(payload: Buffer, count: number): Buffer {
+    const bytes = count * this.elementSize()
+    if (payload.length < bytes) {
+      throw new Error(`XCP upload shorter than requested (${payload.length} < ${bytes})`)
+    }
+    return Buffer.from(payload.subarray(0, bytes))
   }
 
   private async request(packet: Buffer): Promise<Buffer> {
@@ -146,6 +176,25 @@ export class XcpMaster {
     return P.parseGetIdResponse(resp, this.bo)
   }
 
+  /**
+   * GET_ID plus the identification bytes, whether they arrived inline or have
+   * to be read with UPLOAD.
+   */
+  async readId(type: number): Promise<{ mode: number; length: number; data: number[] }> {
+    const header = await this.getId(type)
+    if (header.data && header.data.length > 0) {
+      return { mode: header.mode, length: header.length, data: header.data }
+    }
+    if (!header.length || header.mode & 0x01) {
+      return { mode: header.mode, length: header.length, data: header.data ?? [] }
+    }
+    if (header.length > 8_000_000) {
+      throw new Error(`GET_ID length ${header.length} is too large to upload`)
+    }
+    const uploaded = await this.uploadBytes(header.length)
+    return { mode: header.mode, length: header.length, data: Array.from(uploaded) }
+  }
+
   /** SET_REQUEST: request a persistent slave action (e.g. store CAL/DAQ). */
   async setRequest(mode: number, sessionConfigurationId: number): Promise<Buffer> {
     const resp = await this.request(P.buildSetRequest(mode, sessionConfigurationId))
@@ -173,13 +222,35 @@ export class XcpMaster {
   /** UPLOAD: read `count` elements starting at the current MTA. */
   async upload(count: number): Promise<Buffer> {
     const resp = await this.request(P.buildUpload(count))
-    return Buffer.from(P.checkResponse(resp))
+    return this.trimUpload(P.checkResponse(resp), count)
+  }
+
+  /**
+   * Read `totalBytes` from the current MTA, splitting into UPLOAD commands that
+   * fit in MAX_CTO.
+   */
+  async uploadBytes(totalBytes: number): Promise<Buffer> {
+    const gran = this.elementSize()
+    if (totalBytes < 0 || totalBytes % gran !== 0) {
+      throw new Error(
+        `upload length ${totalBytes} is not a multiple of address granularity ${gran}`
+      )
+    }
+    const maxElements = Math.max(1, Math.floor((this.slaveProperties.maxCto - 1) / gran))
+    const parts: Buffer[] = []
+    let left = totalBytes / gran
+    while (left > 0) {
+      const n = Math.min(left, maxElements)
+      parts.push(await this.upload(n))
+      left -= n
+    }
+    return Buffer.concat(parts)
   }
 
   /** SHORT_UPLOAD: read `count` elements from an explicit address in one command. */
   async shortUpload(count: number, address: number, addressExtension = 0): Promise<Buffer> {
     const resp = await this.request(P.buildShortUpload(count, address, addressExtension, this.bo))
-    return Buffer.from(P.checkResponse(resp))
+    return this.trimUpload(P.checkResponse(resp), count)
   }
 
   /** BUILD_CHECKSUM: compute a checksum over a memory block from the current MTA. */
@@ -246,6 +317,12 @@ export class XcpMaster {
   async getCalPage(mode: number, segment: number): Promise<number> {
     const resp = await this.request(P.buildGetCalPage(mode, segment))
     return P.parseGetCalPageResponse(resp)
+  }
+
+  /** GET_PAG_PROCESSOR_INFO: number of calibration segments and paging properties. */
+  async getPagProcessorInfo(): Promise<P.GetPagProcessorInfoResponse> {
+    const resp = await this.request(P.buildGetPagProcessorInfo())
+    return P.parseGetPagProcessorInfoResponse(resp)
   }
 
   /** COPY_CAL_PAGE: copy one calibration page to another. */
@@ -316,6 +393,35 @@ export class XcpMaster {
   async getDaqClock(): Promise<number> {
     const resp = await this.request(P.buildGetDaqClock())
     return P.parseGetDaqClockResponse(resp, this.bo)
+  }
+
+  /** GET_DAQ_PROCESSOR_INFO: DAQ capabilities of the slave. */
+  async getDaqProcessorInfo(): Promise<P.GetDaqProcessorInfoResponse> {
+    const resp = await this.request(P.buildGetDaqProcessorInfo())
+    return P.parseGetDaqProcessorInfoResponse(resp, this.bo)
+  }
+
+  /** GET_DAQ_RESOLUTION_INFO: ODT granularity and timestamp format. */
+  async getDaqResolutionInfo(): Promise<P.GetDaqResolutionInfoResponse> {
+    const resp = await this.request(P.buildGetDaqResolutionInfo())
+    return P.parseGetDaqResolutionInfoResponse(resp, this.bo)
+  }
+
+  /** GET_DAQ_EVENT_INFO: properties of one event channel. */
+  async getDaqEventInfo(eventChannelNumber: number): Promise<P.GetDaqEventInfoResponse> {
+    const resp = await this.request(P.buildGetDaqEventInfo(eventChannelNumber, this.bo))
+    return P.parseGetDaqEventInfoResponse(resp)
+  }
+
+  /**
+   * Read one asynchronous DAQ, EVENT or SERV packet.
+   * Resolves `null` on timeout.
+   */
+  async readIndication(timeout = 1000): Promise<Buffer | null> {
+    if (!this.transport.readIndication) {
+      throw new Error('this XCP transport does not deliver asynchronous packets')
+    }
+    return this.transport.readIndication(timeout)
   }
 
   /** FREE_DAQ: free the dynamic DAQ list configuration. */

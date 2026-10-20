@@ -11,7 +11,15 @@
  */
 
 import { CAN_SOCKET, CanBase } from '../docan/base'
-import { CAN_ID_TYPE, CanMsgType, getDlcByLen, getLenByDlc } from '../share/can'
+import {
+  CAN_ERROR_ID,
+  CAN_ID_TYPE,
+  CanError,
+  CanMsgType,
+  getDlcByLen,
+  getLenByDlc
+} from '../share/can'
+import { isCtoResponse } from './xcpProtocol'
 import { XcpTransport } from './xcpMaster'
 
 /**
@@ -60,6 +68,12 @@ export class XcpCanTransport implements XcpTransport {
   private readonly rxSocket: CAN_SOCKET
   private readonly addr: XcpCanAddr
   private closed = false
+  /** Command responses (RES/ERR) that arrived ahead of the waiter. */
+  private responses: Buffer[] = []
+  /** DAQ, EVENT and SERV packets. */
+  private indications: Buffer[] = []
+  /** Serializes socket reads so a command wait and a DAQ read cannot race. */
+  private tail: Promise<unknown> = Promise.resolve()
 
   constructor(base: CanBase, addr: XcpCanAddr) {
     this.addr = addr
@@ -78,13 +92,79 @@ export class XcpCanTransport implements XcpTransport {
     return Buffer.concat([packet, pad])
   }
 
+  private exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.tail.then(fn, fn)
+    this.tail = run.then(
+      () => undefined,
+      () => undefined
+    )
+    return run
+  }
+
+  /** Move frames already queued on the socket into the RES / DAQ buckets. */
+  private drainSocketBuffer(): void {
+    while (this.rxSocket.recvBuffer.length) {
+      const val = this.rxSocket.recvBuffer.shift()
+      if (!val || val instanceof CanError) continue
+      this.classify(val.data)
+    }
+  }
+
+  private classify(packet: Buffer): void {
+    if (isCtoResponse(packet)) this.responses.push(packet)
+    else this.indications.push(packet)
+  }
+
+  private async readFrame(timeout: number): Promise<Buffer | null> {
+    try {
+      const { data } = await this.rxSocket.read(timeout)
+      return data
+    } catch (err) {
+      if (err instanceof CanError && err.errorId === CAN_ERROR_ID.CAN_READ_TIMEOUT) return null
+      throw err
+    }
+  }
+
   async request(request: Buffer, timeout = 1000): Promise<Buffer> {
     if (this.closed) throw new Error('XCP CAN transport is closed')
-    // Drop any stale frames buffered on the response id before issuing a request.
-    this.rxSocket.recvBuffer = []
-    await this.txSocket.write(this.frame(request))
-    const { data } = await this.rxSocket.read(timeout)
-    return data
+    return this.exclusive(async () => {
+      // A previous timeout may have left a RES in the queue. DAQ frames stay.
+      this.drainSocketBuffer()
+      this.responses = []
+      await this.txSocket.write(this.frame(request))
+      const deadline = Date.now() + timeout
+      while (this.responses.length === 0) {
+        const left = deadline - Date.now()
+        if (left <= 0) throw new Error('XCP CAN response timeout')
+        const frame = await this.readFrame(left)
+        if (!frame) throw new Error('XCP CAN response timeout')
+        // DAQ/EVENT frames that share the response CAN id must not be parsed
+        // as the command response.
+        this.classify(frame)
+      }
+      return this.responses.shift() as Buffer
+    })
+  }
+
+  /**
+   * Wait for one DAQ, EVENT or SERV frame on the response CAN id.
+   * Resolves `null` on timeout.
+   */
+  async readIndication(timeout = 1000): Promise<Buffer | null> {
+    if (this.closed) throw new Error('XCP CAN transport is closed')
+    return this.exclusive(async () => {
+      this.drainSocketBuffer()
+      if (this.indications.length > 0) return this.indications.shift() as Buffer
+      const deadline = Date.now() + timeout
+      while (this.indications.length === 0) {
+        const left = deadline - Date.now()
+        if (left <= 0) return null
+        const frame = await this.readFrame(left)
+        if (!frame) return null
+        this.classify(frame)
+      }
+      return this.indications.shift() as Buffer
+    })
   }
 
   async send(request: Buffer): Promise<void> {

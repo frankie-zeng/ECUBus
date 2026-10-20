@@ -8,3 +8,5 @@
 export * from './xcpProtocol'
 export * from './xcpMaster'
 export * from './xcpCan'
+export * from './xcpUdp'
+export * from './xcpTcp'

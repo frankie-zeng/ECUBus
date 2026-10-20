@@ -12,6 +12,7 @@ import { describe, it, expect } from 'vitest'
 import * as P from 'src/main/xcp/xcpProtocol'
 import { ByteOrder, ChecksumType } from 'src/main/xcp/xcpProtocol'
 import { XcpMaster, XcpTransport } from 'src/main/xcp/xcpMaster'
+import { decodeEthDatagram, encodeEthPacket } from 'src/main/xcp/xcpUdp'
 
 const hex = (s: string): Buffer => Buffer.from(s.replace(/\s+/g, ''), 'hex')
 const bytes = (arr: number[]): Buffer => Buffer.from(arr)
@@ -47,6 +48,31 @@ function connectedMaster(): { master: XcpMaster; mock: MockTransport } {
   const master = new XcpMaster(mock)
   return { master, mock }
 }
+
+describe('XCP-on-Ethernet framing', () => {
+  it('packs and splits a datagram of two packets', () => {
+    const a = encodeEthPacket(1, Buffer.from([0xff, 0x01]))
+    const b = encodeEthPacket(2, Buffer.from([0xfd, 0x00]))
+    const packets = decodeEthDatagram(Buffer.concat([a, b]))
+    expect(packets.map((p) => Array.from(p))).toEqual([
+      [0xff, 0x01],
+      [0xfd, 0x00]
+    ])
+  })
+
+  it('skips zero padding up to the next 4-byte header', () => {
+    const head = Buffer.alloc(5)
+    head.writeUInt16LE(1, 0)
+    head.writeUInt16LE(1, 2)
+    head[4] = 0xff
+    const datagram = Buffer.concat([
+      head,
+      Buffer.from([0, 0, 0]),
+      encodeEthPacket(2, Buffer.from([0xfe]))
+    ])
+    expect(decodeEthDatagram(datagram).map((p) => p[0])).toEqual([0xff, 0xfe])
+  })
+})
 
 describe('XCP protocol codec — command builders', () => {
   it('CONNECT', () => {
@@ -524,6 +550,36 @@ describe('XcpMaster — end-to-end command flow over a mock transport', () => {
     mock.pushResponse('FF')
     await master.programVerify(0x01, 0x0004, 0xcafebabe)
     expect(mock.last).toEqual(bytes([0xc8, 0x01, 0x04, 0x00, 0xbe, 0xba, 0xfe, 0xca]))
+  })
+
+  it('shortUpload drops CAN-FD padding past the requested element count', async () => {
+    const { master, mock } = connectedMaster()
+    mock.pushResponse(DEFAULT_CONNECT_RESPONSE)
+    await master.connect()
+    mock.pushResponse('FF 11 22 33 44 00 00 00 00 00 00 00')
+    const data = await master.shortUpload(4, 0x1000, 0)
+    expect(Array.from(data)).toEqual([0x11, 0x22, 0x33, 0x44])
+  })
+
+  it('getId keeps inline identification bytes when mode bit 0 is set', async () => {
+    const { master, mock } = connectedMaster()
+    mock.pushResponse(DEFAULT_CONNECT_RESPONSE)
+    await master.connect()
+    mock.pushResponse('FF 01 00 00 05 00 00 00 58 43 50 73 69')
+    const id = await master.readId(0)
+    expect(id).toEqual({ mode: 1, length: 5, data: [0x58, 0x43, 0x50, 0x73, 0x69] })
+    expect(mock.sent).toHaveLength(2)
+  })
+
+  it('GET_DAQ_CLOCK extended 64-bit format keeps a safe integer', () => {
+    const packet = Buffer.alloc(14)
+    packet[0] = 0xff
+    packet[1] = 0x00
+    packet[2] = 0x18
+    packet[3] = 0x02
+    packet.writeUInt32LE(0x89abcdef, 4)
+    packet.writeUInt32LE(0x1, 8)
+    expect(P.parseGetDaqClockResponse(packet)).toBe(0x189abcdef)
   })
 
   it('propagates slave ERR responses as XcpError', async () => {
