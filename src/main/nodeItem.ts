@@ -12,7 +12,10 @@ import UdsTester, {
   SomeipApiCall
 } from './workerClient'
 import { CAN_TP, CAN_TP_SOCKET, TpError as CanTpError } from './docan/cantp'
-import { XcpMaster, XcpCanTransport } from './xcp'
+import { XcpMaster, XcpTransport } from './xcp'
+import { openTransportFromConfig } from './xcp/openConfig'
+import { dllSeedKeyProvider, unlockWithSeedKey } from './xcp/xcpSeedKey'
+import { resolveXcpConnection, XcpConnectionConfig, XcpInlineAddr } from './share/xcpConfig'
 import { UdsLOG, VarLOG } from './log'
 import { applyBuffer, getRxPdu, getTxPdu, PwmBaseInfo, ServiceItem, UdsDevice } from './share/uds'
 import { findService, UDSTesterMain } from './docan/uds'
@@ -136,7 +139,10 @@ export class NodeClass {
   private cantp: CAN_TP[] = []
   private lintp: LIN_TP[] = []
   private cantpSocketMap: Map<string, { tp: CAN_TP; socket: CAN_TP_SOCKET }> = new Map()
-  private xcpMasterMap: Map<string, { master: XcpMaster; transport: XcpCanTransport }> = new Map()
+  private xcpMasterMap: Map<
+    string,
+    { master: XcpMaster; transport: XcpTransport; seedKeyDll?: string }
+  > = new Map()
   private linBaseId: string[] = []
   private canBaseId: string[] = []
   private ethBaseId: string[] = []
@@ -1113,11 +1119,16 @@ export class NodeClass {
     }
 
     if (op === 'createConnection') {
-      const base = findCanBase(data.device)
-      const transport = new XcpCanTransport(base, data.addr)
-      const master = new XcpMaster(transport)
+      const configs = (global.dataSet?.xcp ?? {}) as Record<string, XcpConnectionConfig>
+      const input = (data.name ?? data.addr) as string | XcpInlineAddr
+      const cfg = resolveXcpConnection(input, configs, data.device)
+      const transport = openTransportFromConfig(
+        cfg,
+        cfg.transport === 'can' ? findCanBase : undefined
+      )
+      const master = new XcpMaster(transport, cfg.timeout)
       const handle = `xcp-${Date.now()}-${Math.random().toString(36).slice(2)}`
-      this.xcpMasterMap.set(handle, { master, transport })
+      this.xcpMasterMap.set(handle, { master, transport, seedKeyDll: cfg.seedKeyDll })
       return handle
     }
 
@@ -1133,6 +1144,12 @@ export class NodeClass {
       const entry = this.xcpMasterMap.get(data.handle)
       if (!entry) throw new Error(`XCP handle '${data.handle}' not found`)
       const method = data.method as string
+      if (method === 'unlockWithSeedKey') {
+        if (!entry.seedKeyDll)
+          throw new Error('no seed & key DLL configured on this XCP connection')
+        const resource = Number(data.args?.[0] ?? 0x01)
+        return unlockWithSeedKey(entry.master, resource, dllSeedKeyProvider(entry.seedKeyDll))
+      }
       if (!XCP_ALLOWED_METHODS.has(method)) {
         throw new Error(`unknown or forbidden xcp command: ${method}`)
       }

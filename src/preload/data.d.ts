@@ -267,6 +267,8 @@ export type ReplayItem = {
 export interface DataSet {
   devices: Record<string, UdsDevice>
   tester: Record<string, TesterInfo>
+  /** XCP connections edited in the XCP window. Absent in projects saved before this field existed. */
+  xcp?: Record<string, import('nodeCan/xcpConfig').XcpConnectionConfig>
   subFunction: Record<string, { name: string; subFunction: string }[]>
   nodes: Record<string, NodeItem>
   ia: Record<string, Inter>

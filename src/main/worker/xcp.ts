@@ -37,6 +37,7 @@
 
 import { emitWorkerEventWithReply } from './uds'
 import type { XcpCanAddr } from '../xcp/xcpCan'
+import type { XcpEthInline } from '../share/xcpConfig'
 import type {
   BuildChecksumResponse,
   ConnectResponse,
@@ -65,18 +66,30 @@ async function xcpCommand<T>(handle: string, method: string, args: any[] = []): 
 }
 
 /**
- * Open an XCP-on-CAN connection and return an opaque handle string.
+ * Open an XCP connection and return an opaque handle string.
  *
- * @param addr - XCP-on-CAN addressing (command / response CAN identifiers, framing).
- * @param device - Optional CAN channel name; the first attached CAN channel is used when omitted.
+ * Pass a connection name saved in the XCP window (`XcpCreateConnection('ecu')`),
+ * an XCP-on-CAN address object, or `{ transport: 'udp' | 'tcp', ip, port }`.
+ *
+ * @param addr - Saved connection name, or an inline CAN / Ethernet address.
+ * @param device - Optional CAN channel name. Overrides the device on a CAN connection.
  * @returns Opaque handle string to pass to the other Xcp* functions.
- * @throws If no suitable CAN device is found.
+ * @throws If the name is unknown, the config is invalid, or no CAN device is open.
  * @category XCP
+ *
+ * @example
+ * ```ts
+ * const handle = await XcpCreateConnection('ecu')
+ * ```
  */
-export async function XcpCreateConnection(addr: XcpCanAddr, device?: string): Promise<string> {
+export async function XcpCreateConnection(
+  addr: XcpCanAddr | XcpEthInline | string,
+  device?: string
+): Promise<string> {
   const handle = await emitWorkerEventWithReply('xcpApi', {
     op: 'createConnection',
-    addr,
+    addr: typeof addr === 'string' ? undefined : addr,
+    name: typeof addr === 'string' ? addr : undefined,
     device
   })
   return handle as string
@@ -384,4 +397,14 @@ export function XcpProgram(
 /** PROGRAM_RESET: reset the slave after a programming sequence. @category XCP */
 export function XcpProgramReset(handle: string): Promise<number[]> {
   return xcpCommand(handle, 'programReset')
+}
+
+/**
+ * GET_SEED + UNLOCK using the GenerateKeyEx DLL configured on this connection.
+ * The DLL is the same one UDS secure access uses. `resource` is the XCP
+ * resource byte (CAL/PAG = 1, DAQ = 4, STIM = 8, PGM = 16).
+ * @category XCP
+ */
+export function XcpUnlockWithSeedKey(handle: string, resource: number): Promise<ResourceFlags> {
+  return xcpCommand(handle, 'unlockWithSeedKey', [resource])
 }

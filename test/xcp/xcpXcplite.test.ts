@@ -18,7 +18,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { CanBase } from 'src/main/docan/base'
 import { SIMULATE_CAN } from 'src/main/docan/simulate'
 import { XcpCanTransport } from 'src/main/xcp/xcpCan'
+import { openTransportFromConfig } from 'src/main/xcp/openConfig'
 import { XcpMaster } from 'src/main/xcp/xcpMaster'
+import { resolveXcpConnection, validateXcpConnection } from 'src/main/share/xcpConfig'
 import { XcpTcpTransport } from 'src/main/xcp/xcpTcp'
 import { XcpUdpTransport } from 'src/main/xcp/xcpUdp'
 import { XcpliteCanBridge } from './xcpliteBridge'
@@ -625,6 +627,38 @@ describe.sequential('XCPlite slaves driven by the EcuBus-Pro XCP master', () => 
       bridgeBase.close()
     }
   }, 30000)
+
+  it('GUI connection config over UDP', async () => {
+    const detail = await withEcubusSlave(18034, async (map) => {
+      const inline = resolveXcpConnection(
+        { transport: 'udp', ip: '127.0.0.1', port: map.port, timeout: 1500, name: 'ecu' },
+        {}
+      )
+      expect(validateXcpConnection(inline)).toEqual([])
+      const byName = resolveXcpConnection('ecu', { saved: { ...inline, id: 'saved', name: 'ecu' } })
+      expect(byName.timeout).toBe(1500)
+      const transport = openTransportFromConfig(byName)
+      const master = new XcpMaster(transport, byName.timeout)
+      try {
+        const info = await master.connect(0)
+        await master.getStatus()
+        await master.disconnect()
+        return `GUI_CONFIG maxCto=${info.maxCto} timeout=${byName.timeout}`
+      } finally {
+        master.close()
+      }
+    })
+    record({
+      name: 'GUI config UDP',
+      group: 'harness',
+      relevant: true,
+      reason: 'Project connection object (the GUI config) opened by name over UDP',
+      result: 'pass',
+      detail
+    })
+    expect(detail).toContain('GUI_CONFIG')
+    expect(detail).toContain('maxCto=')
+  }, 20000)
 
   const examples: Array<{ name: string; tcp?: boolean }> = [
     { name: 'hello_xcp' },

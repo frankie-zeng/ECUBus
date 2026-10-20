@@ -15,6 +15,7 @@ export const useDataStore = defineStore('useDataStore', {
     devices: {},
     ia: {},
     tester: {},
+    xcp: {},
     subFunction: {},
     nodes: {},
     database: {
@@ -167,6 +168,7 @@ export const useDataStore = defineStore('useDataStore', {
         devices: this.devices,
         ia: this.ia,
         tester: this.tester,
+        xcp: this.xcp,
         subFunction: this.subFunction,
         nodes: this.nodes,
         database: this.database,
