@@ -37,6 +37,7 @@ import { PwmBase } from './pwm'
 import { SerialBase } from './serial'
 import { SerialMessage } from './share/serial'
 import { setSignal } from './util'
+import { injectSimulateControllerError } from '../cli/rpc/lifecycle'
 import { VSomeIP_Client } from './vsomeip'
 import { SomeipMessage, SomeipMessageType, VsomeipAvailabilityInfo } from './share/someip'
 type TestTree = {
@@ -228,11 +229,7 @@ export class NodeClass {
         this.testOptions
       )
       if (this.testOptions) {
-        this.log?.systemMsg(
-          `----- Test Config ${this.nodeItem.name} starting -----`,
-          getTsUs(),
-          'info'
-        )
+        this.log?.systemMsg(`START  Test Config ${this.nodeItem.name} starting`, getTsUs(), 'info')
       }
     }
   }
@@ -890,7 +887,7 @@ export class NodeClass {
     const info = await this.pool?.getTestInfo()
     if (this.testOptions) {
       this.log?.systemMsg(
-        `----- Test Config ${this.nodeItem.name} finished, total time: ${((getTsUs() - this.startTs) / 1000).toFixed(2)}ms -----`,
+        `DONE   Test Config ${this.nodeItem.name} finished, total time: ${((getTsUs() - this.startTs) / 1000).toFixed(2)}ms`,
         getTsUs(),
         'info'
       )
@@ -1087,6 +1084,20 @@ export class NodeClass {
       if (!entry) throw new Error(`CAN-TP handle '${data.handle}' not found`)
       const result = await entry.socket.read(data.timeout ?? 5000)
       return { data: Array.from(result.data), ts: result.ts }
+    }
+
+    if (op === 'injectError') {
+      const base = findCanBase(data.device)
+      if (base.info.vendor !== 'simulate') {
+        throw new Error(
+          `CAN error injection only supports simulate devices, got ${base.info.vendor}`
+        )
+      }
+      return injectSimulateControllerError({
+        errorState: String(data.errorState ?? ''),
+        txErrorCounter: data.txErrorCounter,
+        rxErrorCounter: data.rxErrorCounter
+      })
     }
 
     throw new Error(`unknown canApi op: ${op}`)
@@ -1706,10 +1717,11 @@ export class NodeClass {
     this.canBaseId.length = 0
     this.ethBaseId.length = 0
   }
-  async start(testControl?: Record<number, boolean>) {
+  async start(testControl?: Record<number, boolean>, signal?: AbortSignal) {
     this.pool?.updateTs(0)
     if (this.pool) {
-      await this.pool.start(this.projectPath, this.nodeItem.name, testControl)
+      await this.pool.start(this.projectPath, this.nodeItem.name, testControl, signal)
+      signal?.throwIfAborted()
       if (this.pool.methods.includes('__setTxPending')) {
         //can
         this.canBaseMap.forEach((base) => {

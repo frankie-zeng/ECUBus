@@ -3,9 +3,7 @@ import { Command, program } from 'commander'
 import { version } from '../../package.json'
 import seqMain from './seq'
 import path from 'path'
-import fsP from 'fs/promises'
 import fs from 'fs'
-import { DataSet, VarItem } from 'src/preload/data'
 import { Logger, transports } from 'winston'
 import { exit } from 'process'
 import { format } from 'winston'
@@ -22,8 +20,7 @@ import testMain from './test'
 import { TestEvent } from 'node:test/reporters'
 import dllLib from '../../resources/lib/zlgcan.dll?asset&asarUnpack'
 import { build as buildFunc } from './build'
-import { getAllSysVar } from '../main/share/sysVar'
-import { cloneDeep } from 'lodash'
+import { parseProject } from './project'
 import { pluginMain } from './plugin'
 import 'src/renderer/src/helper'
 
@@ -68,68 +65,6 @@ class FilteredConsoleTransport extends Transport {
 
     // 对于其他日志，正常处理
     callback()
-  }
-}
-
-async function parseProject(projectPath: string): Promise<{
-  data: DataSet
-  projectPath: string
-  projectName: string
-}> {
-  if (!path.isAbsolute(projectPath)) {
-    projectPath = path.join(process.cwd(), projectPath)
-  }
-  if (!fs.existsSync(projectPath)) {
-    throw new Error(`project file ${projectPath} not found`)
-  }
-
-  try {
-    const content = await fsP.readFile(projectPath, 'utf-8')
-    const data1 = JSON.parse(content)
-    const info = path.parse(projectPath)
-    global.dataSet = data1.data as DataSet
-    global.vars = {}
-
-    const vars: Record<string, VarItem> = cloneDeep(global.dataSet.vars)
-    const sysVars = getAllSysVar(
-      global.dataSet.devices,
-      global.dataSet.tester,
-      global.dataSet.database.orti
-    )
-    for (const v of Object.values(sysVars)) {
-      vars[v.id] = cloneDeep(v)
-    }
-    for (const key of Object.keys(vars)) {
-      const v = vars[key]
-
-      if (v.value) {
-        const parentName: string[] = []
-
-        // 递归查找所有父级名称
-        let currentVar = v
-        while (currentVar.parentId) {
-          const parent = vars[currentVar.parentId]
-          if (parent) {
-            parentName.unshift(parent.name) // 将父级名称添加到数组开头
-            currentVar = parent
-          } else {
-            break
-          }
-        }
-
-        parentName.push(v.name)
-        v.name = parentName.join('.')
-      }
-      global.vars[key] = v
-    }
-
-    return {
-      data: global.dataSet,
-      projectPath: info.dir,
-      projectName: info.base
-    }
-  } catch (e) {
-    throw new Error(`project file ${projectPath} is not a valid file`)
   }
 }
 
@@ -210,14 +145,14 @@ const myFormat = format.printf(({ level, message, label, timestamp }) => {
         return null
       }
       if (testEvent.type == 'test:dequeue') {
-        msg = `----- Test ${testEvent.data.name} starting -----`
+        msg = `START  Test ${testEvent.data.name} starting`
       } else if (testEvent.type == 'test:pass') {
         if (testEvent.data.skip) {
           fn = colors.yellow
-          msg = `----- Test ${testEvent.data.name} skipped, ${testEvent.data.details.duration_ms}ms -----`
+          msg = `SKIP   Test ${testEvent.data.name} skipped, ${testEvent.data.details.duration_ms}ms`
         } else {
           fn = colors.green
-          msg = `----- Test ${testEvent.data.name} passed, ${testEvent.data.details.duration_ms}ms -----`
+          msg = `PASS   Test ${testEvent.data.name} passed, ${testEvent.data.details.duration_ms}ms`
         }
       } else if (testEvent.type == 'test:fail') {
         fn = colors.red
@@ -225,7 +160,11 @@ const myFormat = format.printf(({ level, message, label, timestamp }) => {
         if (file) {
           file = path.relative(process.cwd(), file)
         }
-        msg = `----- Test ${testEvent.data.name} failed, ${testEvent.data.details.duration_ms}ms, file: ${file}:${testEvent.data.line}, details: ${testEvent.data.details.error.message} -----`
+        msg = `FAIL   Test ${testEvent.data.name} failed, ${testEvent.data.details.duration_ms}ms, file: ${file}:${testEvent.data.line}, details: ${testEvent.data.details.error.message}`
+      } else if (testEvent.type == 'test:stdout') {
+        const printed = String((testEvent.data as { message?: string }).message ?? '').trim()
+        if (!printed) return null
+        msg = printed
       } else if (testEvent.type == 'test:diagnostic') {
         msg = testEvent.data.message
         fn = colors.yellow

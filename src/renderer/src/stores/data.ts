@@ -4,9 +4,10 @@ import { cloneDeep, result } from 'lodash'
 import { ElLoading, ElMessageBox, ElProgress } from 'element-plus'
 import { useProjectStore } from './project'
 import { DataSet, NodeItem } from 'src/preload/data'
-import { useGlobalStart } from './runtime'
+import { useGlobalStart, useRuntimeStore } from './runtime'
 import { nextTick, h, ref } from 'vue'
 import i18next from 'i18next'
+import { panelStartValues, storeVariableValues } from '../views/uds/panel/free/variableStart'
 
 export type { DataSet }
 
@@ -37,11 +38,14 @@ export const useDataStore = defineStore('useDataStore', {
     globalRun(type: 'start' | 'stop') {
       const globalStart = useGlobalStart()
       if (type == 'start' && globalStart.value == false) {
+        const signalSession = crypto.randomUUID()
+        useRuntimeStore().signalSession = signalSession
         globalStart.value = true
 
         const project = useProjectStore()
         window.dataParseWorker.postMessage({
           method: 'initDataBase',
+          signalSession,
           data: cloneDeep(this.database)
         })
         nextTick(() => {
@@ -96,10 +100,10 @@ export const useDataStore = defineStore('useDataStore', {
                 closeOnClickModal: false,
                 closeOnPressEscape: false
               })
-              let hasError = false
+              const buildErrors: string[] = []
               for (const node of needBuild) {
                 try {
-                  await window.electron.ipcRenderer.invoke(
+                  const buildResult = await window.electron.ipcRenderer.invoke(
                     'ipc-build-project',
                     project.projectInfo.path,
                     project.projectInfo.name,
@@ -107,8 +111,14 @@ export const useDataStore = defineStore('useDataStore', {
                     node.script,
                     false
                   )
-                } catch (e: any) {
-                  hasError = true
+                  if (Array.isArray(buildResult)) {
+                    for (const err of buildResult) {
+                      const where = [err?.file || node.script, err?.line].filter(Boolean).join(':')
+                      buildErrors.push(`${where} ${err?.message || ''}`.trim())
+                    }
+                  }
+                } catch {
+                  buildErrors.push(node.script || 'build failed')
                 }
                 process.value += Math.round(100 / totalScripts)
                 // Force update the dialog content
@@ -120,8 +130,8 @@ export const useDataStore = defineStore('useDataStore', {
               await delay
               ElMessageBox.close()
 
-              if (hasError) {
-                throw new Error(i18next.t('runtime.messages.buildScriptsFailed'))
+              if (buildErrors.length > 0) {
+                throw new Error(buildErrors.join('\n'))
               }
             }
           }
@@ -133,14 +143,13 @@ export const useDataStore = defineStore('useDataStore', {
                 text: i18next.t('runtime.messages.loading'),
                 background: 'rgba(0, 0, 0, 0.7)'
               })
+              const dataSet = cloneDeep(this.getData())
+              storeVariableValues(dataSet.vars, panelStartValues(this.panels, this.vars))
               window.electron.ipcRenderer
-                .invoke(
-                  'ipc-global-start',
-                  cloneDeep(project.projectInfo),
-                  cloneDeep(this.getData())
-                )
+                .invoke('ipc-global-start', cloneDeep(project.projectInfo), dataSet, signalSession)
                 .then(() => {
                   window.startTime = Date.now()
+                  useRuntimeStore().startedSession = signalSession
                 })
                 .catch((e: any) => {
                   globalStart.value = false

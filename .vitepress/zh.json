@@ -30,7 +30,13 @@
     },
     {
       "text": "CAN",
-      "link": "can/can.md"
+      "link": "can/can.md",
+      "items": [
+        {
+          "text": "模拟 CAN",
+          "link": "can/simulate.md"
+        }
+      ]
     },
     {
       "text": "LIN",
@@ -59,7 +65,13 @@
     },
     {
       "text": "命令行",
-      "link": "cli/cli.md"
+      "link": "cli/cli.md",
+      "items": [
+        {
+          "text": "构建",
+          "link": "cli/build.md"
+        }
+      ]
     },
     {
       "text": "以太网",
@@ -175,6 +187,10 @@
         {
           "text": "通用",
           "link": "setting/general.md"
+        },
+        {
+          "text": "SIM-CAN",
+          "link": "setting/sim-can.md"
         }
       ]
     }
@@ -188,11 +204,15 @@
           "link": "can/readme.md"
         },
         {
+          "text": "PC MCAL-CAN JSON-RPC",
+          "link": "mcal_can_rpc/readme.md"
+        },
+        {
           "text": "CAN 高精度定时器",
           "link": "can_timer/readme.md"
         },
         {
-          "text": "NXP UDS Bootloader",
+          "text": "NXP UDS 引导加载程序",
           "link": "nxp_bootloader/readme.md"
         }
       ],

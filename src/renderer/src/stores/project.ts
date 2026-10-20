@@ -7,6 +7,7 @@ import { error, info } from 'electron-log'
 import { useRuntimeStore } from './runtime'
 import i18next from 'i18next'
 import { markRaw } from 'vue'
+import { upgradeLegacyPanels } from './panelCompatibility'
 
 export interface ProjectInfo {
   name: string
@@ -165,6 +166,7 @@ export const useProjectStore = defineStore('project', {
               }
             }
             assign(ss, rdata.data)
+            upgradeLegacyPanels(ss)
           })
           this.project = rdata.project
           const info = window.path.parse(example)
@@ -234,6 +236,7 @@ export const useProjectStore = defineStore('project', {
                 }
 
                 merge(ss, rdata.data)
+                upgradeLegacyPanels(ss)
 
                 if (canData) {
                   const validCanData = filterValidCanDBs(canData)

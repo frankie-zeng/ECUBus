@@ -25,6 +25,7 @@ ipcMain.on('ipc-get-port', (event, id: string) => {
 class LogQueue {
   private static instance: LogQueue | null = null
   list: any[] = []
+  signalSession: string | undefined
   timer: any
   mainWin: BrowserWindow | undefined
 
@@ -75,18 +76,16 @@ export const getLogQueue = () => LogQueue.getInstance()
 export type { LogQueue }
 
 const winMap = new Map<string, BrowserWindow>()
-const winPosMap = new Map<string, { x: number; y: number; width: number; height: number }>()
 
 ipcMain.on('ipc-open-window', (event, arg) => {
   if (winMap.has(arg.id)) {
     winMap.get(arg.id)?.show()
   } else {
-    const pos = winPosMap.get(arg.id)
     const win = new BrowserWindow({
-      width: pos?.width || arg.w || 800,
-      height: pos?.height || arg.h || 600,
-      x: pos?.x || undefined,
-      y: pos?.y || undefined,
+      name: arg.id,
+      windowStatePersistence: true,
+      width: arg.w || 800,
+      height: arg.h || 600,
       ...(process.platform === 'linux' ? { icon } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
@@ -134,33 +133,13 @@ ipcMain.on('ipc-close-others-windows', (event, arg) => {
   closeAllWindows()
 })
 export function closeAllWindows() {
-  winMap.forEach((win, key) => {
-    //store pos
-
-    const pos = win.getBounds()
-    winPosMap.set(key, {
-      x: pos?.x,
-      y: pos?.y,
-      width: pos?.width,
-      height: pos?.height
-    })
+  winMap.forEach((win) => {
     win.close()
   })
 }
 
 export function closeWindow(id: string) {
-  const win = winMap.get(id)
-  if (win) {
-    //store pos
-    const pos = win.getBounds()
-    winPosMap.set(id, {
-      x: pos?.x,
-      y: pos?.y,
-      width: pos?.width,
-      height: pos?.height
-    })
-    win.close()
-  }
+  winMap.get(id)?.close()
 }
 export function minimizeWindow(id: string) {
   winMap.get(id)?.minimize()

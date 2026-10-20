@@ -10,6 +10,7 @@ import { initialize as initAnalytics, trackEvent } from './analytics'
 import { createLogs } from './log'
 import './update'
 import { globalStop } from './ipc/uds'
+import { startRpcHost } from './rpcHost'
 import Transport from 'winston-transport'
 import { initMainI18n } from './i18n'
 import { setupCasdoor } from './ipc/casdoor'
@@ -104,29 +105,19 @@ class ElectronLog extends Transport {
         message: info.message
       }
     }
-    this.q.list.push(info)
+    this.q.list.push({ ...info, signalSession: this.q.signalSession })
     callback()
   }
 }
 
 function createWindow(): void {
-  // Get stored window bounds and state
-  const windowBounds = store.get('windowBounds') as Electron.Rectangle
-  const isMaximized = store.get('windowMaximized', false)
-
-  function getBounds() {
-    const bounds = global.mainWindow.getBounds()
-    // bounds.x += 5
-    // bounds.y += 5
-    return bounds
-  }
-  // Create the browser window.
   const mainWindow = new BrowserWindow({
+    name: 'ecubus-main',
+    windowStatePersistence: true,
     minWidth: 1000,
     minHeight: 600,
     width: 1000,
     height: 600,
-
     frame: false,
     show: false,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -137,9 +128,6 @@ function createWindow(): void {
       contextIsolation: true
     }
   })
-  if (windowBounds) {
-    mainWindow.setBounds(windowBounds)
-  }
   global.mainWindow = mainWindow
   logQ.addWin(mainWindow, true)
   createLogs(
@@ -165,13 +153,9 @@ function createWindow(): void {
     } else {
       if (mainWindow.isMaximized()) {
         mainWindow.unmaximize()
-        store.set('windowMaximized', false)
       } else {
         mainWindow.maximize()
-        store.set('windowMaximized', true)
       }
-      // Save current bounds before maximizing
-      store.set('windowBounds', getBounds())
     }
   })
 
@@ -181,19 +165,12 @@ function createWindow(): void {
     } else {
       logQ.stopTimer()
       globalStop()
-      // Only save bounds if window is not maximized
-      store.set('windowBounds', getBounds())
-      store.set('windowMaximized', mainWindow.isMaximized())
       closeAllWindows()
       mainWindow.close()
     }
   })
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
-    // Restore maximized state
-    if (isMaximized) {
-      mainWindow.maximize()
-    }
     if (isDev) {
       mainWindow.webContents.openDevTools()
     }
@@ -239,6 +216,8 @@ app.whenReady().then(async () => {
   }
 
   createWindow()
+
+  void startRpcHost()
 
   trackEvent('app_open')
 

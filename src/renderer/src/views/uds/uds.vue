@@ -418,6 +418,7 @@ import { useGlobalStart, useRuntimeStore } from '@r/stores/runtime'
 import { usePluginStore } from '@r/stores/plugin'
 import osTraceIcon from '@iconify/icons-ph/crosshair-fill'
 import { CirclePlusFilled, Delete, Edit, ArrowDown } from '@element-plus/icons-vue'
+import { usePanelLocale } from './panel/free/locale'
 import type { EcuBusPlugin, PluginItemConfig, PluginTabConfig } from '../../../../preload/plugin'
 import i18next from 'i18next'
 
@@ -453,6 +454,7 @@ const pined = ref(true)
 const { width, height } = useWindowSize()
 const graph = new joint.dia.Graph()
 const dataBase = useDataStore()
+const panelText = usePanelLocale()
 const project = useProjectStore()
 const runtime = useRuntimeStore()
 const pluginStore = usePluginStore()
@@ -543,55 +545,58 @@ const PanelDropdown = {
   setup() {
     return () =>
       h(ElDropdownMenu, { size: 'small' }, () => [
-        h(ElDropdownItem, { command: 'panel', icon: CirclePlusFilled }, () =>
-          i18next.t('uds.dropdowns.panel.addPanel')
-        ),
-        ...Object.values(dataBase.panels).map((item: any, index) =>
-          h(
-            ElDropdownItem,
-            { key: item.id, divider: true, command: item.id, divided: index === 0 },
-            () =>
-              h(
-                'div',
-                {
-                  style:
-                    'display: flex; align-items: center; justify-content: space-between; width: 100%;'
-                },
-                [
-                  h('div', { style: 'display: flex; align-items: center' }, [
-                    h(Icon, { icon: panelIcon1, style: 'margin-right: 5px' }),
-                    h('span', { style: 'display: flex; align-items: center' }, item.name),
-                    h(ElDivider, { direction: 'vertical' }),
-                    h('div', [
-                      h(ElButton, { link: true, type: 'warning' }, () =>
-                        h(
-                          ElIcon,
-                          {
-                            onClick: (e) => {
-                              e.stopPropagation()
-                              editPanel(item.id)
-                            }
-                          },
-                          () => h(Edit)
-                        )
-                      ),
-                      h(ElButton, { link: true, type: 'danger' }, () =>
-                        h(
-                          ElIcon,
-                          {
-                            onClick: (e) => {
-                              e.stopPropagation()
-                              deletePanel(item.id)
-                            }
-                          },
-                          () => h(Delete)
-                        )
+        ...Object.values(dataBase.panels).map((item: any) =>
+          h(ElDropdownItem, { key: item.id, command: item.id }, () =>
+            h(
+              'div',
+              {
+                style:
+                  'display: flex; align-items: center; justify-content: space-between; width: 100%;'
+              },
+              [
+                h('div', { style: 'display: flex; align-items: center' }, [
+                  h(Icon, { icon: panelIcon1, style: 'margin-right: 5px' }),
+                  h('span', { style: 'display: flex; align-items: center' }, item.name),
+                  h(ElDivider, { direction: 'vertical' }),
+                  h('div', [
+                    h(ElButton, { link: true, type: 'warning' }, () =>
+                      h(
+                        ElIcon,
+                        {
+                          onClick: (e) => {
+                            e.stopPropagation()
+                            editPanel(item.id)
+                          }
+                        },
+                        () => h(Edit)
                       )
-                    ])
+                    ),
+                    h(ElButton, { link: true, type: 'danger' }, () =>
+                      h(
+                        ElIcon,
+                        {
+                          onClick: (e) => {
+                            e.stopPropagation()
+                            deletePanel(item.id)
+                          }
+                        },
+                        () => h(Delete)
+                      )
+                    )
                   ])
-                ]
-              )
+                ])
+              ]
+            )
           )
+        ),
+        h(
+          ElDropdownItem,
+          {
+            command: 'panel',
+            icon: CirclePlusFilled,
+            divided: Object.keys(dataBase.panels).length > 0
+          },
+          () => panelText('newPanel')
         )
       ])
   }
@@ -1216,9 +1221,10 @@ function openGraph(command: string) {
 }
 function openPanel(command: string) {
   if (command == 'panel') {
-    layoutMaster.addWin('panel', 'panel', {
+    const id = v4()
+    layoutMaster.addWin('panel', id, {
       params: {
-        'edit-index': command
+        'edit-index': id
       }
     })
   } else {

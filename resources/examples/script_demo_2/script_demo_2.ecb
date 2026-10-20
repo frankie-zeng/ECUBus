@@ -54,62 +54,64 @@
     "datas": {},
     "panels": {
       "9226deb1-108e-4492-8dec-49cd8871a380": {
-        "name": "LinControl",
         "id": "9226deb1-108e-4492-8dec-49cd8871a380",
-        "rule": [
-          {
-            "type": "BButton",
-            "props": {
-              "releaseValue": 0,
+        "name": "LinControl",
+        "document": {
+          "schemaVersion": 2,
+          "width": 800,
+          "height": 420,
+          "controls": [
+            {
+              "id": "control-1",
+              "rememberValue": false,
+              "type": "button",
+              "label": "发送ChecSum错误帧",
+              "x": 24,
+              "y": 24,
+              "width": 300,
+              "height": 56,
+              "labelPosition": "top",
+              "locked": false,
+              "fontSize": 14,
+              "color": "",
+              "unit": "",
+              "min": 0,
+              "max": 100,
+              "step": 1,
+              "initialValue": 0,
               "pressValue": 1,
-              "variable": {
-                "type": "variable",
-                "enable": true,
-                "id": "1dd88fae-c74e-40a1-90d6-7179a92c383f",
-                "name": "EnvChecksumError",
-                "color": "#19996a",
-                "yAxis": {
-                  "min": 0,
-                  "max": 1
-                },
-                "bindValue": {
-                  "variableId": "1dd88fae-c74e-40a1-90d6-7179a92c383f",
-                  "variableType": "user",
-                  "variableName": "EnvChecksumError",
-                  "variableFullName": "EnvChecksumError"
+              "releaseValue": 0,
+              "toggle": false,
+              "readOnly": false,
+              "options": [],
+              "binding": {
+                "kind": "variable",
+                "node": {
+                  "type": "variable",
+                  "enable": true,
+                  "id": "1dd88fae-c74e-40a1-90d6-7179a92c383f",
+                  "name": "EnvChecksumError",
+                  "color": "#19996a",
+                  "yAxis": {
+                    "min": 0,
+                    "max": 1
+                  },
+                  "bindValue": {
+                    "variableId": "1dd88fae-c74e-40a1-90d6-7179a92c383f",
+                    "variableType": "user",
+                    "variableName": "EnvChecksumError",
+                    "variableFullName": "EnvChecksumError",
+                    "variableValueType": "number"
+                  }
                 }
               },
-              "type": "primary"
-            },
-            "children": [
-              "发送ChecSum错误帧"
-            ],
-            "_fc_id": "id_Fmilmfkdw246abc",
-            "name": "ref_Fcb0mfkdw246acc",
-            "field": "Fslimfkdw246adc",
-            "display": true,
-            "hidden": false,
-            "_fc_drag_tag": "BButton"
-          }
-        ],
-        "options": {
-          "submitBtn": {
-            "show": false,
-            "innerText": "Submit"
-          },
-          "form": {
-            "inline": false,
-            "hideRequiredAsterisk": false,
-            "labelPosition": "right",
-            "size": "default",
-            "labelWidth": "125px"
-          },
-          "resetBtn": {
-            "show": false,
-            "innerText": "Reset"
-          },
-          "formName": "LinControl"
-        }
+              "buttonVariant": "primary",
+              "buttonPlain": false
+            }
+          ]
+        },
+        "rule": [],
+        "options": {}
       }
     },
     "logs": {}

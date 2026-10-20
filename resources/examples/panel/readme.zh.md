@@ -41,11 +41,13 @@
 
 ## 示例面板
 
-![Demo](demo.gif)
+面板存储在 `panel.ecb` 中。截图中显示了按下 **Start** 后它立即运行的状态。
+
+![程序面板](panel.png)
 
 ## 代码概览
 
-- **panel.ecb**：定义面板布局、变量和UI元素。
+- **panel.ecb**：存储项目、变量，以及包含 LED、按钮和消息显示的自由布局面板。
 - **program.ts**：处理启动、停止和模拟程序失败的逻辑。
 
 ```typescript

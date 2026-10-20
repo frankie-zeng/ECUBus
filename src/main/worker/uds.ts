@@ -37,6 +37,8 @@ export type { ServiceItem }
 export type { TesterInfo } from '../share/tester'
 export type { ServiceId }
 import { parentPort, isMainThread } from 'worker_threads'
+import { format as formatLog } from 'util'
+import { AsyncLocalStorage } from 'async_hooks'
 
 const exposedMethods: Record<string, Function> = {}
 
@@ -211,7 +213,7 @@ import { setVar as setVarMain, getVar as getVarMain } from '../var'
  */
 export { assert }
 
-import { test as nodeTest, TestContext } from 'node:test'
+import { test as nodeTest } from 'node:test'
 
 export { getCheckSum as getLinCheckSum, getPID } from '../share/lin'
 
@@ -291,50 +293,56 @@ async function preserveErrorStack<T>(fn: () => T | Promise<T>): Promise<T> {
  */
 
 export function test(name: string, fn: () => void | Promise<void>) {
+  markRunNode('test', name)
   selfTest(name, async (t) => {
-    if (!init) {
-      try {
-        await initPromise
-      } catch (e: any) {
-        console.error(`Util.Init function failed: ${e}`)
-        process.exit(-1)
+    const tracked = keyForTestContext(t, name)
+    return sharedTestPrintStore().run(tracked, async () => {
+      if (!init) {
+        try {
+          await initPromise
+        } catch (e: any) {
+          console.error(`Util.Init function failed: ${e}`)
+          process.exit(-1)
+        }
+        init = true
       }
-      init = true
-    }
 
-    const currentTestCnt = testCnt
-    const enabled = testEnableControl[currentTestCnt] == true
-    let advanced = false
-    const advanceTestCnt = () => {
-      if (!advanced) {
-        testCnt = Math.max(testCnt, currentTestCnt + 1)
-        advanced = true
+      const currentTestCnt = testCnt
+      const enabled = testEnableControl[currentTestCnt] == true
+      let advanced = false
+      const advanceTestCnt = () => {
+        if (!advanced) {
+          testCnt = Math.max(testCnt, currentTestCnt + 1)
+          advanced = true
+        }
       }
-    }
 
-    t.before(async () => {
-      if (enabled) {
-        console.log(`<<< TEST START ${name}>>>`)
+      t.before(async () => {
+        if (enabled) {
+          console.log(`<<< TEST START ${name}>>>`)
+        }
+      })
+      t.after(() => {
+        if (enabled) {
+          console.log(`<<< TEST END ${name}>>>`)
+        }
+        advanceTestCnt()
+      })
+
+      if (!enabled) {
+        advanceTestCnt()
+        t.skip()
+      } else {
+        return preserveErrorStack(fn)
       }
     })
-    t.after(() => {
-      if (enabled) {
-        console.log(`<<< TEST END ${name}>>>`)
-      }
-      advanceTestCnt()
-    })
-
-    if (!enabled) {
-      advanceTestCnt()
-      t.skip()
-    } else {
-      return preserveErrorStack(fn)
-    }
   })
 }
 
 test.skip = function (name: string, fn: () => void | Promise<void>) {
+  markRunNode('test', name)
   selfTest(name, (t) => {
+    keyForTestContext(t, name)
     const currentTestCnt = testCnt
     let advanced = false
     const advanceTestCnt = () => {
@@ -401,10 +409,11 @@ import {
  * ```
  */
 export function beforeEach(fn: () => void | Promise<void>) {
-  nodeBeforeEach(async () => {
+  nodeBeforeEach(async (t) => {
     // Use current testCnt to determine if this hook should run
-    if (testEnableControl[testCnt] === true) {
-      return preserveErrorStack(fn)
+    if (testEnableControl[testCnt] === true && t && 'name' in t) {
+      const key = keyForTestContext(t, t.name)
+      return sharedTestPrintStore().run(key, () => preserveErrorStack(fn))
     }
   })
 }
@@ -441,10 +450,11 @@ export function beforeEach(fn: () => void | Promise<void>) {
  * ```
  */
 export function afterEach(fn: () => void | Promise<void>) {
-  nodeAfterEach(async () => {
+  nodeAfterEach(async (t) => {
     // Use current testCnt to determine if this hook should run
-    if (testEnableControl[testCnt] === true) {
-      return preserveErrorStack(fn)
+    if (testEnableControl[testCnt] === true && t && 'name' in t) {
+      const key = keyForTestContext(t, t.name)
+      return sharedTestPrintStore().run(key, () => preserveErrorStack(fn))
     }
   })
 }
@@ -615,6 +625,7 @@ const selfTest = process.env.ONLY == 'true' ? nodeTest.only : nodeTest
  * ```
  */
 export function describe(name: string, fn: () => void | Promise<void>) {
+  markRunNode('suite', name)
   selfDescribe(name, async (t) => {
     return preserveErrorStack(fn)
   })
@@ -694,6 +705,191 @@ const emitMap = new Map<number, { resolve: any; reject: any }>()
 const serviceMap = new Map<string, ServiceItem>()
 
 global.cmdId = 0
+
+/**
+ * User `console.log` text for the running case.
+ *
+ * Node emits `test:dequeue` when a case starts and only emits `test:pass` /
+ * `test:fail` when that case is finalized, so holding prints until the result
+ * hides them for the whole case. The reporter reads the dequeue a turn after
+ * the case's synchronous prefix, so a print posted from `console.log` itself
+ * arrives before the UI has opened that case. Buffer only until that
+ * dequeue is forwarded, then stream later writes as they happen.
+ *
+ * State lives on globalThis because the test bundle and the reporter are
+ * separate copies of this module. `nodes` is the registration order of
+ * `describe()` / `test()`; dequeue events follow that same preorder, including
+ * suites, which have no print key.
+ */
+interface TestRunNode {
+  kind: 'test' | 'suite'
+  name: string
+}
+
+interface TestPrintBuf {
+  keys: string[]
+  prints: Map<string, string[]>
+  nameOcc: Map<string, number>
+  cursor: number
+  contexts: WeakMap<object, string>
+  /** Cases whose `test:dequeue` has already been forwarded to the UI. */
+  live: Set<string>
+  nodes: TestRunNode[]
+  nodeCursor: number
+  /** Live lines waiting out the short coalesce window. */
+  pending: string[]
+  liveTimer?: ReturnType<typeof setTimeout>
+}
+
+/** Coalesce a burst of live lines without holding them until the case ends. */
+const testPrintFlushMs = 40
+
+function testPrintBuf(): TestPrintBuf {
+  const host = globalThis as { __ecubusTestPrints?: TestPrintBuf }
+  if (!host.__ecubusTestPrints) {
+    host.__ecubusTestPrints = {
+      keys: [],
+      prints: new Map(),
+      nameOcc: new Map(),
+      cursor: 0,
+      contexts: new WeakMap(),
+      live: new Set(),
+      nodes: [],
+      nodeCursor: 0,
+      pending: []
+    }
+  }
+  return host.__ecubusTestPrints
+}
+
+function markRunNode(kind: TestRunNode['kind'], name: string) {
+  testPrintBuf().nodes.push({ kind, name })
+}
+
+function sharedTestPrintStore() {
+  const host = globalThis as { __ecubusTestPrintStore?: AsyncLocalStorage<string> }
+  if (!host.__ecubusTestPrintStore) {
+    host.__ecubusTestPrintStore = new AsyncLocalStorage()
+  }
+  return host.__ecubusTestPrintStore
+}
+
+function keyForTestContext(ctx: object, name: string) {
+  const buf = testPrintBuf()
+  const existing = buf.contexts.get(ctx)
+  if (existing) return existing
+  const occ = (buf.nameOcc.get(name) || 0) + 1
+  buf.nameOcc.set(name, occ)
+  const key = `${name}\0${occ}`
+  buf.keys.push(key)
+  buf.contexts.set(ctx, key)
+  return key
+}
+
+function emitPrintMessages(messages: string[]) {
+  for (const message of messages) {
+    workerEmit({
+      event: 'test',
+      id: global.cmdId,
+      data: {
+        type: 'test:stdout',
+        data: { message }
+      }
+    })
+    global.cmdId++
+  }
+}
+
+function flushLivePrints() {
+  const buf = testPrintBuf()
+  if (buf.liveTimer) {
+    clearTimeout(buf.liveTimer)
+    buf.liveTimer = undefined
+  }
+  const pending = buf.pending
+  if (!pending.length) return
+  buf.pending = []
+  emitPrintMessages(pending)
+}
+
+function enqueueLivePrint(message: string) {
+  const buf = testPrintBuf()
+  buf.pending.push(message)
+  if (buf.liveTimer) return
+  const timer = setTimeout(() => {
+    buf.liveTimer = undefined
+    flushLivePrints()
+  }, testPrintFlushMs)
+  timer.unref?.()
+  buf.liveTimer = timer
+}
+
+/**
+ * `test:dequeue` for this case has been sent. Release lines captured in the
+ * synchronous prefix so they follow the START line instead of preceding it.
+ * Suites share the dequeue stream but have no print buffer.
+ */
+function releasePrintsForDequeuedTest(name: string) {
+  const buf = testPrintBuf()
+  const node = buf.nodes[buf.nodeCursor]
+  if (!node || node.name !== name) return
+  buf.nodeCursor++
+  if (node.kind !== 'test') return
+  const key = buf.keys[buf.cursor]
+  if (!key || buf.live.has(key) || !key.startsWith(`${name}\0`)) return
+  buf.live.add(key)
+  const lines = buf.prints.get(key)
+  buf.prints.delete(key)
+  if (lines?.length) emitPrintMessages(lines)
+}
+
+/** Emit any lines still held for this case, then let the result event through. */
+function finishTrackedPrints(name: string) {
+  flushLivePrints()
+  const buf = testPrintBuf()
+  const key = buf.keys[buf.cursor]
+  if (!key || !key.startsWith(`${name}\0`)) return
+  buf.live.delete(key)
+  buf.cursor++
+  const lines = buf.prints.get(key)
+  buf.prints.delete(key)
+  if (lines?.length) emitPrintMessages(lines)
+}
+
+/**
+ * The test runner consumes `console.log` inside a case and does not emit
+ * `test:stdout` (or write `worker.stdout`) for those lines. Keep the text
+ * with the case so the Test log can show it apart from START / PASS / FAIL / SKIP.
+ */
+const testStatusMarker = /^<<< TEST (START|END) .+>>>$/
+const consoleHookState = globalThis as { __ecubusTestConsoleHooked?: boolean }
+if (!consoleHookState.__ecubusTestConsoleHooked) {
+  consoleHookState.__ecubusTestConsoleHooked = true
+  const originalConsoleLog = console.log.bind(console)
+  console.log = (...args: unknown[]) => {
+    const visible = formatLog(...args)
+      .split(/\r?\n/)
+      .filter((line) => {
+        const trimmed = line.trim()
+        return trimmed.length > 0 && !testStatusMarker.test(trimmed)
+      })
+      .join('\n')
+    if (visible && process.env.MODE === 'test' && process.env.ONLY !== 'true') {
+      const buf = testPrintBuf()
+      const key = sharedTestPrintStore().getStore()
+      if (key && buf.live.has(key)) {
+        enqueueLivePrint(visible)
+      } else if (key) {
+        const lines = buf.prints.get(key)
+        if (lines) lines.push(visible)
+        else buf.prints.set(key, [visible])
+      } else {
+        emitPrintMessages([visible])
+      }
+    }
+    originalConsoleLog(...args)
+  }
+}
 
 /**
  * Emit a worker **event** that expects a single correlated completion from the main process.
@@ -2659,6 +2855,47 @@ export async function output(msg: CanMessage | LinMsg | SomeipMessageBase): Prom
 }
 
 /**
+ * AUTOSAR controller error state injected onto a Simulate CAN controller.
+ * @category CAN
+ */
+export type CanInjectErrorState = 'ACTIVE' | 'PASSIVE' | 'BUSOFF'
+
+/**
+ * Inject an AUTOSAR controller error (Error Active, Error Passive, or Bus-off) from a node script.
+ *
+ * @category CAN
+ * @param errorState - `ACTIVE`, `PASSIVE`, or `BUSOFF`
+ * @param options.device - Simulate device name on this node. Required when the node has more than one CAN device.
+ *   The device handle is the bus. The error is applied to every Can.c controller open on that bus.
+ * @param options.txErrorCounter - TEC. Defaults are 0 (active), 128 (passive), 256 (bus-off).
+ * @param options.rxErrorCounter - REC. Defaults to 0 for active, otherwise unchanged.
+ * @returns One result per open Can.c controller: error state, counters, and controller mode.
+ * @throws If the device is not Simulate CAN, the listener is down, or Can.c has not opened a controller.
+ *
+ * @example
+ * ```ts
+ * await injectCanError('BUSOFF')
+ * await injectCanError('ACTIVE', { device: 'SIM0' })
+ * ```
+ */
+export async function injectCanError(
+  errorState: CanInjectErrorState,
+  options?: {
+    device?: string
+    txErrorCounter?: number
+    rxErrorCounter?: number
+  }
+) {
+  return emitWorkerEventWithReply('canApi', {
+    op: 'injectError',
+    errorState,
+    device: options?.device,
+    txErrorCounter: options?.txErrorCounter,
+    rxErrorCounter: options?.rxErrorCounter
+  })
+}
+
+/**
  * Set a signal value
  *
  * @category LIN
@@ -2946,12 +3183,23 @@ type TestEventGenerator = Parameters<typeof dot>[0]
 // eslint-disable-next-line require-yield
 export async function* reporter(source: TestEventGenerator) {
   for await (const event of source) {
+    if (event.type === 'test:dequeue') {
+      workerEmit({
+        event: 'test',
+        id: global.cmdId,
+        data: event
+      })
+      global.cmdId++
+      releasePrintsForDequeuedTest(event.data.name)
+      continue
+    }
     if (
-      event.type === 'test:start' ||
-      event.type === 'test:pass' ||
-      event.type === 'test:fail' ||
-      event.type === 'test:dequeue'
+      (event.type === 'test:pass' || event.type === 'test:fail') &&
+      event.data.details?.type !== 'suite'
     ) {
+      finishTrackedPrints(event.data.name)
+    }
+    if (event.type === 'test:start' || event.type === 'test:pass' || event.type === 'test:fail') {
       workerEmit({
         event: 'test',
         id: global.cmdId,
@@ -3027,6 +3275,12 @@ export async function linStartScheduler(
  * await linStartScheduler('MyScheduler', 0, 'LinDevice1', [true, false, true, false]);
  * ```
  */
+export async function linStartScheduler(
+  schName: string,
+  slot: number,
+  device: string,
+  activeCtrl: boolean[]
+): Promise<void>
 export async function linStartScheduler(
   schName: string,
   slot?: number,

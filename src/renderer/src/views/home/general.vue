@@ -53,7 +53,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { QuestionFilled, Moon, Sunny } from '@element-plus/icons-vue'
-import { assign, isEqual, cloneDeep } from 'lodash'
+import { assign, isEqual } from 'lodash'
 import { useDark } from '@vueuse/core'
 import LanguageSwitcher from './LanguageSwitcher.vue'
 
@@ -64,13 +64,22 @@ const form = ref({
   language: OldVal?.language || 'en'
 })
 
+function persistGeneral() {
+  const current = (window.store.get('general.settings') as Record<string, unknown>) || {}
+  window.store.set('general.settings', {
+    ...current,
+    zoom: form.value.zoom,
+    language: form.value.language
+  })
+}
+
 watch(
   form,
   (v) => {
-    if (isEqual(v, OldVal)) {
+    if (isEqual(v, { zoom: OldVal?.zoom || 100, language: OldVal?.language || 'en' })) {
       return
     }
-    window.store.set('general.settings', cloneDeep(v))
+    persistGeneral()
   },
   { deep: true }
 )
@@ -85,7 +94,10 @@ const handleThemeChange = (value: boolean) => {
 
 onMounted(() => {
   if (OldVal) {
-    assign(form.value, OldVal)
+    assign(form.value, {
+      zoom: OldVal.zoom || 100,
+      language: OldVal.language || 'en'
+    })
   }
 })
 </script>
