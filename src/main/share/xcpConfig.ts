@@ -186,6 +186,37 @@ export function validateXcpConnection(raw: XcpConnectionConfig): string[] {
   return errors
 }
 
+/** Whether a worker currently holds this saved connection open. */
+export interface XcpConnectionStatus {
+  id: string
+  name: string
+  open: boolean
+}
+
+export interface XcpLinkDevice {
+  type: string
+  canDevice?: { name?: string }
+  ethDevice?: { name?: string }
+}
+
+/** Hardware node this connection is drawn against in the Network view. */
+export function xcpLinkedDeviceId(
+  cfg: Pick<XcpConnectionConfig, 'transport' | 'device'>,
+  devices: Record<string, XcpLinkDevice> | undefined
+): string | undefined {
+  const name = cfg.device?.trim()
+  if (!name || !devices) return undefined
+  for (const [id, device] of Object.entries(devices)) {
+    if (cfg.transport === 'can' && device.type === 'can' && device.canDevice?.name === name) {
+      return id
+    }
+    if (cfg.transport !== 'can' && device.type === 'eth' && device.ethDevice?.name === name) {
+      return id
+    }
+  }
+  return undefined
+}
+
 function isEth(input: XcpInlineAddr): input is XcpEthInline {
   return input.transport === 'udp' || input.transport === 'tcp'
 }

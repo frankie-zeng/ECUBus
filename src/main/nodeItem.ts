@@ -14,6 +14,7 @@ import UdsTester, {
 import { CAN_TP, CAN_TP_SOCKET, TpError as CanTpError } from './docan/cantp'
 import { XcpMaster, XcpTransport } from './xcp'
 import { openTransportFromConfig } from './xcp/openConfig'
+import { noteXcpWorkerClose, noteXcpWorkerOpen } from './xcp/presence'
 import { resolveXcpConnection, XcpConnectionConfig, XcpInlineAddr } from './share/xcpConfig'
 import { UdsLOG, VarLOG } from './log'
 import { applyBuffer, getRxPdu, getTxPdu, PwmBaseInfo, ServiceItem, UdsDevice } from './share/uds'
@@ -139,7 +140,10 @@ export class NodeClass {
   private cantp: CAN_TP[] = []
   private lintp: LIN_TP[] = []
   private cantpSocketMap: Map<string, { tp: CAN_TP; socket: CAN_TP_SOCKET }> = new Map()
-  private xcpMasterMap: Map<string, { master: XcpMaster; transport: XcpTransport }> = new Map()
+  private xcpMasterMap: Map<
+    string,
+    { master: XcpMaster; transport: XcpTransport; configId?: string }
+  > = new Map()
   private linBaseId: string[] = []
   private canBaseId: string[] = []
   private ethBaseId: string[] = []
@@ -1135,13 +1139,16 @@ export class NodeClass {
       )
       const master = new XcpMaster(transport, cfg.timeout)
       const handle = `xcp-${Date.now()}-${Math.random().toString(36).slice(2)}`
-      this.xcpMasterMap.set(handle, { master, transport })
+      const configId = cfg.id !== 'inline' ? cfg.id : undefined
+      this.xcpMasterMap.set(handle, { master, transport, configId })
+      if (configId) noteXcpWorkerOpen(configId, cfg.name)
       return handle
     }
 
     if (op === 'closeConnection') {
       const entry = this.xcpMasterMap.get(data.handle)
       if (!entry) throw new Error(`XCP handle '${data.handle}' not found`)
+      noteXcpWorkerClose(entry.configId)
       entry.master.close()
       this.xcpMasterMap.delete(data.handle)
       return
@@ -1676,7 +1683,8 @@ export class NodeClass {
       tp.close(false)
     }
     this.cantpSocketMap.clear()
-    for (const { master } of this.xcpMasterMap.values()) {
+    for (const { master, configId } of this.xcpMasterMap.values()) {
+      noteXcpWorkerClose(configId)
       master.close()
     }
     this.xcpMasterMap.clear()

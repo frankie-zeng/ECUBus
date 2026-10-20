@@ -81,6 +81,7 @@ it.each([
     getTsUs: () => 0,
     startTs: 0,
     setProjectSimulateCount: vi.fn(async () => {}),
+    resetXcpWorkerPresence: vi.fn(),
     monitorEventLoopDelay: vi.fn(() => ({ enable: vi.fn() })),
     setInterval: vi.fn(),
     clearTimeout: vi.fn(),

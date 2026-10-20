@@ -97,6 +97,7 @@ export async function XcpCreateConnection(
 
 /**
  * Close an XCP connection previously opened with {@link XcpCreateConnection}.
+ * Project Stop closes a handle the script has not closed yet.
  * @category XCP
  */
 export async function XcpCloseConnection(handle: string): Promise<void> {

@@ -5,6 +5,7 @@ import {
   normalizeXcpProject,
   resolveXcpConnection,
   validateXcpConnection,
+  xcpLinkedDeviceId,
   type XcpConnectionConfig
 } from 'src/main/share/xcpConfig'
 import { XcpMaster, XcpTransport } from 'src/main/xcp/xcpMaster'
@@ -87,6 +88,17 @@ describe('XCP project config', () => {
     expect(validateXcpConnection(cfg)).toEqual([])
     const roundTrip = JSON.parse(JSON.stringify(cfg)) as XcpConnectionConfig
     expect(Object.keys(roundTrip).sort()).toEqual(Object.keys(saved()).sort())
+  })
+
+  it('links a CAN connection to its device and a UDP connection to Ethernet', () => {
+    const devices = {
+      can1: { type: 'can', canDevice: { name: 'SIMULATE_0' } },
+      eth1: { type: 'eth', ethDevice: { name: 'ETH0' } }
+    }
+    expect(xcpLinkedDeviceId(saved({ device: 'SIMULATE_0' }), devices)).toBe('can1')
+    expect(xcpLinkedDeviceId(saved({ transport: 'udp', device: 'ETH0' }), devices)).toBe('eth1')
+    expect(xcpLinkedDeviceId(saved({ transport: 'udp', device: '' }), devices)).toBeUndefined()
+    expect(xcpLinkedDeviceId(saved({ device: 'missing' }), devices)).toBeUndefined()
   })
 
   it('uses the configured timeout on every request', async () => {

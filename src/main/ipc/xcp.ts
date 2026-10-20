@@ -1,7 +1,8 @@
 /**
  * GUI probe: connect with a project XCP config, read status and DAQ events, then disconnect.
  */
-import { ipcMain } from 'electron'
+import { BrowserWindow, ipcMain } from 'electron'
+import { listXcpWorkerPresence, onXcpWorkerPresence } from '../xcp/presence'
 import { XcpMaster } from '../xcp/xcpMaster'
 import { openTransportFromConfig, readSlaveDaqEvents } from '../xcp/openConfig'
 import { XcpConnectionConfig, XcpDaqEvent, validateXcpConnection } from '../share/xcpConfig'
@@ -21,6 +22,14 @@ async function withMaster<T>(
     master.close()
   }
 }
+
+onXcpWorkerPresence((rows) => {
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.webContents.send('xcp-connection-status', rows)
+  }
+})
+
+ipcMain.handle('ipc-xcp-get-status', () => listXcpWorkerPresence())
 
 ipcMain.handle('ipc-xcp-probe', async (_event, raw: XcpConnectionConfig) => {
   return withMaster(raw, async (master) => {
