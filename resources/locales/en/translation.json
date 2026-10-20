@@ -1550,6 +1550,37 @@
       "root": "XCP Connections",
       "empty": "Add an XCP connection",
       "connected": "Connected",
+      "tree": {
+        "can": "CAN",
+        "udp": "UDP",
+        "tcp": "TCP"
+      },
+      "dialogs": {
+        "deleteConfirm": "Are you sure to delete this XCP connection?",
+        "warning": "Warning",
+        "ok": "OK",
+        "cancel": "Cancel",
+        "a2lFile": "A2L file",
+        "dllFile": "Seed & key DLL",
+        "allFiles": "All Files"
+      },
+      "placeholders": {
+        "selectDevice": "Select a CAN device"
+      },
+      "validation": {
+        "nameRequired": "Name is required",
+        "nameExists": "Name already exists",
+        "deviceRequired": "CAN device is required",
+        "timeout": "Timeout must be an integer from 1 to 600000 ms",
+        "canIdRange": "ID must be an integer from 0 to {{max}}",
+        "canIdDiffer": "Command ID and response ID must differ",
+        "paddingValue": "Padding value must be a byte",
+        "dlc": "DLC must be a frame length from 1 to 64",
+        "brs": "BRS requires CAN-FD",
+        "ip": "IP address is required",
+        "port": "Port must be an integer from 1 to 65535",
+        "daqEvent": "DAQ event channel must be a non-negative integer"
+      },
       "sections": {
         "general": "General",
         "can": "CAN",
