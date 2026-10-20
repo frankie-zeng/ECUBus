@@ -1,0 +1,19 @@
+diff --git a/examples/c_demo/src/main.c b/examples/c_demo/src/main.c
+index f76bf58..2bd7ca9 100644
+--- a/examples/c_demo/src/main.c
++++ b/examples/c_demo/src/main.c
+@@ -323,7 +323,13 @@ int main(void) {
+         // Trigger the measurement event for globals, local variables on stack, and event synchronized calibration access without using a calibration segment
+         DaqTriggerEventExt(mainloop, ApplXcpGetModuleAddr());
+ 
+-        // Check server status
++        // XcpEthServerInit() returns before the transmit thread sets its running
++        // flag, so the first loop iteration can observe a false status and exit.
++        if (!XcpEthServerStatus()) {
++            for (int spin = 0; spin < 50 && !XcpEthServerStatus(); spin++) {
++                sleepUs(1000);
++            }
++        }
+         if (!XcpEthServerStatus()) {
+             printf("\nXCP Server failed\n");
+             break;
