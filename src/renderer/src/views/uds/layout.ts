@@ -2,6 +2,7 @@ import { IconifyIcon } from '@iconify/vue'
 import hardwareOutline from '@iconify/icons-material-symbols/hardware-outline'
 import networkNode from '@iconify/icons-material-symbols/network-node'
 import textFields from '@iconify/icons-material-symbols/text-fields'
+import xcpIcon from '@iconify/icons-mdi/chip'
 import PhAddressBook from '@iconify/icons-ph/address-book'
 import database from '@iconify/icons-material-symbols/database'
 import { Component, Ref, defineAsyncComponent, nextTick, ref } from 'vue'
@@ -189,6 +190,20 @@ export const layoutMap: Record<string, LayoutItem> = {
     key: 'tester',
     component: defineAsyncComponent(() => import('./tester/index.vue')),
     icon: textFields
+  },
+  xcp: {
+    i: 'Xcp',
+    x: 0,
+    y: 0,
+    w: 720,
+    h: 520,
+    minW: 640,
+    minH: 420,
+    label: 'XCP',
+    labelKey: 'uds.windows.xcp',
+    key: 'xcp',
+    component: defineAsyncComponent(() => import('./xcp/index.vue')),
+    icon: xcpIcon
   },
   // can: {
   //   i: 'CanConfig',

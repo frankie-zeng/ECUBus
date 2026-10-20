@@ -954,6 +954,7 @@
       "interact": "Interact",
       "replay": "Replay",
       "udsTester": "UDS Tester",
+      "xcp": "XCP",
       "services": "Services",
       "sequence": "Sequence",
       "soaConfig": "SOA Config",
@@ -1076,6 +1077,7 @@
       "network": "Network",
       "hardware": "Devices",
       "tester": "UDS Tester",
+      "xcp": "XCP",
       "message": "Message",
       "testerService": "Service",
       "testerSequence": "Sequence",
@@ -1542,6 +1544,50 @@
           "time": "Time: {{time}}ms",
           "value": "Value: {{value}}"
         }
+      }
+    },
+    "xcp": {
+      "root": "XCP Connections",
+      "empty": "Add an XCP connection",
+      "connected": "Connected",
+      "sections": {
+        "general": "General",
+        "can": "CAN",
+        "ethernet": "Ethernet",
+        "a2l": "A2L",
+        "security": "Seed & key",
+        "daq": "DAQ"
+      },
+      "labels": {
+        "name": "Name",
+        "transport": "Transport",
+        "timeout": "Timeout (ms)",
+        "device": "Device",
+        "canIdCmd": "Command ID",
+        "canIdResp": "Response ID",
+        "extended": "29-bit ID",
+        "padding": "Padding",
+        "paddingValue": "Padding value",
+        "a2l": "A2L file",
+        "seedKey": "Seed & key DLL",
+        "resource": "Resource",
+        "daqEvent": "DAQ event"
+      },
+      "columns": {
+        "name": "Name",
+        "kind": "Kind",
+        "address": "Address",
+        "size": "Size",
+        "event": "Event"
+      },
+      "actions": {
+        "browse": "Browse",
+        "connect": "Connect",
+        "readEvents": "Read events",
+        "unlock": "Unlock"
+      },
+      "errors": {
+        "noDll": "Choose a seed & key DLL first"
       }
     },
     "tester": {
