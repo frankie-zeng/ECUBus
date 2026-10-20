@@ -97,6 +97,7 @@ import {
   udsHardware,
   Node as UdsNode,
   Replay as UdsReplay,
+  XcpNode,
   getCeilInstanceAs
 } from './udsView'
 import { useGlobalStart } from '@r/stores/runtime'
@@ -125,9 +126,16 @@ import networkNode from '@iconify/icons-material-symbols/network-node'
 import nodeIcon from '@iconify/icons-material-symbols/variables-outline-rounded'
 import { useProjectStore } from '@r/stores/project'
 import soaIcon from '@iconify/icons-material-symbols/linked-services-outline'
+import xcpIcon from '@iconify/icons-mdi/chip'
 import replayIcon from '@iconify/icons-material-symbols/replay'
 import i18next from 'i18next'
 import { NodeItem, Inter, LogItem, ReplayItem } from 'src/preload/data'
+import {
+  defaultXcpConnection,
+  xcpLinkedDeviceId,
+  type XcpConnectionConfig,
+  type XcpConnectionStatus
+} from 'nodeCan/xcpConfig'
 import { cloneDeep } from 'lodash'
 import { UdsDevice } from 'nodeCan/uds'
 
@@ -342,6 +350,33 @@ function addChild(parent: Tree) {
   if (parent.type != 'eth' && parent.type != 'serial') {
     parent.children.push(i)
   }
+  if (parent.type === 'can' || parent.type === 'eth') {
+    const xcpTree: Tree = {
+      type: 'xcp',
+      label: i18next.t('uds.network.tree.xcp'),
+      canAdd: true,
+      children: [],
+      icon: xcpIcon,
+      id: `xcp-${parent.type}`
+    }
+    for (const key of Object.keys(dataBase.xcp ?? {})) {
+      const item = dataBase.xcp![key]
+      const shown =
+        (parent.type === 'can' && item.transport === 'can') ||
+        (parent.type === 'eth' && item.transport !== 'can')
+      if (!shown) continue
+      xcpTree.children.push({
+        type: 'xcp',
+        label: item.name,
+        canAdd: false,
+        children: [],
+        icon: xcpIcon,
+        contextMenu: true,
+        id: key
+      })
+    }
+    parent.children.push(xcpTree)
+  }
 }
 const tData = computed(() => {
   const can: Tree = {
@@ -484,9 +519,11 @@ let paper: joint.dia.Paper
 
 // Clipboard for copy/paste functionality
 const clipboard = ref<{
-  type: 'node' | 'interactive' | 'log' | 'replay' | 'device' | null
-  data: NodeItem | Inter | LogItem | ReplayItem | UdsDevice | null
+  type: 'node' | 'interactive' | 'log' | 'replay' | 'device' | 'xcp' | null
+  data: NodeItem | Inter | LogItem | ReplayItem | UdsDevice | XcpConnectionConfig | null
 }>({ type: null, data: null })
+
+const xcpOpen = ref(new Set<string>())
 
 // Context menu state
 const contextMenu = ref<{
@@ -549,6 +586,11 @@ function copySelectedNode() {
     clipboard.value = {
       type: 'device',
       data: cloneDeep(dataBase.devices[selectedId])
+    }
+  } else if (dataBase.xcp?.[selectedId]) {
+    clipboard.value = {
+      type: 'xcp',
+      data: cloneDeep(dataBase.xcp[selectedId])
     }
   }
 }
@@ -687,6 +729,20 @@ function pasteNode() {
     dataBase.devices[id] = newDevice
     udsView.addDevice(id, dataBase.devices[id])
     udsView.changeName(id, newName)
+  } else if (clipboard.value.type === 'xcp') {
+    const xcpData = copiedData as XcpConnectionConfig
+    if (!dataBase.xcp) dataBase.xcp = {}
+    const existingNames = getExistingNames(dataBase.xcp)
+    const newName = generateUniqueName(xcpData.name, existingNames)
+    dataBase.xcp[id] = defaultXcpConnection({
+      ...cloneDeep(xcpData),
+      id,
+      name: newName
+    })
+    udsView.addXcp(id, dataBase.xcp[id])
+    udsView.changeName(id, newName)
+    const deviceId = xcpLinkedDeviceId(dataBase.xcp[id], dataBase.devices)
+    if (deviceId) udsView.addLink(id, deviceId)
   }
 
   fitPater()
@@ -803,6 +859,8 @@ function handleContextDelete() {
         delete dataBase.logs[targetId]
       } else if (targetType === 'replay') {
         delete dataBase.replays[targetId]
+      } else if (targetType === 'xcp') {
+        delete dataBase.xcp?.[targetId]
       }
       layout.removeWin(targetId)
     })
@@ -848,10 +906,19 @@ function replayCallback(val: RelayStop | RelayProgress) {
     }
   }
 }
+function onXcpStatus(_event: unknown, rows: XcpConnectionStatus[]) {
+  applyXcpOpen(rows)
+}
+
 onMounted(() => {
   loading.value = true
   window.logBus.on('replayStop', replayCallback)
   window.logBus.on('replayProgress', replayCallback)
+  window.electron.ipcRenderer.on('xcp-connection-status', onXcpStatus)
+  window.electron.ipcRenderer
+    .invoke('ipc-xcp-get-status')
+    .then((rows: XcpConnectionStatus[]) => applyXcpOpen(rows ?? []))
+    .catch(() => undefined)
   window.jQuery('#networkShift').resizable({
     handles: 'e',
     containment: '#networkMain',
@@ -1092,6 +1159,7 @@ watchEffect(() => {
         }
       }
     }
+    syncXcp()
     //check log
     for (const from of Object.keys(dataBase.logs)) {
       for (const to of Object.keys(dataBase.devices)) {
@@ -1139,6 +1207,37 @@ watchEffect(() => {
   }
 })
 
+function applyXcpOpen(rows: XcpConnectionStatus[]) {
+  xcpOpen.value = new Set(rows.filter((row) => row.open).map((row) => row.id))
+  for (const key of Object.keys(dataBase.xcp ?? {})) {
+    const cell = udsView.ceilMap.get(key)
+    if (cell instanceof XcpNode) cell.setOpen(xcpOpen.value.has(key))
+  }
+}
+
+function syncXcp() {
+  const xcp = dataBase.xcp ?? {}
+  for (const el of [...udsView.ceilMap.values()]) {
+    if (el instanceof XcpNode && xcp[el.getId()] == undefined) {
+      for (const to of Object.keys(dataBase.devices)) udsView.removeLink(el.getId(), to)
+      el.destroy()
+      udsView.ceilMap.delete(el.getId())
+    }
+  }
+  for (const key of Object.keys(xcp)) {
+    const cfg = xcp[key]
+    udsView.addXcp(key, cfg)
+    udsView.changeName(key, cfg.name)
+    const deviceId = xcpLinkedDeviceId(cfg, dataBase.devices)
+    for (const to of Object.keys(dataBase.devices)) {
+      if (to !== deviceId) udsView.removeLink(key, to)
+    }
+    if (deviceId && dataBase.devices[deviceId]) udsView.addLink(key, deviceId)
+    const cell = udsView.ceilMap.get(key)
+    if (cell instanceof XcpNode) cell.setOpen(xcpOpen.value.has(key))
+  }
+}
+
 function buildView() {
   for (const key of Object.keys(dataBase.devices)) {
     udsView.addDevice(key, dataBase.devices[key])
@@ -1172,6 +1271,7 @@ function buildView() {
       udsView.addLink(key, to)
     }
   }
+  syncXcp()
   //add log
   for (const key of Object.keys(dataBase.logs)) {
     udsView.addLog(key, dataBase.logs[key])
@@ -1338,6 +1438,33 @@ function addNode(type: string, parent?: Tree) {
         udsView.addLink(id, key)
       }
     }
+  } else if (type == 'xcp') {
+    const id = v4()
+    const transport = parent?.type === 'eth' ? 'udp' : 'can'
+    if (!dataBase.xcp) dataBase.xcp = {}
+    let index = 0
+    let name = `XCP_${transport}_${index}`
+    while (Object.values(dataBase.xcp).some((item) => item.name === name)) {
+      index += 1
+      name = `XCP_${transport}_${index}`
+    }
+    let device = ''
+    if (transport === 'can') {
+      const cans = Object.values(dataBase.devices).filter(
+        (item) => item.type === 'can' && item.canDevice?.name
+      )
+      if (cans.length === 1 && cans[0].canDevice) device = cans[0].canDevice.name
+    } else {
+      const eths = Object.values(dataBase.devices).filter(
+        (item) => item.type === 'eth' && item.ethDevice?.name
+      )
+      if (eths.length === 1 && eths[0].ethDevice) device = eths[0].ethDevice.name
+    }
+    dataBase.xcp[id] = defaultXcpConnection({ id, name, transport, device })
+    udsView.addXcp(id, dataBase.xcp[id])
+    const deviceId = xcpLinkedDeviceId(dataBase.xcp[id], dataBase.devices)
+    if (deviceId) udsView.addLink(id, deviceId)
+    layout.addWin('xcp', 'xcp', { params: { 'edit-index': id } })
   } else if (type == 'node') {
     const id = v4()
     {
@@ -1453,6 +1580,7 @@ onUnmounted(() => {
   paper.remove()
   window.logBus.off('replayStop', replayCallback)
   window.logBus.off('replayProgress', replayCallback)
+  window.electron.ipcRenderer.removeListener('xcp-connection-status', onXcpStatus)
   document.removeEventListener('keydown', handleKeyboardEvent)
 })
 </script>

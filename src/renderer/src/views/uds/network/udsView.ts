@@ -211,6 +211,10 @@ export const colorMap: Record<string, { fill: string; color: string }> = {
   replay: {
     fill: 'rgb(76, 175, 80)',
     color: '#FFFFFF'
+  },
+  xcp: {
+    fill: 'rgb(0, 137, 123)',
+    color: '#FFFFFF'
   }
 }
 
@@ -759,6 +763,49 @@ export class Node extends udsCeil {
   }
 }
 
+export class XcpNode extends udsCeil {
+  constructor(
+    paper: joint.dia.Paper,
+    graph: joint.dia.Graph,
+    id: string,
+    name: string,
+    x: number,
+    y: number
+  ) {
+    super(
+      paper,
+      graph,
+      {
+        name,
+        type: 'xcp',
+        id
+      },
+      x,
+      y,
+      {
+        panel: false,
+        edit: true,
+        remove: true,
+        lockX: false,
+        lockY: true
+      }
+    )
+  }
+
+  /** Green while a worker holds this connection open. */
+  setOpen(open: boolean) {
+    if (open) {
+      this.rect.attr('body/stroke', '#00C853')
+      this.rect.attr('body/strokeWidth', 3)
+      this.changeNameBottom(i18next.t('uds.xcp.open'))
+    } else {
+      this.rect.attr('body/stroke', '#000000')
+      this.rect.attr('body/strokeWidth', 2)
+      this.changeNameBottom('')
+    }
+  }
+}
+
 export interface udsVEcu {
   name: string
   type: string
@@ -901,6 +948,27 @@ export class UDSView {
     })
     this.ceilMap.set(id, element)
 
+    return element
+  }
+  addXcp(id: string, data: { name: string }) {
+    const e = this.ceilMap.get(id)
+    if (e) return e
+    const element = new XcpNode(this.paper!, this.graph, id, data.name, nodeXOffset, -200)
+    nodeXOffset -= 250
+    element.on('remove', (ceil) => {
+      const dataBase = useDataStore()
+      delete dataBase.xcp?.[ceil.getId()]
+      ceil.destroy()
+      this.ceilMap.delete(ceil.getId())
+    })
+    element.on('edit', (ceil) => {
+      this.layout.addWin('xcp', 'xcp', {
+        params: {
+          'edit-index': ceil.getId()
+        }
+      })
+    })
+    this.ceilMap.set(id, element)
     return element
   }
   addNode(id: string, data: NodeItem) {

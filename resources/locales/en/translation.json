@@ -1590,7 +1590,8 @@
         "cancel": "Cancel"
       },
       "placeholders": {
-        "selectDevice": "Select a CAN device"
+        "selectDevice": "Select a CAN device",
+        "selectEthernetDevice": "Select an Ethernet device"
       },
       "validation": {
         "nameRequired": "Name is required",
@@ -1627,7 +1628,8 @@
       "actions": {
         "connect": "Connect",
         "readEvents": "Read events"
-      }
+      },
+      "open": "Open"
     },
     "tester": {
       "tree": {
@@ -2339,7 +2341,8 @@
         "serial": "Serial Port",
         "loggers": "Loggers",
         "replays": "Replays",
-        "someip": "SomeIP"
+        "someip": "SomeIP",
+        "xcp": "XCP"
       },
       "dialogs": {
         "deleteNodeMessage": "This will permanently delete the node. Continue?",

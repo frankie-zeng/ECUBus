@@ -51,7 +51,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, toRef } from 'vue'
+import { nextTick, onMounted, ref, toRef, watch } from 'vue'
 import { Icon } from '@iconify/vue'
 import { ElMessageBox } from 'element-plus'
 import circlePlusFilled from '@iconify/icons-ep/circle-plus-filled'
@@ -63,7 +63,7 @@ import { defaultXcpConnection, type XcpTransportKind } from 'nodeCan/xcpConfig'
 import i18next from 'i18next'
 import xcpConfig from './config.vue'
 
-const props = defineProps<{ height: number; width: number }>()
+const props = defineProps<{ height: number; width: number; editIndex?: string }>()
 const h = toRef(props, 'height')
 const w = toRef(props, 'width')
 const winKey = 'xcp'
@@ -179,6 +179,15 @@ function selectFirst() {
   }
 }
 
+function selectId(id?: string) {
+  if (!id) return false
+  const node = treeRef.value?.getNode(id)
+  if (!node) return false
+  treeRef.value.setCurrentKey(id)
+  activeTree.value = node.data
+  return true
+}
+
 onMounted(() => {
   window.jQuery(`#${winKey}Shift`).resizable({
     handles: 'e',
@@ -189,8 +198,31 @@ onMounted(() => {
     minWidth: 150
   })
   buildTree()
-  nextTick(() => selectFirst())
+  nextTick(() => {
+    if (!selectId(props.editIndex)) selectFirst()
+  })
 })
+
+watch(
+  () => props.editIndex,
+  (id) => {
+    nextTick(() => selectId(id))
+  }
+)
+
+watch(
+  () =>
+    Object.values(db.xcp ?? {})
+      .map((item) => `${item.id}:${item.name}:${item.transport}`)
+      .join('|'),
+  () => {
+    const current = activeTree.value?.id
+    buildTree()
+    nextTick(() => {
+      if (!selectId(current)) selectId(props.editIndex)
+    })
+  }
+)
 </script>
 
 <style scoped>

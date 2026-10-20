@@ -97,6 +97,20 @@
         <el-divider content-position="left">{{
           i18next.t('uds.xcp.sections.ethernet')
         }}</el-divider>
+        <el-form-item :label="i18next.t('uds.xcp.labels.device')" prop="device">
+          <el-select
+            v-model="data.device"
+            clearable
+            :placeholder="i18next.t('uds.xcp.placeholders.selectEthernetDevice')"
+          >
+            <el-option
+              v-for="item in ethDevices"
+              :key="item.id"
+              :label="item.name"
+              :value="item.name"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label-width="0">
           <el-col :span="12">
             <el-form-item label="IP" prop="ip">
@@ -178,6 +192,16 @@ const canDevices = computed(() => {
         name: device.canDevice.name,
         vendor: device.canDevice.vendor
       })
+    }
+  }
+  return list
+})
+
+const ethDevices = computed(() => {
+  const list: { id: string; name: string }[] = []
+  for (const device of Object.values(db.devices)) {
+    if (device.type === 'eth' && device.ethDevice?.name) {
+      list.push({ id: device.ethDevice.id, name: device.ethDevice.name })
     }
   }
   return list
@@ -374,6 +398,10 @@ onBeforeMount(() => {
   if (saved) data.value = defaultXcpConnection(cloneDeep(saved))
   if (data.value.transport === 'can' && data.value.device) {
     const known = canDevices.value.some((item) => item.name === data.value.device)
+    if (!known) data.value.device = ''
+  }
+  if (data.value.transport !== 'can' && data.value.device) {
+    const known = ethDevices.value.some((item) => item.name === data.value.device)
     if (!known) data.value.device = ''
   }
   stopWatch = watch(data, () => save(), { deep: true })
