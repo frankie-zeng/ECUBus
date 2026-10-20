@@ -15,12 +15,22 @@ import os from 'os'
 import path from 'path'
 import { Worker } from 'worker_threads'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import {
+  applySimulateRpcListen,
+  DEFAULT_SIMULATE_RPC_HOST,
+  DEFAULT_SIMULATE_RPC_PORT,
+  setProjectSimulateCount
+} from 'src/cli/rpc/lifecycle'
 import { CanBase } from 'src/main/docan/base'
-import { SIMULATE_CAN } from 'src/main/docan/simulate'
+import { isSimulateHandleOpen, SIMULATE_CAN } from 'src/main/docan/simulate'
 import { XcpCanTransport } from 'src/main/xcp/xcpCan'
 import { openTransportFromConfig } from 'src/main/xcp/openConfig'
 import { XcpMaster } from 'src/main/xcp/xcpMaster'
-import { resolveXcpConnection, validateXcpConnection } from 'src/main/share/xcpConfig'
+import {
+  defaultXcpConnection,
+  resolveXcpConnection,
+  validateXcpConnection
+} from 'src/main/share/xcpConfig'
 import { XcpTcpTransport } from 'src/main/xcp/xcpTcp'
 import { XcpUdpTransport } from 'src/main/xcp/xcpUdp'
 import { XcpliteCanBridge } from './xcpliteBridge'
@@ -170,6 +180,38 @@ function sleep(ms: number): Promise<void> {
 
 function bin(name: string, dir = BUILD): string {
   return path.join(dir, name)
+}
+
+function freeTcpPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = net.createServer()
+    server.once('error', reject)
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address()
+      const port = typeof address === 'object' && address ? address.port : 0
+      server.close((err) => (err ? reject(err) : resolve(port)))
+    })
+  })
+}
+
+/** Start the real SIMULATE_CAN JSON-RPC listener. The bridge joins it over TCP. */
+async function listenSimulateRpc(): Promise<number> {
+  const port = await freeTcpPort()
+  await applySimulateRpcListen({ host: '127.0.0.1', port, enabled: true })
+  const status = await setProjectSimulateCount(1)
+  if (!status.listening) {
+    throw new Error(`simulate JSON-RPC did not listen: ${status.error ?? 'unknown'}`)
+  }
+  return port
+}
+
+async function silenceSimulateRpc(): Promise<void> {
+  await setProjectSimulateCount(0)
+  await applySimulateRpcListen({
+    host: DEFAULT_SIMULATE_RPC_HOST,
+    port: DEFAULT_SIMULATE_RPC_PORT,
+    enabled: true
+  })
 }
 
 function makeFdBase(handle: number): CanBase {
@@ -560,14 +602,23 @@ describe.sequential('XCPlite slaves driven by the EcuBus-Pro XCP master', () => 
     expect(detail).toContain('DISCONNECT')
   }, 20000)
 
-  it('ecubus_slave over simulate CAN-FD', async () => {
+  it('ecubus_slave over simulate CAN-FD RPC', async () => {
     const masterBase = makeFdBase(20)
-    const bridgeBase = makeFdBase(21)
+    const rpcPort = await listenSimulateRpc()
     let bridge: XcpliteCanBridge | undefined
     try {
       const detail = await withEcubusSlave(18032, async (map) => {
-        bridge = new XcpliteCanBridge(bridgeBase, map.port, 0x7e0, 0x7e1)
+        expect(isSimulateHandleOpen(21)).toBe(false)
+        bridge = new XcpliteCanBridge({
+          port: rpcPort,
+          handle: 21,
+          slavePort: map.port,
+          canIdCmd: 0x7e0,
+          canIdResp: 0x7e1
+        })
         await bridge.start()
+        expect(isSimulateHandleOpen(21)).toBe(true)
+        expect(bridge.hth).toBe(42)
         const master = new XcpMaster(
           new XcpCanTransport(masterBase, {
             name: 'xcplite',
@@ -582,41 +633,53 @@ describe.sequential('XCPlite slaves driven by the EcuBus-Pro XCP master', () => 
           const results = await exerciseXcpSession(master, ecubusOptions(map))
           expect(results[0].detail).toContain('maxCto=64')
           expect(results[0].detail).toContain('maxDto=64')
-          return summarize(results, 'CAN-FD bridge, MAX_CTO/DTO clamped to 64')
+          return summarize(
+            results,
+            `CAN-FD via JSON-RPC ${bridge.host}:${bridge.port} handle 21, MAX_CTO/DTO clamped to 64`
+          )
         } finally {
           master.close()
         }
       })
       record({
-        name: 'ecubus_slave CAN-FD bridge',
+        name: 'ecubus_slave CAN-FD RPC',
         group: 'harness',
         relevant: true,
-        reason: 'Same slave, packets carried on the simulate CAN bus',
+        reason:
+          'Same slave. The bridge is an external node: TCP JSON-RPC Can.Init on a free SIMULATE_CAN handle',
         result: 'pass',
         detail
       })
     } finally {
       await bridge?.stop()
       masterBase.close()
-      bridgeBase.close()
+      await silenceSimulateRpc()
     }
   }, 20000)
 
-  it('public worker script over simulate CAN-FD', async () => {
+  it('public worker script over simulate CAN-FD RPC', async () => {
     const masterBase = makeFdBase(22)
-    const bridgeBase = makeFdBase(23)
+    const rpcPort = await listenSimulateRpc()
     let bridge: XcpliteCanBridge | undefined
     try {
       const detail = await withEcubusSlave(18033, async (map) => {
-        bridge = new XcpliteCanBridge(bridgeBase, map.port, 0x7e0, 0x7e1)
+        bridge = new XcpliteCanBridge({
+          port: rpcPort,
+          handle: 23,
+          slavePort: map.port,
+          canIdCmd: 0x7e0,
+          canIdResp: 0x7e1
+        })
         await bridge.start()
+        expect(bridge.hth).toBe(46)
         return runWorkerScript(map, masterBase)
       })
       record({
-        name: 'worker script xcplite-can.ts',
+        name: 'worker script xcplite-can.ts RPC',
         group: 'harness',
         relevant: true,
-        reason: 'Public Xcp* API compiled against the shipped worker bundle',
+        reason:
+          'Public Xcp* API on the project simulate device; XCPlite joined through SIMULATE_CAN JSON-RPC',
         result: 'pass',
         detail
       })
@@ -624,7 +687,7 @@ describe.sequential('XCPlite slaves driven by the EcuBus-Pro XCP master', () => 
     } finally {
       await bridge?.stop()
       masterBase.close()
-      bridgeBase.close()
+      await silenceSimulateRpc()
     }
   }, 30000)
 
@@ -658,6 +721,63 @@ describe.sequential('XCPlite slaves driven by the EcuBus-Pro XCP master', () => 
     })
     expect(detail).toContain('GUI_CONFIG')
     expect(detail).toContain('maxCto=')
+  }, 20000)
+
+  it('GUI connection config over simulate CAN-FD RPC', async () => {
+    const masterBase = makeFdBase(24)
+    const rpcPort = await listenSimulateRpc()
+    let bridge: XcpliteCanBridge | undefined
+    try {
+      const detail = await withEcubusSlave(18035, async (map) => {
+        bridge = new XcpliteCanBridge({
+          port: rpcPort,
+          handle: 25,
+          slavePort: map.port,
+          canIdCmd: 0x7e0,
+          canIdResp: 0x7e1
+        })
+        await bridge.start()
+        const saved = defaultXcpConnection({
+          id: 'can-sim',
+          name: 'can-sim',
+          transport: 'can',
+          device: 'SIMULATE_0',
+          timeout: 3000,
+          canfd: true,
+          padding: false,
+          dlc: 64
+        })
+        expect(validateXcpConnection(saved)).toEqual([])
+        const byName = resolveXcpConnection('can-sim', { saved })
+        expect(byName.device).toBe('SIMULATE_0')
+        const transport = openTransportFromConfig(byName, () => masterBase)
+        const master = new XcpMaster(transport, byName.timeout)
+        try {
+          const info = await master.connect(0)
+          await master.getStatus()
+          await master.disconnect()
+          return `GUI_CAN_RPC maxCto=${info.maxCto} maxDto=${info.maxDto} handle=${bridge.handle} hth=${bridge.hth}`
+        } finally {
+          master.close()
+        }
+      })
+      record({
+        name: 'GUI config CAN RPC',
+        group: 'harness',
+        relevant: true,
+        reason:
+          'Saved CAN connection opened by name. Slave traffic uses the external SIMULATE_CAN JSON-RPC node',
+        result: 'pass',
+        detail
+      })
+      expect(detail).toContain('GUI_CAN_RPC')
+      expect(detail).toContain('maxCto=64')
+      expect(detail).toContain('maxDto=64')
+    } finally {
+      await bridge?.stop()
+      masterBase.close()
+      await silenceSimulateRpc()
+    }
   }, 20000)
 
   const examples: Array<{ name: string; tcp?: boolean }> = [
