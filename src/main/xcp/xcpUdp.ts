@@ -12,6 +12,7 @@
 
 import dgram from 'dgram'
 import { isCtoResponse } from './xcpProtocol'
+import { XcpTraceHook } from './xcpTrace'
 import { XcpTransport } from './xcpMaster'
 
 /**
@@ -65,7 +66,8 @@ export class XcpUdpTransport implements XcpTransport {
 
   constructor(
     private readonly host: string,
-    private readonly port: number
+    private readonly port: number,
+    private readonly trace?: XcpTraceHook
   ) {
     this.socket = dgram.createSocket('udp4')
     this.ready = new Promise((resolve) => {
@@ -73,6 +75,7 @@ export class XcpUdpTransport implements XcpTransport {
     })
     this.socket.on('message', (msg) => {
       for (const packet of decodeEthDatagram(msg)) {
+        this.trace?.rx(packet)
         if (isCtoResponse(packet)) this.responses.push(packet)
         else this.indications.push(packet)
       }
@@ -105,7 +108,10 @@ export class XcpUdpTransport implements XcpTransport {
     await new Promise<void>((resolve, reject) => {
       this.socket.send(frame, this.port, this.host, (err) => {
         if (err) reject(err)
-        else resolve()
+        else {
+          this.trace?.tx(payload)
+          resolve()
+        }
       })
     })
   }
@@ -165,5 +171,6 @@ export class XcpUdpTransport implements XcpTransport {
     this.closed = true
     this.wake()
     this.socket.close()
+    this.trace?.close()
   }
 }

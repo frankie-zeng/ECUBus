@@ -3,6 +3,20 @@ import { transport, createLogger, format, Logger, transports } from 'winston'
 import type { Format } from 'logform'
 import Transport from 'winston-transport'
 import { CAN_ERROR_ID, CanAddr, CanMessage, CanMsgType, getTsUs } from './share/can'
+import {
+  ByteOrder,
+  XcpCommand,
+  XcpResponse,
+  parseConnectResponse,
+  parseGetDaqProcessorInfoResponse
+} from './xcp/xcpProtocol'
+import {
+  XcpDaqIdField,
+  XcpTraceHook,
+  daqIdFieldFromKeyByte,
+  describeXcpRx,
+  describeXcpTx
+} from './xcp/xcpTrace'
 import EventEmitter from 'events'
 import type { Sequence, ServiceItem } from './share/uds'
 import { PayloadType } from './doip'
@@ -929,6 +943,91 @@ export class ReplayLOG {
       method: 'replayError',
       replayId: this.replayId,
       data: { msg }
+    })
+  }
+}
+
+function xcpTraceTs(explicit?: number): number {
+  if (explicit != undefined) return explicit
+  const start = (global as { startTs?: number }).startTs ?? 0
+  const now = getTsUs()
+  return start > 0 && now >= start ? now - start : now
+}
+
+/**
+ * Trace rows for one XCP connection. The raw CAN frame is still logged by the
+ * CAN device. This row is the decoded XCP packet, named `can-sim.CONNECT`.
+ */
+export class XcpLOG implements XcpTraceHook {
+  log: Logger
+  private closed = false
+  private pending?: number
+  private byteOrder = ByteOrder.INTEL
+  private daqField: XcpDaqIdField = 'absolute-odt'
+
+  constructor(
+    private connection: string,
+    instance?: string
+  ) {
+    const et = externalTransport.map((t) => t.t())
+    const formatList = [format.json(), format.label({ label: connection || 'XCP' })]
+    if (instance) formatList.push(instanceFormat({ instance }))
+    this.log = createLogger({
+      transports: [new Base(), ...et],
+      format: format.combine(...formatList, ...externalFormat)
+    })
+  }
+
+  tx(packet: Buffer, ts?: number): void {
+    if (this.closed) return
+    const pid = packet[0] ?? 0
+    if (pid >= 0xc0) this.pending = pid
+    this.emit(describeXcpTx(packet, this.connection, this.daqField, this.byteOrder), packet, ts)
+  }
+
+  rx(packet: Buffer, ts?: number): void {
+    if (this.closed) return
+    const pid = packet[0] ?? 0
+    if (pid === XcpResponse.RES || pid === XcpResponse.ERR) {
+      this.noteResponse(packet)
+      this.pending = undefined
+    }
+    this.emit(describeXcpRx(packet, this.connection, this.daqField, this.byteOrder), packet, ts)
+  }
+
+  close(): void {
+    if (this.closed) return
+    this.closed = true
+    this.log.close()
+  }
+
+  private noteResponse(packet: Buffer): void {
+    if (packet[0] !== XcpResponse.RES) return
+    try {
+      if (this.pending === XcpCommand.CONNECT) {
+        this.byteOrder = parseConnectResponse(packet).commModeBasic.byteOrder
+      } else if (this.pending === XcpCommand.GET_DAQ_PROCESSOR_INFO) {
+        const info = parseGetDaqProcessorInfoResponse(packet, this.byteOrder)
+        this.daqField = daqIdFieldFromKeyByte(info.keyByte)
+      }
+    } catch {
+      /* a short RES still shows up as a response row */
+    }
+  }
+
+  private emit(record: ReturnType<typeof describeXcpTx>, packet: Buffer, ts?: number): void {
+    this.log.info({
+      method: record.method,
+      id: record.name,
+      data: {
+        name: record.name,
+        kind: record.kind,
+        symbol: record.symbol,
+        ts: xcpTraceTs(ts),
+        bytes: Array.from(packet),
+        detail: record.detail,
+        dir: record.dir
+      }
     })
   }
 }

@@ -2223,7 +2223,8 @@
         "uds": "UDS",
         "eth": "ETH",
         "someip": "SomeIP",
-        "osTrace": "OS Trace"
+        "osTrace": "OS Trace",
+        "xcp": "XCP"
       },
       "columns": {
         "time": "Time",
@@ -2250,6 +2251,13 @@
         "someipServiceValid": "SomeIP Service Valid",
         "osEvent": "OS Event",
         "osError": "OS Error",
+        "xcpCmd": "XCP Cmd",
+        "xcpRes": "XCP Res",
+        "xcpErr": "XCP Err",
+        "xcpEv": "XCP Ev",
+        "xcpServ": "XCP Serv",
+        "xcpDaq": "XCP DAQ",
+        "xcpStim": "XCP STIM",
         "version": "Version",
         "protocolVersion": "Protocol Version",
         "interfaceVersion": "Interface Version",

@@ -20,6 +20,7 @@ import {
   getLenByDlc
 } from '../share/can'
 import { isCtoResponse } from './xcpProtocol'
+import { XcpTraceHook } from './xcpTrace'
 import { XcpTransport } from './xcpMaster'
 
 /**
@@ -75,7 +76,11 @@ export class XcpCanTransport implements XcpTransport {
   /** Serializes socket reads so a command wait and a DAQ read cannot race. */
   private tail: Promise<unknown> = Promise.resolve()
 
-  constructor(base: CanBase, addr: XcpCanAddr) {
+  constructor(
+    base: CanBase,
+    addr: XcpCanAddr,
+    private readonly trace?: XcpTraceHook
+  ) {
     this.addr = addr
     const msgType = toMsgType(addr)
     this.txSocket = new CAN_SOCKET(base, addr.canIdCmd, msgType, { name: addr.name })
@@ -106,19 +111,19 @@ export class XcpCanTransport implements XcpTransport {
     while (this.rxSocket.recvBuffer.length) {
       const val = this.rxSocket.recvBuffer.shift()
       if (!val || val instanceof CanError) continue
-      this.classify(val.data)
+      this.classify(val.data, val.ts)
     }
   }
 
-  private classify(packet: Buffer): void {
+  private classify(packet: Buffer, ts?: number): void {
+    this.trace?.rx(packet, ts)
     if (isCtoResponse(packet)) this.responses.push(packet)
     else this.indications.push(packet)
   }
 
-  private async readFrame(timeout: number): Promise<Buffer | null> {
+  private async readFrame(timeout: number): Promise<{ data: Buffer; ts: number } | null> {
     try {
-      const { data } = await this.rxSocket.read(timeout)
-      return data
+      return await this.rxSocket.read(timeout)
     } catch (err) {
       if (err instanceof CanError && err.errorId === CAN_ERROR_ID.CAN_READ_TIMEOUT) return null
       throw err
@@ -131,7 +136,8 @@ export class XcpCanTransport implements XcpTransport {
       // A previous timeout may have left a RES in the queue. DAQ frames stay.
       this.drainSocketBuffer()
       this.responses = []
-      await this.txSocket.write(this.frame(request))
+      const txTs = await this.txSocket.write(this.frame(request))
+      this.trace?.tx(request, txTs)
       const deadline = Date.now() + timeout
       while (this.responses.length === 0) {
         const left = deadline - Date.now()
@@ -140,7 +146,7 @@ export class XcpCanTransport implements XcpTransport {
         if (!frame) throw new Error('XCP CAN response timeout')
         // DAQ/EVENT frames that share the response CAN id must not be parsed
         // as the command response.
-        this.classify(frame)
+        this.classify(frame.data, frame.ts)
       }
       return this.responses.shift() as Buffer
     })
@@ -161,7 +167,7 @@ export class XcpCanTransport implements XcpTransport {
         if (left <= 0) return null
         const frame = await this.readFrame(left)
         if (!frame) return null
-        this.classify(frame)
+        this.classify(frame.data, frame.ts)
       }
       return this.indications.shift() as Buffer
     })
@@ -169,7 +175,8 @@ export class XcpCanTransport implements XcpTransport {
 
   async send(request: Buffer): Promise<void> {
     if (this.closed) throw new Error('XCP CAN transport is closed')
-    await this.txSocket.write(this.frame(request))
+    const txTs = await this.txSocket.write(this.frame(request))
+    this.trace?.tx(request, txTs)
   }
 
   close(): void {
@@ -177,5 +184,6 @@ export class XcpCanTransport implements XcpTransport {
     this.closed = true
     this.txSocket.close()
     this.rxSocket.close()
+    this.trace?.close()
   }
 }

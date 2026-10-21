@@ -12,6 +12,7 @@
 
 import net from 'net'
 import { isCtoResponse } from './xcpProtocol'
+import { XcpTraceHook } from './xcpTrace'
 import { XcpTransport } from './xcpMaster'
 import { encodeEthPacket } from './xcpUdp'
 
@@ -59,7 +60,8 @@ export class XcpTcpTransport implements XcpTransport {
 
   constructor(
     private readonly host: string,
-    private readonly port: number
+    private readonly port: number,
+    private readonly trace?: XcpTraceHook
   ) {
     this.socket = net.connect({ host, port })
     this.ready = new Promise((resolve, reject) => {
@@ -76,6 +78,7 @@ export class XcpTcpTransport implements XcpTransport {
       const { frames, offset } = takeEthFrames(this.rx)
       if (offset > 0) this.rx = Buffer.from(this.rx.subarray(offset))
       for (const frame of frames) {
+        this.trace?.rx(frame)
         if (isCtoResponse(frame)) this.responses.push(frame)
         else this.indications.push(frame)
       }
@@ -111,7 +114,10 @@ export class XcpTcpTransport implements XcpTransport {
     await new Promise<void>((resolve, reject) => {
       this.socket.write(frame, (err) => {
         if (err) reject(err)
-        else resolve()
+        else {
+          this.trace?.tx(payload)
+          resolve()
+        }
       })
     })
   }
@@ -168,5 +174,6 @@ export class XcpTcpTransport implements XcpTransport {
     this.closed = true
     this.wake()
     this.socket.destroy()
+    this.trace?.close()
   }
 }

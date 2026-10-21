@@ -2,6 +2,7 @@
  * Open the transport described by a saved XCP connection.
  */
 import { CanBase } from '../docan/base'
+import { XcpLOG } from '../log'
 import { XcpConnectionConfig, XcpDaqEvent } from '../share/xcpConfig'
 import { XcpCanTransport } from './xcpCan'
 import { XcpMaster, XcpTransport } from './xcpMaster'
@@ -12,21 +13,29 @@ export function openTransportFromConfig(
   cfg: XcpConnectionConfig,
   findCan?: (device?: string) => CanBase
 ): XcpTransport {
-  if (cfg.transport === 'udp') return new XcpUdpTransport(cfg.ip, cfg.port)
-  if (cfg.transport === 'tcp') return new XcpTcpTransport(cfg.ip, cfg.port)
-  if (!findCan) throw new Error('CAN device is not available')
+  const trace = new XcpLOG(cfg.name, cfg.device || `${cfg.ip}:${cfg.port}`)
+  if (cfg.transport === 'udp') return new XcpUdpTransport(cfg.ip, cfg.port, trace)
+  if (cfg.transport === 'tcp') return new XcpTcpTransport(cfg.ip, cfg.port, trace)
+  if (!findCan) {
+    trace.close()
+    throw new Error('CAN device is not available')
+  }
   const base = findCan(cfg.device)
-  return new XcpCanTransport(base, {
-    name: cfg.name,
-    canIdCmd: cfg.canIdCmd,
-    canIdResp: cfg.canIdResp,
-    extended: cfg.extended,
-    canfd: cfg.canfd,
-    brs: cfg.brs,
-    padding: cfg.padding,
-    paddingValue: cfg.paddingValue,
-    dlc: cfg.dlc
-  })
+  return new XcpCanTransport(
+    base,
+    {
+      name: cfg.name,
+      canIdCmd: cfg.canIdCmd,
+      canIdResp: cfg.canIdResp,
+      extended: cfg.extended,
+      canfd: cfg.canfd,
+      brs: cfg.brs,
+      padding: cfg.padding,
+      paddingValue: cfg.paddingValue,
+      dlc: cfg.dlc
+    },
+    trace
+  )
 }
 
 /** CONNECT is already done. Read GET_DAQ_EVENT_INFO and the event name via UPLOAD. */

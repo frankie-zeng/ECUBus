@@ -185,6 +185,11 @@ const errorMessages: Record<number, string> = {
   [XcpErrorCode.ERR_RESOURCE_TEMPORARY_NOT_ACCESSIBLE]: 'resource temporarily not accessible'
 }
 
+/** Human-readable text for an {@link XcpErrorCode}. Unknown codes stay "unknown". @category XCP */
+export function xcpErrorMessage(code: number): string {
+  return errorMessages[code] ?? 'unknown'
+}
+
 /**
  * Error thrown when the slave answers a command with an ERR (0xFE) response.
  * @category XCP
@@ -195,7 +200,7 @@ export class XcpError extends Error {
   /** Full raw response packet. */
   response: Buffer
   constructor(code: number, response: Buffer) {
-    super(`XCP error 0x${code.toString(16).padStart(2, '0')}: ${errorMessages[code] ?? 'unknown'}`)
+    super(`XCP error 0x${code.toString(16).padStart(2, '0')}: ${xcpErrorMessage(code)}`)
     this.name = 'XcpError'
     this.code = code
     this.response = response
