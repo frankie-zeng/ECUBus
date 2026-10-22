@@ -96,6 +96,29 @@ Util.On('Can.DiagRequest.send', (msg) => {
 })
 ```
 
+#### runUdsSeq 进度
+
+`runUdsSeq` 运行一条已配置的序列（`TesterName.SequenceName`）。不传回调时行为与原来完全一致。传入 `onProgress` 后，可以知道当前正在执行哪一条已启用的步骤，以及整体百分比。回调在步骤开始时触发（`phase: 'start'`），在步骤完成时再次触发（`phase: 'finish'`）。
+
+`index` 是已启用步骤中的序号（从 0 开始），`total` 是将要执行的已启用步骤数，`pct` 从第一步开始时的 `0` 到最后一步完成时的 `100`。被禁用的步骤会跳过。若某一步失败并导致序列停止，该步只有 `start` 事件，返回的 Promise 会拒绝。回调抛出异常或返回被拒绝的 Promise 时，错误会被记录，序列继续执行。回调不会被等待。
+
+```typescript
+import { runUdsSeq } from 'ECB'
+
+await runUdsSeq('Tester.Seq0', {
+  onProgress(info) {
+    console.log(`${info.phase} ${info.index + 1}/${info.total} ${info.name} ${info.pct}%`)
+  }
+})
+
+// 设备名和进度回调一起传入
+await runUdsSeq('Tester.Seq0', 'Device1', {
+  onProgress(info) {
+    console.log(info.serviceId, info.pct)
+  }
+})
+```
+
 ## 示例
 
 :::details 在脚本初始化时发送10条CAN消息，然后在30秒延时后发送另一条消息{open}

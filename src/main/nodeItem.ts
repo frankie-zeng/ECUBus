@@ -15,6 +15,7 @@ import { CAN_TP, CAN_TP_SOCKET, TpError as CanTpError } from './docan/cantp'
 import { UdsLOG, VarLOG } from './log'
 import { applyBuffer, getRxPdu, getTxPdu, PwmBaseInfo, ServiceItem, UdsDevice } from './share/uds'
 import { findService, UDSTesterMain } from './docan/uds'
+import { forwardUdsSeqProgress } from './share/udsSeqProgress'
 import { cloneDeep } from 'lodash'
 
 import { NodeItem } from 'src/preload/data'
@@ -1417,7 +1418,8 @@ export class NodeClass {
     }
     return 0
   }
-  async runUdsSeq(data: { name: string; device?: string }) {
+  async runUdsSeq(data: { name: string; device?: string; progressId?: number }) {
+    const onProgress = forwardUdsSeqProgress(this.pool, data.progressId)
     let targetDevice: UdsDevice | undefined
     if (this.nodeItem.channel.length > 0) {
       for (const id of this.nodeItem.channel) {
@@ -1470,7 +1472,7 @@ export class NodeClass {
           if (canBase) {
             uds.setCanBase(this.canBaseMap.get(targetDevice.canDevice.id))
             this.udsTesterMap.set(data.name, uds)
-            await uds.runSequence(seqIndex, cycle)
+            await uds.runSequence(seqIndex, cycle, onProgress)
           } else {
             throw new Error(
               `can device ${targetDevice.canDevice.vendor}-${targetDevice.canDevice.handle} not found`
@@ -1482,7 +1484,7 @@ export class NodeClass {
           if (ethBase) {
             uds.setDoip(ethBase)
             this.udsTesterMap.set(data.name, uds)
-            await uds.runSequence(seqIndex, cycle)
+            await uds.runSequence(seqIndex, cycle, onProgress)
           } else {
             throw new Error(
               `eth device ${targetDevice.ethDevice.vendor}-${targetDevice.ethDevice.device.handle} not found`
@@ -1494,7 +1496,7 @@ export class NodeClass {
           if (linBase) {
             uds.setLinBase(linBase)
             this.udsTesterMap.set(data.name, uds)
-            await uds.runSequence(seqIndex, cycle)
+            await uds.runSequence(seqIndex, cycle, onProgress)
           } else {
             throw new Error(
               `lin device ${targetDevice.linDevice.vendor}-${targetDevice.linDevice.device.handle} not found`
