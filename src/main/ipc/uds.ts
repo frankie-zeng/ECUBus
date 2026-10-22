@@ -86,6 +86,7 @@ import {
 import TraceItem from '../ostrace/item'
 import { startPlugins, stopPlugins } from './plugin'
 import { setProjectSimulateCount } from 'src/cli/rpc/lifecycle'
+import { resetXcpWorkerPresence } from '../xcp/presence'
 import Replay, { ReplayReader } from '../replay'
 import { BlfReader } from '../replay/blfReader'
 import { AscReader } from '../replay/ascReader'
@@ -312,6 +313,19 @@ interface NodeItemA {
 }
 
 const canBaseMap = new Map<string, CanBase>()
+
+/** CAN device opened by a running project, looked up by the name shown in Devices. */
+export function findOpenCanDevice(name?: string): CanBase {
+  if (name) {
+    for (const base of canBaseMap.values()) {
+      if (base.info.name === name) return base
+    }
+    throw new Error(`CAN device '${name}' is not open. Start the project first.`)
+  }
+  const first = canBaseMap.values().next().value as CanBase | undefined
+  if (!first) throw new Error('No CAN device is open. Start the project first.')
+  return first
+}
 const ethBaseMap = new Map<string, EthBaseInfo>()
 const linBaseMap = new Map<string, LinBase>()
 const pwmBaseMap = new Map<string, PwmBase>()
@@ -1035,6 +1049,8 @@ export function globalStop(emit = false) {
     value.close()
   })
   nodeMap.clear()
+  // Worker XCP transports are closed with their node. Clear any leftover presence.
+  resetXcpWorkerPresence()
   cantps.forEach((value) => {
     value.close()
   })

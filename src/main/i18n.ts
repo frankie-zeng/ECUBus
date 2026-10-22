@@ -18,49 +18,63 @@ export const getAppLocalesPath = () => {
   return localesDir
 }
 
-// 使用 glob 加载指定语言的所有翻译文件并合并为一个大的 JSON
-async function loadAllTranslations(lng: string): Promise<Record<string, any>> {
-  const merged: Record<string, any> = {}
+function isPlainObject(value: unknown): value is Record<string, any> {
+  return !!value && typeof value === 'object' && !Array.isArray(value)
+}
+
+/** Overlay locale files. Nested objects merge so a partial zh file keeps English. */
+function deepMerge(base: Record<string, any>, over: Record<string, any>): Record<string, any> {
+  const out: Record<string, any> = { ...base }
+  for (const key of Object.keys(over)) {
+    const left = out[key]
+    const right = over[key]
+    out[key] = isPlainObject(left) && isPlainObject(right) ? deepMerge(left, right) : right
+  }
+  return out
+}
+
+async function readLocaleTree(lng: string): Promise<Record<string, any>> {
+  let merged: Record<string, any> = {}
   const appLocalesPath = getAppLocalesPath()
-
-  try {
-    // 加载主应用翻译：locales/{lng}/translation.json
-    const appPattern = join(appLocalesPath, lng, 'translation.json').replace(/\\/g, '/')
-    const appFiles = await glob(appPattern)
-
-    for (const file of appFiles) {
-      try {
-        const content = await fs.readFile(file, 'utf-8')
-        const translations = JSON.parse(content)
-        Object.assign(merged, translations)
-      } catch (error) {
-        log.error(`Failed to load app translation from ${file}:`, error)
-      }
+  const appPattern = join(appLocalesPath, lng, 'translation.json').replace(/\\/g, '/')
+  const appFiles = await glob(appPattern)
+  for (const file of appFiles) {
+    try {
+      const translations = JSON.parse(await fs.readFile(file, 'utf-8'))
+      if (isPlainObject(translations)) merged = deepMerge(merged, translations)
+    } catch (error) {
+      log.error(`Failed to load app translation from ${file}:`, error)
     }
-
-    // 加载插件翻译：plugins/*/locales/{lng}/translation.json
-    const pluginsDir = getPluginsDirectory()
-    const pluginPattern = join(pluginsDir, '*', 'locales', lng, 'translation.json').replace(
-      /\\/g,
-      '/'
-    )
-    const pluginFiles = await glob(pluginPattern)
-
-    for (const file of pluginFiles) {
-      try {
-        const content = await fs.readFile(file, 'utf-8')
-        const translations = JSON.parse(content)
-        // 插件翻译直接覆盖主应用翻译
-        Object.assign(merged, translations)
-      } catch (error) {
-        log.error(`Failed to load plugin translation from ${file}:`, error)
-      }
-    }
-  } catch (error) {
-    log.error(`Failed to load translations for ${lng}:`, error)
   }
 
+  const pluginsDir = getPluginsDirectory()
+  const pluginPattern = join(pluginsDir, '*', 'locales', lng, 'translation.json').replace(
+    /\\/g,
+    '/'
+  )
+  const pluginFiles = await glob(pluginPattern)
+  for (const file of pluginFiles) {
+    try {
+      const translations = JSON.parse(await fs.readFile(file, 'utf-8'))
+      if (isPlainObject(translations)) merged = deepMerge(merged, translations)
+    } catch (error) {
+      log.error(`Failed to load plugin translation from ${file}:`, error)
+    }
+  }
   return merged
+}
+
+// 使用 glob 加载指定语言的所有翻译文件并合并为一个大的 JSON
+async function loadAllTranslations(lng: string): Promise<Record<string, any>> {
+  try {
+    const own = await readLocaleTree(lng)
+    if (lng === 'en') return own
+    // A language file may only carry the keys that differ from English.
+    return deepMerge(await readLocaleTree('en'), own)
+  } catch (error) {
+    log.error(`Failed to load translations for ${lng}:`, error)
+    return {}
+  }
 }
 
 // 从 i18next 获取已加载的翻译（如果已初始化）

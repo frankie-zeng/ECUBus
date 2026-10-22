@@ -361,6 +361,7 @@ import closeIcon from '@iconify/icons-material-symbols/close'
 import resizeIcon from '@iconify/icons-material-symbols/resize'
 import networkNode from '@iconify/icons-material-symbols/network-node'
 import textFields from '@iconify/icons-material-symbols/text-fields'
+import xcpIcon from '@iconify/icons-mdi/chip'
 import checkIndeterminateSmall from '@iconify/icons-material-symbols/check-indeterminate-small'
 import externalLinkIcon from '@iconify/icons-mdi/external-link'
 import hardware from '@iconify/icons-material-symbols/hardware-outline'
@@ -1057,6 +1058,13 @@ const baseTabsConfig = computed<TabConfig[]>(() => [
         labelKey: 'uds.toolbar.udsTester',
         icon: textFields,
         onClick: () => handleSelect(['tester'])
+      },
+      {
+        type: 'button',
+        label: 'XCP',
+        labelKey: 'uds.toolbar.xcp',
+        icon: xcpIcon,
+        onClick: () => handleSelect(['xcp'])
       },
       {
         type: 'dropdown',

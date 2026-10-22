@@ -43,6 +43,7 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "worker": "cd src/main/worker/secureAccess && npx node-gyp rebuild &&  cd ../../../.. && npx webpack --config webpack.config.js --mode production",
     "worker:js": "npx webpack --config webpack.config.js --mode production",
+    "xcplite:build": "bash tools/xcplite/build.sh",
     "ensure:worker": "node scripts/ensure-worker-bundle.mjs",
     "predev": "npm run ensure:worker",
     "start": "electron-vite preview",

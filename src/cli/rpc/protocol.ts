@@ -1,8 +1,4 @@
-import {
-  RPC_INVALID_REQUEST,
-  RPC_PARSE_ERROR,
-  RpcError
-} from './errors'
+import { RPC_INVALID_REQUEST, RPC_PARSE_ERROR, RpcError } from './errors'
 import type { JsonRpcNotification, JsonRpcRequest, JsonRpcResponse } from './types'
 
 const MAX_FRAME = 1024 * 1024

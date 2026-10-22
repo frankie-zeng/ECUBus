@@ -27,6 +27,8 @@ log.txt
 tools/a.bin
 tools/a.txt
 tools/a.csv
+# Vector XCPlite is fetched and built by tools/xcplite/build.sh (MIT, not shipped).
+tools/xcplite/upstream/
 
 .env.development
 doip-certs

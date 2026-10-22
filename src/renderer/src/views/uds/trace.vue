@@ -617,6 +617,16 @@ interface UdsErrorLog {
   method: 'udsError' | 'udsScript' | 'udsSystem' | 'canError' | 'linEvent'
   data: { msg: string; ts: number }
 }
+interface XcpLog {
+  method: 'xcpSent' | 'xcpRecv' | 'xcpErr' | 'xcpEvent' | 'xcpDaq'
+  data: {
+    name: string
+    kind: 'cmd' | 'res' | 'err' | 'ev' | 'serv' | 'daq' | 'stim'
+    ts: number
+    bytes?: number[] | Uint8Array
+    detail?: string
+  }
+}
 interface LinErrorLog {
   method: 'linError'
   data: { msg: string; ts: number; data?: LinMsg }
@@ -651,6 +661,7 @@ interface LogItem {
     | SomeipServiceValidLog
     | OsEventLog
     | OsErrorLog
+    | XcpLog
   level: string
   instance: string
   label: string
@@ -1006,6 +1017,46 @@ function logDisplay({ values }: { values: LogItem[] }) {
         msgType: msgType,
         children: (val.message.data as any).children
       })
+    } else if (
+      val.message.method == 'xcpSent' ||
+      val.message.method == 'xcpRecv' ||
+      val.message.method == 'xcpErr' ||
+      val.message.method == 'xcpEvent' ||
+      val.message.method == 'xcpDaq'
+    ) {
+      const bytes = val.message.data.bytes
+      const raw = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes ?? [])
+      const kind = val.message.data.kind
+      const msgType =
+        kind === 'cmd'
+          ? i18next.t('uds.trace.messageTypes.xcpCmd')
+          : kind === 'res'
+            ? i18next.t('uds.trace.messageTypes.xcpRes')
+            : kind === 'err'
+              ? i18next.t('uds.trace.messageTypes.xcpErr')
+              : kind === 'ev'
+                ? i18next.t('uds.trace.messageTypes.xcpEv')
+                : kind === 'serv'
+                  ? i18next.t('uds.trace.messageTypes.xcpServ')
+                  : kind === 'stim'
+                    ? i18next.t('uds.trace.messageTypes.xcpStim')
+                    : i18next.t('uds.trace.messageTypes.xcpDaq')
+      insertData({
+        method: val.message.method,
+        dir: val.message.method == 'xcpSent' || kind === 'stim' ? 'Tx' : 'Rx',
+        name: val.message.data.name,
+        data: data2str(raw).trim(),
+        ts: val.message.data.ts,
+        id: val.message.data.name,
+        len: raw.length,
+        dlc: raw.length,
+        device: val.label,
+        channel: val.instance,
+        msgType,
+        children: val.message.data.detail
+          ? [{ name: val.message.data.name, data: val.message.data.detail }]
+          : undefined
+      })
     } else if (val.message.method == 'canError') {
       //find last udsSent or udsPreSend
 
@@ -1194,12 +1245,29 @@ const props = defineProps({
   },
   defaultCheckList: {
     type: Array as PropType<string[]>,
-    default: () => ['canBase', 'ipBase', 'linBase', 'serialBase', 'uds', 'someipBase', 'osTrace']
+    default: () => [
+      'canBase',
+      'ipBase',
+      'linBase',
+      'serialBase',
+      'uds',
+      'xcp',
+      'someipBase',
+      'osTrace'
+    ]
   }
 })
 
 function filterChange(
-  method: 'uds' | 'canBase' | 'ipBase' | 'linBase' | 'serialBase' | 'someipBase' | 'osTrace',
+  method:
+    | 'uds'
+    | 'xcp'
+    | 'canBase'
+    | 'ipBase'
+    | 'linBase'
+    | 'serialBase'
+    | 'someipBase'
+    | 'osTrace',
   val: boolean
 ) {
   const i = LogFilter.value.find((v) => v.v == method)
@@ -1564,11 +1632,17 @@ function saveAll(command: string) {
       } else if (
         log.method === 'udsSent' ||
         log.method === 'udsRecv' ||
-        log.method === 'udsNegRecv'
+        log.method === 'udsNegRecv' ||
+        log.method === 'xcpSent' ||
+        log.method === 'xcpRecv' ||
+        log.method === 'xcpErr' ||
+        log.method === 'xcpEvent' ||
+        log.method === 'xcpDaq'
       ) {
         // UDS 消息 (按照 CAN 格式处理)
         const dlc = log.len ? len2dlc(log.len).toString(16) : '0'
-        const dir = log.method === 'udsSent' ? 'Tx' : 'Rx'
+        const dir =
+          log.method === 'udsSent' || log.method === 'xcpSent' || log.dir === 'Tx' ? 'Tx' : 'Rx'
         messageLine = `${channel}  ${id.padEnd(15)} ${dir.padEnd(4)} d ${dlc} ${data}`
       }
 
@@ -1985,7 +2059,7 @@ function togglePause() {
 const LogFilter = ref<
   {
     label: string
-    v: 'uds' | 'canBase' | 'ipBase' | 'linBase' | 'serialBase' | 'someipBase' | 'osTrace'
+    v: 'uds' | 'xcp' | 'canBase' | 'ipBase' | 'linBase' | 'serialBase' | 'someipBase' | 'osTrace'
     value: string[]
   }[]
 >([
@@ -2008,6 +2082,11 @@ const LogFilter = ref<
     label: i18next.t('uds.trace.filters.uds'),
     v: 'uds',
     value: ['udsSent', 'udsRecv']
+  },
+  {
+    label: i18next.t('uds.trace.filters.xcp'),
+    v: 'xcp',
+    value: ['xcpSent', 'xcpRecv', 'xcpErr', 'xcpEvent', 'xcpDaq']
   },
   {
     label: i18next.t('uds.trace.filters.eth'),
@@ -2286,9 +2365,19 @@ onMounted(() => {
 
           case 'udsSent':
           case 'udsRecv':
+          case 'xcpSent':
+          case 'xcpRecv':
             color = getComputedStyle(document.documentElement)
               .getPropertyValue('--el-color-info')
               .trim()
+            break
+          case 'xcpEvent':
+            color = getComputedStyle(document.documentElement)
+              .getPropertyValue('--el-color-success')
+              .trim()
+            break
+          case 'xcpDaq':
+            color = '#00897B'
             break
           case 'canError':
           case 'linError':
@@ -2300,6 +2389,7 @@ onMounted(() => {
             break
           case 'linWarning':
           case 'udsWarning':
+          case 'xcpErr':
           case 'udsNegRecv':
             color = getComputedStyle(document.documentElement)
               .getPropertyValue('--el-color-warning')
@@ -2433,6 +2523,23 @@ onUnmounted(() => {
 
 .udsNegRecv {
   color: var(--el-color-warning);
+}
+
+.xcpSent,
+.xcpRecv {
+  color: var(--el-color-info);
+}
+
+.xcpErr {
+  color: var(--el-color-warning);
+}
+
+.xcpEvent {
+  color: var(--el-color-success);
+}
+
+.xcpDaq {
+  color: #00897b;
 }
 
 .osEvent {

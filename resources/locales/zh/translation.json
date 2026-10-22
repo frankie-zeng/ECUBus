@@ -1,0 +1,18 @@
+{
+  "uds": {
+    "trace": {
+      "filters": {
+        "xcp": "XCP"
+      },
+      "messageTypes": {
+        "xcpCmd": "XCP 命令",
+        "xcpRes": "XCP 正响应",
+        "xcpErr": "XCP 错误",
+        "xcpEv": "XCP 事件",
+        "xcpServ": "XCP 服务",
+        "xcpDaq": "XCP DAQ",
+        "xcpStim": "XCP STIM"
+      }
+    }
+  }
+}
