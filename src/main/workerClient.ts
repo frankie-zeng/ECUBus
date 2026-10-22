@@ -31,7 +31,7 @@ type HandlerMap = {
       | { method: 'setVar'; name: string; value: number | number[] | string }
       | { method: 'setVars'; vars: Array<{ name: string; value: number | number[] | string }> }
   ) => void
-  runUdsSeq: (data: { name: string; device?: string }) => void
+  runUdsSeq: (data: { name: string; device?: string; progressId?: number }) => void
   stopUdsSeq: (data: { name: string; device?: string }) => void
   linApi: (
     data: linApiStartSch | linApiStopSch | linApiPowerCtrl | linApiBaudRateCtrl

@@ -96,6 +96,29 @@ Util.On('Can.DiagRequest.send', (msg) => {
 })
 ```
 
+#### runUdsSeq progress
+
+`runUdsSeq` runs one configured sequence (`TesterName.SequenceName`). Calls without a callback are unchanged. Pass `onProgress` to learn which enabled item is running and the overall percentage. The callback runs when the item starts (`phase: 'start'`) and again when it finishes (`phase: 'finish'`).
+
+`index` is the 0-based position among enabled items, `total` is how many of those items will run, and `pct` moves from `0` at the first start to `100` after the last finish. Disabled items are skipped. If an item fails and stops the sequence, that item has a `start` event only and the promise rejects. A callback that throws, or returns a rejected promise, is logged and does not stop the sequence. The callback is not awaited.
+
+```typescript
+import { runUdsSeq } from 'ECB'
+
+await runUdsSeq('Tester.Seq0', {
+  onProgress(info) {
+    console.log(`${info.phase} ${info.index + 1}/${info.total} ${info.name} ${info.pct}%`)
+  }
+})
+
+// Device name and progress together
+await runUdsSeq('Tester.Seq0', 'Device1', {
+  onProgress(info) {
+    console.log(info.serviceId, info.pct)
+  }
+})
+```
+
 ## Example
 
 ::: details Send 10 CAN messages on script initialization, then send one more message after 30s delay {open}

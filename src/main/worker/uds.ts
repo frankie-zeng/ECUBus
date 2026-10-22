@@ -32,6 +32,8 @@ import {
   applyBuffer,
   UdsAddress
 } from '../share/uds'
+import { invokeUdsSeqProgressCallback, type UdsSeqProgress } from '../share/udsSeqProgress'
+export type { UdsSeqProgress, UdsSeqProgressPhase } from '../share/udsSeqProgress'
 export { CAN_ID_TYPE, CAN_ADDR_TYPE, CAN_ADDR_FORMAT } from '../share/can'
 export type { ServiceItem }
 export type { TesterInfo } from '../share/tester'
@@ -702,6 +704,17 @@ type EventMapRecv = {
 type EventMap = EventMapSend & EventMapRecv
 
 const emitMap = new Map<number, { resolve: any; reject: any }>()
+/** Progress callbacks for in-flight `runUdsSeq` calls, keyed by the command id. */
+const udsSeqProgressMap = new Map<number, (info: UdsSeqProgress) => void>()
+
+/**
+ * Deliver a sequence progress event to the callback registered by `runUdsSeq`.
+ * A throwing or rejected callback is logged and does not reject the sequence.
+ */
+function dispatchUdsSeqProgress(data: { id?: number; info?: UdsSeqProgress } | undefined): void {
+  if (!data || typeof data.id !== 'number' || !data.info) return
+  invokeUdsSeqProgressCallback(udsSeqProgressMap.get(data.id), data.info)
+}
 const serviceMap = new Map<string, ServiceItem>()
 
 global.cmdId = 0
@@ -2621,7 +2634,16 @@ export class UtilClass {
   constructor() {
     if (!this.isMain) {
       registerWorker({
-        __on: this.workerOn.bind(this),
+        __on: (event: string, data: any) => {
+          // Progress is delivered while runUdsSeq is still awaiting __eventDone.
+          // Handle it synchronously so a throwing callback cannot be reordered
+          // behind completion, and cannot reject the sequence.
+          if (event === '__udsSeqProgress') {
+            dispatchUdsSeqProgress(data)
+            return true
+          }
+          return this.workerOn(event as any, data)
+        },
         __start: this.start.bind(this),
         __eventDone: this.evnetDone.bind(this)
       })
@@ -3097,33 +3119,122 @@ export function getVar<T extends keyof VariableMap>(varName: T): VariableMap[T] 
 }
 
 /**
- * Run a UDS sequence
+ * Options for {@link runUdsSeq}.
  *
  * @category UDS
- * @param {UdsSeqName} seqName - The name of the UDS sequence to run
- * @param {string} [device] - The optional device name to run the sequence on when multiple devices are connected
- * @returns {Promise<void>} - Returns a promise that resolves when sequence completes
+ */
+export interface RunUdsSeqOptions {
+  /**
+   * Device name when the node is connected to more than one device.
+   * Same meaning as the `device` string argument.
+   */
+  device?: string
+  /**
+   * Called when each enabled sequence item starts and when it finishes.
+   *
+   * The callback is not awaited. Throw inside it, or return a rejected promise,
+   * and the sequence keeps running; the error is logged.
+   * Disabled items are skipped. `pct` is 0 when the first item starts and 100
+   * when the last item finishes. If an item fails and stops the sequence, that
+   * item emits `start` only and the returned promise rejects.
+   *
+   * @param info - Which item is running and the overall percentage
+   */
+  onProgress?: (info: UdsSeqProgress) => void
+}
+
+function resolveRunUdsSeqArgs(
+  deviceOrOptions?: string | RunUdsSeqOptions,
+  options?: RunUdsSeqOptions
+): { device?: string; onProgress?: RunUdsSeqOptions['onProgress'] } {
+  if (typeof deviceOrOptions === 'string') {
+    return {
+      device: deviceOrOptions,
+      onProgress: typeof options?.onProgress === 'function' ? options.onProgress : undefined
+    }
+  }
+  if (deviceOrOptions && typeof deviceOrOptions === 'object') {
+    return {
+      device: deviceOrOptions.device,
+      onProgress:
+        typeof deviceOrOptions.onProgress === 'function' ? deviceOrOptions.onProgress : undefined
+    }
+  }
+  return {}
+}
+
+/**
+ * Run a UDS sequence.
+ *
+ * Existing calls `runUdsSeq(name)` and `runUdsSeq(name, device)` are unchanged.
+ * Pass an options object, or a device name plus options, to receive progress
+ * for each enabled item.
+ *
+ * @category UDS
+ * @param {UdsSeqName} seqName - The name of the UDS sequence to run (`TesterName.SequenceName`)
+ * @param {string | RunUdsSeqOptions} [deviceOrOptions] - Device name, or options including `onProgress`
+ * @param {RunUdsSeqOptions} [options] - Options when `deviceOrOptions` is a device name
+ * @returns {Promise<void>} - Resolves when the sequence completes, rejects when it fails
  *
  * @example
  * ```ts
  * // Run a UDS sequence
- * await runUdsSeq('MySequence');
+ * await runUdsSeq('Tester.Seq0');
  *
- * // Run sequence on specific device
- * await runUdsSeq('MySequence', 'Device1');
+ * // Run sequence on a specific device
+ * await runUdsSeq('Tester.Seq0', 'Device1');
+ *
+ * // Report the item that is running and the overall percentage
+ * await runUdsSeq('Tester.Seq0', {
+ *   onProgress(info) {
+ *     console.log(`${info.phase} ${info.index + 1}/${info.total} ${info.name} ${info.pct}%`);
+ *   }
+ * });
+ *
+ * await runUdsSeq('Tester.Seq0', 'Device1', {
+ *   onProgress(info) {
+ *     console.log(info.serviceId, info.pct);
+ *   }
+ * });
  * ```
  */
-export async function runUdsSeq(seqName: UdsSeqName, device?: string): Promise<void> {
+export async function runUdsSeq(seqName: UdsSeqName, device?: string): Promise<void>
+export async function runUdsSeq(seqName: UdsSeqName, options?: RunUdsSeqOptions): Promise<void>
+export async function runUdsSeq(
+  seqName: UdsSeqName,
+  device: string,
+  options?: RunUdsSeqOptions
+): Promise<void>
+export async function runUdsSeq(
+  seqName: UdsSeqName,
+  deviceOrOptions?: string | RunUdsSeqOptions,
+  options?: RunUdsSeqOptions
+): Promise<void> {
+  const { device, onProgress } = resolveRunUdsSeqArgs(deviceOrOptions, options)
+  const id = global.cmdId
   const p: Promise<void> = new Promise((resolve, reject) => {
+    if (onProgress) {
+      udsSeqProgressMap.set(id, onProgress)
+    }
     workerEmit({
-      id: global.cmdId,
+      id,
       event: 'runUdsSeq',
       data: {
         device,
-        name: seqName
+        name: seqName,
+        ...(onProgress ? { progressId: id } : {})
       }
     })
-    emitMap.set(global.cmdId, { resolve, reject })
+    emitMap.set(id, {
+      resolve: () => {
+        udsSeqProgressMap.delete(id)
+        resolve()
+      },
+      reject: (err: unknown) => {
+        udsSeqProgressMap.delete(id)
+        reject(err)
+      }
+    })
     global.cmdId++
   })
 

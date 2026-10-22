@@ -13,6 +13,11 @@ import {
   applyBuffer,
   UdsInfo
 } from '../share/uds'
+import {
+  countRunnableUdsSeqItems,
+  withUdsSeqItemProgress,
+  type UdsSeqProgressHandler
+} from '../share/udsSeqProgress'
 import { CAN_ADDR_TYPE, CanAddr, getTsUs } from '../share/can'
 import { CanBase } from './base'
 import path from 'path'
@@ -324,7 +329,7 @@ export class UDSTesterMain {
     this.runningLinBase = base
     this.closeBase = false
   }
-  async runSequence(seqIndex: number, cycle?: number) {
+  async runSequence(seqIndex: number, cycle?: number, onProgress?: UdsSeqProgressHandler) {
     this.ac = new AbortController()
     const targetDevice = this.device
     if (targetDevice) {
@@ -382,7 +387,13 @@ export class UDSTesterMain {
       if (targetDevice.type == 'can' && targetDevice.canDevice) {
         try {
           if (this.runningCanBase) {
-            await this.runCanSequenceWithBase(this.runningCanBase, seqIndex, this.log, cycleCount)
+            await this.runCanSequenceWithBase(
+              this.runningCanBase,
+              seqIndex,
+              this.log,
+              cycleCount,
+              onProgress
+            )
           } else {
             // await this.runCanSequence(targetDevice.canDevice, seqIndex, log, cycleCount)
             throw new Error('can base not found')
@@ -399,7 +410,13 @@ export class UDSTesterMain {
       } else if (targetDevice.type == 'eth' && targetDevice.ethDevice) {
         try {
           if (this.runningDoip) {
-            await this.runEthSequenceWithBase(this.runningDoip, seqIndex, this.log, cycleCount)
+            await this.runEthSequenceWithBase(
+              this.runningDoip,
+              seqIndex,
+              this.log,
+              cycleCount,
+              onProgress
+            )
           } else {
             // await this.runCanSequence(targetDevice.canDevice, seqIndex, log, cycleCount)
             throw new Error('eth base not found')
@@ -416,7 +433,13 @@ export class UDSTesterMain {
       } else if (targetDevice.type == 'lin' && targetDevice.linDevice) {
         try {
           if (this.runningLinBase) {
-            await this.runLinSequenceWithBase(this.runningLinBase, seqIndex, this.log, cycleCount)
+            await this.runLinSequenceWithBase(
+              this.runningLinBase,
+              seqIndex,
+              this.log,
+              cycleCount,
+              onProgress
+            )
           } else {
             // await this.runCanSequence(targetDevice.canDevice, seqIndex, log, cycleCount)
             throw new Error('lin base not found')
@@ -439,7 +462,8 @@ export class UDSTesterMain {
     base: CanBase,
     seqIndex: number,
     log: UdsLOG,
-    cycleCount: number
+    cycleCount: number,
+    onProgress?: UdsSeqProgressHandler
   ) {
     const tp = new CAN_TP(base)
     await this.runTp(
@@ -459,7 +483,8 @@ export class UDSTesterMain {
       },
       seqIndex,
       log,
-      cycleCount
+      cycleCount,
+      onProgress
     ).finally(() => {
       tp.close(this.closeBase)
     })
@@ -468,7 +493,8 @@ export class UDSTesterMain {
     base: DOIP,
     seqIndex: number,
     log: UdsLOG,
-    cycleCount: number
+    cycleCount: number,
+    onProgress?: UdsSeqProgressHandler
   ) {
     await this.runTp(
       {
@@ -490,14 +516,16 @@ export class UDSTesterMain {
       },
       seqIndex,
       log,
-      cycleCount
+      cycleCount,
+      onProgress
     )
   }
   private async runLinSequenceWithBase(
     base: LinBase,
     seqIndex: number,
     log: UdsLOG,
-    cycleCount: number
+    cycleCount: number,
+    onProgress?: UdsSeqProgressHandler
   ) {
     const tp = new LIN_TP(base)
     await this.runTp(
@@ -521,7 +549,8 @@ export class UDSTesterMain {
       },
       seqIndex,
       log,
-      cycleCount
+      cycleCount,
+      onProgress
     )
   }
   // private async runCanSequence(device: CanBaseInfo, seqIndex: number, log: UdsLOG, cycleCount: number) {
@@ -585,7 +614,8 @@ export class UDSTesterMain {
     },
     seqIndex: number,
     log: UdsLOG,
-    cycleCount: number
+    cycleCount: number,
+    onProgress?: UdsSeqProgressHandler
   ) {
     const values = this.buildObj()
     const targetSeq = this.tester.seqList[seqIndex]
@@ -610,6 +640,10 @@ export class UDSTesterMain {
           log.systemMsg(`====== Running cycle #${i}, delay 1000ms ======`, this.lastActiveTs)
           await this.delay(1000)
         }
+        const runnableCount = countRunnableUdsSeqItems(targetSeq.services, (serviceId) => {
+          return this.services[serviceId] !== undefined
+        })
+        let progressIndex = 0
         const processStep = 100 / targetSeq.services.length
         for (const [serviceIndex, service] of targetSeq.services.entries()) {
           if (this.ac.signal.aborted) {
@@ -941,14 +975,26 @@ export class UDSTesterMain {
               }
               await tester.delay(service.delay)
             }
+            const itemIndex = progressIndex++
             log.udsIndex(this.tester.id, serviceIndex, targetService.name, 'start')
             this.varLog.setVarByKey(
               `Statistics.${this.tester.id}.${seqIndex}`,
               curProcess,
               this.lastActiveTs
             )
-            await baseRun(this, targetService)
-            log.udsIndex(this.tester.id, serviceIndex, targetService.name, 'finished')
+            await withUdsSeqItemProgress(
+              onProgress,
+              {
+                index: itemIndex,
+                total: runnableCount,
+                name: targetService.name,
+                serviceId: targetService.serviceId
+              },
+              async () => {
+                await baseRun(this, targetService)
+                log.udsIndex(this.tester.id, serviceIndex, targetService.name, 'finished')
+              }
+            )
           }
           this.varLog.setVarByKey(
             `Statistics.${this.tester.id}.${seqIndex}`,
